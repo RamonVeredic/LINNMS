@@ -22,6 +22,10 @@ No staging Dockerfiles, Git history, `.github`, docs, testing files, source-seed
 
 The workflow `LINNMS Protected Production` is **manual-only**. By default it builds a candidate without pushing. Opting into `publish` pushes **only** `ghcr.io/ramonveredic/nms:protected-candidate` (NOT `latest`) to avoid replacing an operational image prematurely.
 
+## Production deployment definitions
+
+Production compose templates have been moved here from staging and currently target `ghcr.io/ramonveredic/nms:protected-candidate`. They are deliberately not included in the container filesystem. Do not replace `latest` until end-to-end validation is complete. The production repository is the only home for deployment examples.
+
 ## Automatic encryption key and security tradeoff
 
 Production CI generates a fresh key for every build. It is **not** stored as a separate file in the final image, and no key-volume setup is required on the customer's deployment. The generated C header and encoder plaintext stay in the CI working directory/build stage; never upload logs, caches, or artifacts containing these files.

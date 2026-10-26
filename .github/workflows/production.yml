@@ -110,4 +110,3 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ghcr.io/ramonveredic/nms:protected-candidate
-          cache-to: type=gha,mode=min
