@@ -20,11 +20,11 @@ No staging Dockerfiles, Git history, `.github`, docs, testing files, source-seed
 - `LINNMS_READ_TOKEN`: fine-grained personal access token (read access) to both private repositories `LINNMS-Staging` and `LINNMS-protection`. The normal `GITHUB_TOKEN` for LINNMS may not read those repositories.
 - Encryption is automatic: each build generates a fresh 32-byte random key using `openssl rand -hex 32`, encrypts the PHP sources, then compiles that key into the `linnms_loader.so` binary. No `LINNMS_ENCRYPTION_KEY_HEX` GitHub secret is needed.
 
-The workflow `LINNMS Protected Production` is **manual-only**. By default it builds a candidate without pushing. Opting into `publish` pushes **only** `ghcr.io/ramonveredic/nms:protected-candidate` (NOT `latest`) to avoid replacing an operational image prematurely.
+The workflow `LINNMS Protected Production` is manual-only and requires a release version of the form `vMAJOR.MINOR.PATCH`. By default it builds only a candidate without pushing. When **publish=true** and all build checks succeed it publishes both `ghcr.io/ramonveredic/nms:latest` and `ghcr.io/ramonveredic/nms:MAJOR.MINOR.PATCH` from the same source+protection snapshot. It does not test actual OLT/SNMP hardware or end-to-end database migrations, so publish only after deployment validation.
 
 ## Production deployment definitions
 
-Production compose templates have been moved here from staging and currently target `ghcr.io/ramonveredic/nms:protected-candidate`. They are deliberately not included in the container filesystem. Do not replace `latest` until end-to-end validation is complete. The production repository is the only home for deployment examples.
+Production Compose templates were moved here from staging and now target `ghcr.io/ramonveredic/nms:latest` (version-pinning is recommended for reproducibility). They are not included in the container filesystem. Be aware `latest` might still point to an earlier legacy image until a new production build is validated and published. The production repository is the only home for deployment examples.
 
 ## Automatic encryption key and security tradeoff
 

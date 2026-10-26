@@ -2,7 +2,7 @@ name: linnms
 
 services:
   app:
-    image: ghcr.io/ramonveredic/nms:protected-candidate
+    image: ghcr.io/ramonveredic/nms:latest
     container_name: linnms
     hostname: linnms
     restart: unless-stopped
