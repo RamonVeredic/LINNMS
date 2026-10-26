@@ -1,0 +1,10 @@
+# Do not ever commit build inputs/outputs or application source.
+/build/
+/tmp/
+/bundle/
+/context/
+/staging/
+/protection/
+/*.key
+*.so
+*.lnc

@@ -1,0 +1,60 @@
+# Intentionally accepts ONLY a pre-filtered, encrypted build context.
+# Source staging, encoder, key, scripts and Git metadata MUST NEVER be copied.
+FROM lscr.io/linuxserver/nginx:1.30.4 AS loader-build
+RUN apk add --no-cache php85-dev build-base autoconf libsodium-dev pkgconf
+COPY protection/loader/ /build/loader/
+RUN cd /build/loader \
+    && phpize85 \
+    && ./configure --with-php-config=/usr/bin/php-config85 --enable-linnms-loader \
+    && make -j2 \
+    && test -s modules/linnms_loader.so
+
+FROM lscr.io/linuxserver/nginx:1.30.4
+ARG VERSION=dev
+LABEL org.opencontainers.image.title="LINNMS" \
+      org.opencontainers.image.description="LINNMS protected production image" \
+      org.opencontainers.image.source="https://github.com/RamonVeredic/LINNMS" \
+      org.opencontainers.image.version="$VERSION"
+
+RUN apk add --no-cache \
+      inetutils-telnet net-snmp-tools php85-pdo_mysql php85-snmp php85-sodium libsodium
+COPY --from=loader-build /build/loader/modules/linnms_loader.so /usr/lib/php85/modules/linnms_loader.so
+RUN printf '%s\n' \
+      'extension=linnms_loader' \
+      'linnms_loader.roots=/opt/linnms/runtime,/opt/linnms/config,/opt/linnms/frontend' \
+      'linnms_loader.key_file=/run/secrets/linnms_protection_key' \
+      'opcache.enable=0' \
+      'opcache.enable_cli=0' \
+      > /etc/php85/conf.d/99-linnms-loader.ini \
+    && php -m | grep -Fx linnms_loader \
+    && php -r 'if (!extension_loaded("sodium")) exit(1);'
+
+RUN mkdir -p /opt/linnms/runtime /opt/linnms/config /opt/linnms/frontend \
+      /opt/linnms/nginx /custom-cont-init.d /custom-services.d
+COPY bundle/config/app/runtime/ /opt/linnms/runtime/
+COPY bundle/config/app/config/ /opt/linnms/config/
+COPY bundle/config/www/ /opt/linnms/frontend/
+COPY bundle/nginx/ /opt/linnms/nginx/
+COPY bundle/linnms.init.d/50-linnms-public-init /custom-cont-init.d/50-linnms-public-init
+COPY bundle/linnms.service.d/ /custom-services.d/
+
+# Verify the FINAL image, not merely a filtered working directory.
+RUN set -eu; \
+    ! find /opt/linnms -name .github -o -name .git -o -name 'Dockerfile*' -o -name '*.sample' | grep .; \
+    ! grep -E 'SOURCE_(MOUNTS|ROOT|SEED)|staging|source-seed' /custom-cont-init.d/50-linnms-public-init; \
+    find /opt/linnms -type f -name '*.php' -exec php -r \
+      'foreach(array_slice($argv,1) as $f) { $h=fopen($f,"rb"); $b=fread($h,4); fclose($h); if ($b!=="LNC1") {fwrite(STDERR, "Unencoded PHP: $f\n");exit(1);} }' \
+      -- {} +; \
+    test -f /opt/linnms/runtime/app/runtime.php; \
+    test -f /opt/linnms/frontend/index.php; \
+    test -f /opt/linnms/config/public-entry.php; \
+    test ! -e /opt/linnms/source-seed; \
+    test ! -e /run/secrets/linnms_protection_key
+RUN chmod 0755 /custom-cont-init.d/50-linnms-public-init /custom-services.d/* \
+    && chown -R root:root /opt/linnms \
+    && find /opt/linnms -type d -exec chmod 0555 {} \; \
+    && find /opt/linnms -type f -exec chmod 0444 {} \;
+
+# The deployer MUST mount a runtime key file readable by PHP and PHP-FPM.
+# Without it, the native loader fails closed when protected PHP is requested.
+EXPOSE 80 443
