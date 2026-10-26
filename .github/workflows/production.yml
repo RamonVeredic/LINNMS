@@ -45,11 +45,13 @@ jobs:
           echo "Source commit: $(git -C "$work/staging" rev-parse HEAD)"
           echo "Protection commit: $(git -C "$work/protection" rev-parse HEAD)"
 
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
       - name: Build and smoke-test native loader on AMD64/ARM64
         run: |
           set -eu
           cd "$RUNNER_TEMP/linnms-protected/protection"
-          docker buildx create --use --name linnms-ci
           docker buildx build --platform linux/amd64 -f docker/Dockerfile.smoke .
           docker buildx build --platform linux/arm64 -f docker/Dockerfile.smoke .
 
@@ -76,9 +78,6 @@ jobs:
           python3 scripts/verify_context.py "$work/context"
           rm -f "$work/release.key"
           rm -rf "$work/encoded"
-
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
 
       - name: Build (no push unless publish explicitly enabled)
         uses: docker/build-push-action@v6
