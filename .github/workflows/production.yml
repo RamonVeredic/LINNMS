@@ -3,8 +3,12 @@ name: LINNMS Protected Production
 on:
   workflow_dispatch:
     inputs:
+      version:
+        description: "Production release tag (e.g. v1.2.3)"
+        required: true
+        type: string
       publish:
-        description: "Push to GHCR only after validating full runtime in your environment"
+        description: "Push both GHCR tags (latest and version) after successful build"
         required: true
         type: boolean
         default: false
@@ -19,6 +23,19 @@ jobs:
     steps:
       - name: Checkout production build recipes only
         uses: actions/checkout@v4
+
+      - name: Validate release version and image tags
+        id: release
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! "$RELEASE_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo 'Release version must be vMAJOR.MINOR.PATCH (for example v1.2.3)' >&2
+            exit 1
+          fi
+          echo "version=${RELEASE_VERSION#v}" >> "$GITHUB_OUTPUT"
 
       - name: Check required private-repository credentials
         env:
@@ -91,7 +108,7 @@ jobs:
           file: ${{ runner.temp }}/linnms-protected/context/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: false
-          tags: ghcr.io/ramonveredic/nms:candidate
+          tags: ghcr.io/ramonveredic/nms:${{ steps.release.outputs.version }}-candidate
 
       - name: GHCR authentication
         if: ${{ inputs.publish }}
@@ -109,4 +126,6 @@ jobs:
           file: ${{ runner.temp }}/linnms-protected/context/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/ramonveredic/nms:protected-candidate
+          tags: |
+            ghcr.io/ramonveredic/nms:latest
+            ghcr.io/ramonveredic/nms:${{ steps.release.outputs.version }}
