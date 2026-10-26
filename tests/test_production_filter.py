@@ -80,6 +80,7 @@ class ProductionFilterTest(unittest.TestCase):
         (context / "bundle").mkdir(parents=True)
         (context / "protection/loader").mkdir(parents=True)
         (context / "protection/loader/linnms_loader.c").write_text("/* build only */")
+        (context / "protection/loader/linnms_auto_key.h").write_text("#define LINNMS_EMBEDDED_KEY 1")
         (context / "Dockerfile").write_text("FROM scratch")
         import shutil
         shutil.copytree(self.output, context / "bundle", dirs_exist_ok=True)

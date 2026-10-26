@@ -23,13 +23,9 @@ jobs:
       - name: Check required private-repository credentials
         env:
           READ_TOKEN: ${{ secrets.LINNMS_READ_TOKEN }}
-          KEY_HEX: ${{ secrets.LINNMS_ENCRYPTION_KEY_HEX }}
         run: |
           set -eu
           test -n "$READ_TOKEN" || { echo 'Missing LINNMS_READ_TOKEN' >&2; exit 1; }
-          printf '%s' "$KEY_HEX" | grep -Eq '^[0-9a-fA-F]{64}$' || {
-            echo 'Missing/invalid LINNMS_ENCRYPTION_KEY_HEX' >&2; exit 1;
-          }
 
       - name: Fetch source and protection from private repositories
         env:
@@ -55,15 +51,20 @@ jobs:
           docker buildx build --platform linux/amd64 -f docker/Dockerfile.smoke .
           docker buildx build --platform linux/arm64 -f docker/Dockerfile.smoke .
 
-      - name: Filter and encrypt all PHP sources off-context
-        env:
-          KEY_HEX: ${{ secrets.LINNMS_ENCRYPTION_KEY_HEX }}
+      - name: Generate unique ephemeral encryption key per release
         run: |
           set -eu
           work="$RUNNER_TEMP/linnms-protected"
           umask 077
-          printf '%s\n' "$KEY_HEX" > "$work/release.key"
+          openssl rand -hex 32 > "$work/release.key"
+          test "$(wc -c < "$work/release.key")" -eq 65
           chmod 600 "$work/release.key"
+
+      - name: Filter and encrypt all PHP sources off-context
+        run: |
+          set -eu
+          work="$RUNNER_TEMP/linnms-protected"
+          umask 077
           python3 scripts/filter_production.py "$work/staging" "$work/plain"
           docker run --rm --user "$(id -u):$(id -g)" \
             -v "$work:/work" \
@@ -74,6 +75,10 @@ jobs:
           mkdir -p "$work/context/bundle" "$work/context/protection"
           cp -a "$work/encoded/." "$work/context/bundle/"
           cp -a "$work/protection/loader" "$work/context/protection/"
+          docker run --rm --user "$(id -u):$(id -g)" \
+            -v "$work:/work" \
+            php:8.5-cli-alpine php /work/protection/encoder/generate_header.php \
+            /work/release.key /work/context/protection/loader/linnms_auto_key.h
           cp docker/Dockerfile.production "$work/context/Dockerfile"
           python3 scripts/verify_context.py "$work/context"
           rm -f "$work/release.key"
@@ -87,7 +92,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: false
           tags: ghcr.io/ramonveredic/nms:candidate
-          cache-to: type=gha,mode=min
 
       - name: GHCR authentication
         if: ${{ inputs.publish }}

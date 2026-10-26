@@ -1,5 +1,5 @@
 # Intentionally accepts ONLY a pre-filtered, encrypted build context.
-# Source staging, encoder, key, scripts and Git metadata MUST NEVER be copied.
+# Source staging, encoder, scripts and Git metadata MUST NEVER be copied.\n# An ephemeral key is compiled into the .so at build time; it is EXTRACTABLE from the binary.\n# The generated key header MUST NOT be copied into the final image.
 FROM lscr.io/linuxserver/nginx:1.30.4 AS loader-build
 RUN apk add --no-cache php85-dev build-base autoconf libsodium-dev pkgconf
 COPY protection/loader/ /build/loader/
@@ -7,7 +7,8 @@ RUN cd /build/loader \
     && phpize85 \
     && ./configure --with-php-config=/usr/bin/php-config85 --enable-linnms-loader \
     && make -j2 \
-    && test -s modules/linnms_loader.so
+    && test -s modules/linnms_loader.so \
+    && test -s linnms_auto_key.h
 
 FROM lscr.io/linuxserver/nginx:1.30.4
 ARG VERSION=dev
@@ -22,7 +23,6 @@ COPY --from=loader-build /build/loader/modules/linnms_loader.so /usr/lib/php85/m
 RUN printf '%s\n' \
       'extension=linnms_loader' \
       'linnms_loader.roots=/opt/linnms/runtime,/opt/linnms/config,/opt/linnms/frontend' \
-      'linnms_loader.key_file=/run/secrets/linnms_protection_key' \
       'opcache.enable=0' \
       'opcache.enable_cli=0' \
       > /etc/php85/conf.d/99-linnms-loader.ini \
@@ -55,6 +55,7 @@ RUN chmod 0755 /custom-cont-init.d/50-linnms-public-init /custom-services.d/* \
     && find /opt/linnms -type d -exec chmod 0555 {} \; \
     && find /opt/linnms -type f -exec chmod 0444 {} \;
 
-# The deployer MUST mount a runtime key file readable by PHP and PHP-FPM.
-# Without it, the native loader fails closed when protected PHP is requested.
+# Per-build key embedded into the loader; no runtime key file required.
+# External key-file override remains supported by native loader for controlled installations.
+# This is anti-casual-inspection, not protection from a customer with full host access.
 EXPOSE 80 443

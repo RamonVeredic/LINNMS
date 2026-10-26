@@ -9,6 +9,9 @@ if not (root / "bundle/config/www/index.php").is_file():
     raise SystemExit("Production entrypoint missing")
 if not (root / "protection/loader/linnms_loader.c").is_file():
     raise SystemExit("Native loader source missing")
+header = root / "protection/loader/linnms_auto_key.h"
+if not header.is_file() or "#define LINNMS_EMBEDDED_KEY 1" not in header.read_text():
+    raise SystemExit("Missing per-build embedded key header")
 deny = {".git", ".github", "docker", "tests", "tools", "source-seed", "doc",
         "linnms-staging", "staging", "__pycache__"}
 php_count = 0
@@ -21,6 +24,8 @@ for file in root.rglob("*"):
     # Dockerfile and loader source belong to the build context, not the final image.
     if rel.parts[0] not in {"bundle", "protection"} and rel.as_posix() != "Dockerfile":
         raise SystemExit(f"Unexpected build context item: {rel}")
+    if rel.parts[0] == "protection" and rel.suffix not in {".c", ".h", ".m4"}:
+        raise SystemExit(f"Unexpected protected-loader build input: {rel}")
     if rel.parts[0] == "bundle":
         if any(part.lower() in deny or part.startswith(".") for part in rel.parts):
             raise SystemExit(f"Staging/development artifact: {rel}")

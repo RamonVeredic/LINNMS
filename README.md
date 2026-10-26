@@ -18,14 +18,15 @@ No staging Dockerfiles, Git history, `.github`, docs, testing files, source-seed
 ## Required GitHub Action secrets
 
 - `LINNMS_READ_TOKEN`: fine-grained personal access token (read access) to both private repositories `LINNMS-Staging` and `LINNMS-protection`. The normal `GITHUB_TOKEN` for LINNMS may not read those repositories.
-- `LINNMS_ENCRYPTION_KEY_HEX`: 64 hex characters generated securely once; kept private. E.g. generate locally with `php -r 'echo bin2hex(random_bytes(32)), PHP_EOL;'`. Never store this value in Git, images, artifacts or logs.
+- Encryption is automatic: each build generates a fresh 32-byte random key using `openssl rand -hex 32`, encrypts the PHP sources, then compiles that key into the `linnms_loader.so` binary. No `LINNMS_ENCRYPTION_KEY_HEX` GitHub secret is needed.
 
 The workflow `LINNMS Protected Production` is **manual-only**. By default it builds a candidate without pushing. Opting into `publish` pushes **only** `ghcr.io/ramonveredic/nms:protected-candidate` (NOT `latest`) to avoid replacing an operational image prematurely.
 
-## Deployment prerequisite (not automated)
+## Automatic encryption key and security tradeoff
 
-The same hex key must be mounted as a *read-only file* at
-`/run/secrets/linnms_protection_key`, readable by the PHP CLI worker and PHP-FPM user `abc`. Loss of the key makes encrypted PHP unavailable. A customer with root access can extract the key; this does not prevent reverse engineering.
+Production CI generates a fresh key for every build. It is **not** stored as a separate file in the final image, and no key-volume setup is required on the customer's deployment. The generated C header and encoder plaintext stay in the CI working directory/build stage; never upload logs, caches, or artifacts containing these files.
+
+**Security limitation:** the key is embedded in the native loader binary and can be recovered by anyone who controls the customer-side Docker image. This protects source from direct viewing, but does **not** guarantee secrecy against reverse engineering. For a stronger custody model, maintain a separate runtime key outside the container and manage it through a dedicated secret store.
 
 ## Status and known limitations
 
