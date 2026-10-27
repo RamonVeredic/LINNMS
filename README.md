@@ -16,7 +16,9 @@ Repositories:
 
 **Production tags are created in LINNMS, not LINNMS-Staging.** Source development and merging continue in LINNMS-Staging. Its old production-dispatch workflow was removed. There is no cross-repository dispatch token or release workflow in staging.
 
-After source changes have passed staging tests and are merged to `LINNMS-Staging/master`, create the production Git tag on **LINNMS/main**:
+After source changes have passed staging tests, create a staging tag **on the tested source commit** (e.g. `staging-V1.0.1`), merge that commit into `LINNMS-Staging/master`, then create the **matching production Git tag** on `LINNMS/main`. The production build fails closed if the matching staging tag is absent or is not an ancestor of the staging master branch.
+
+Examples: `staging-V1.0.1` in `LINNMS-Staging` pairs with `V1.0.1` in `LINNMS`. The old `V1.0.0` tag that was accidentally created in staging is not a production trigger anymore.
 
 ```bash
 git clone git@github.com:RamonVeredic/LINNMS.git
@@ -34,12 +36,12 @@ A normal change to LINNMS production tooling under `main` runs a no-publish vali
 ## Build chain and security controls
 
 1. LINNMS CI checks out the tagged LINNMS production **build recipes**.
-2. Using `LINNMS_READ_TOKEN`, it checks out `LINNMS-Staging/master` and `LINNMS-protection/main`. It records the source commit SHA and labels the Docker image with the source revision.
-3. It validates the native loader on AMD64 and ARM64, applies an explicit production allowlist, and generates a fresh 32-byte symmetric key.
-4. It encrypts the selected PHP files and builds a multi-arch Docker image with an embedded native loader. The generated header, encoder, staging Dockerfile, test files, CI secrets, and plaintext application source do not enter the final runtime image.
-5. Both GHCR release tags are pushed only if the production Docker build and its smoke checks succeed.
+2. Using `LINNMS_READ_TOKEN`, it locates the **matching `staging-vX.Y.Z` or `staging-VX.Y.Z` source tag** in `LINNMS-Staging` and checks out its exact commit SHA, verifying that SHA belongs to staging `master`. It also checks out `LINNMS-protection/main`.
+3. It validates the native loader on AMD64 and ARM64, applies a production allowlist, and generates a new 32-byte encryption key.
+4. It encrypts all selected PHP and builds the multi-arch Docker image with a native loader. The encoder, source plaintext, test files, build headers, and secrets do not enter the final image.
+5. It publishes `nms:X.Y.Z` and `nms:latest` only after the build smoke tests pass.
 
-**Current reproducibility limitation:** a production Git tag pins the *LINNMS build recipes*, but automatic tagged builds take whichever staging `master` SHA exists when the build starts. The SHA is recorded in the image metadata. Retrying a tag later can therefore select newer source. For a strictly immutable source release, use the manual production workflow with `source_tag` (tag in LINNMS-Staging) and optionally `source_sha`; that workflow verifies the source tag belongs to staging master. Immutable release-source pinning for fully automatic production tags is future work.
+**Release reproducibility:** the application source commit is pinned by the matching staging tag and embedded as `org.opencontainers.image.revision`. The protection toolchain is still fetched from its `main` branch; it should be pinned to a reviewed commit for fully reproducible release builds. A push to `LINNMS/main` involving build scripts still triggers a no-publish build from current staging `master` for CI validation. Manual workflow dispatch allows an explicit source tag.
 
 **Security limitation:** the auto-generated key is compiled into the native loader and can be extracted by a customer who controls the image. It obstructs casual inspection of encrypted source, not full reverse engineering. PHP 8.5 ABI and end-to-end database, device, HTTP, worker and OPcache behavior must be tested in an actual deployment.
 
