@@ -56,9 +56,12 @@ jobs:
             echo 'Release version must be vMAJOR.MINOR.PATCH (for example v1.2.3)' >&2
             exit 1
           fi
-          if [[ -n "$SOURCE_TAG" && "$SOURCE_TAG" != "$RELEASE_VERSION" ]]; then
-            echo 'Source tag and release version must match' >&2
-            exit 1
+          if [[ -n "$SOURCE_TAG" ]]; then
+            if [[ ! "$SOURCE_TAG" =~ ^[vV][0-9]+\.[0-9]+\.[0-9]+$ ]] ||
+               [[ "v${SOURCE_TAG:1}" != "$RELEASE_VERSION" ]]; then
+              echo 'Source tag must match release version (case-insensitive V)' >&2
+              exit 1
+            fi
           fi
           if [[ -n "$SOURCE_SHA" && ! "$SOURCE_SHA" =~ ^[0-9a-fA-F]{40}$ ]]; then
             echo 'Invalid 40-character source commit SHA' >&2
