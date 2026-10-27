@@ -1,6 +1,12 @@
 name: LINNMS Protected Production
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/production.yml'
+      - 'docker/**'
+      - 'scripts/**'
   workflow_dispatch:
     inputs:
       version:
@@ -27,7 +33,7 @@ jobs:
       - name: Validate release version and image tags
         id: release
         env:
-          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || 'v0.0.0' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -111,7 +117,7 @@ jobs:
           tags: ghcr.io/ramonveredic/nms:${{ steps.release.outputs.version }}-candidate
 
       - name: GHCR authentication
-        if: ${{ inputs.publish }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish == true }}
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -119,7 +125,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish protected image (explicit opt-in only)
-        if: ${{ inputs.publish }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish == true }}
         uses: docker/build-push-action@v6
         with:
           context: ${{ runner.temp }}/linnms-protected/context
