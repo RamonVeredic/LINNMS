@@ -167,9 +167,9 @@ jobs:
           echo "Protection commit: $protection_sha"
           {
             echo "### LINNMS Production build"
-            echo "- Staging source: `$SOURCE_MODE`"
-            echo "- Staging commit: `$resolved_sha`"
-            echo "- Protection commit: `$protection_sha`"
+            printf -- "- Staging source: %s\n" "$SOURCE_MODE"
+            printf -- "- Staging commit: %s\n" "$resolved_sha"
+            printf -- "- Protection commit: %s\n" "$protection_sha"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: docker/setup-qemu-action@v3
