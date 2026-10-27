@@ -1,0 +1,52 @@
+name: linnms
+services:
+  app:
+    image: ${LINNMS_IMAGE:-ghcr.io/ramonveredic/linnms:latest}
+    container_name: linnms
+    hostname: linnms
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Jakarta
+      - DB_SOCKET=/run/mysqld/mysqld.sock
+      - DB_NAME=linnms_appliance
+      - DB_USER=root
+      - DB_PASSWORD=
+    ports:
+      - "84:80"
+      - "4143:443"
+    volumes:
+      - linnms-state:/config
+      - linnms-run:/run/mysqld
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mariadb:11.4
+    container_name: linnms-db
+    restart: unless-stopped
+    command:
+      - --skip-networking
+      - --socket=/run/mysqld/mysqld.sock
+    environment:
+      - MARIADB_DATABASE=linnms_appliance
+      - MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1
+      - MARIADB_AUTO_UPGRADE=1
+      - TZ=Asia/Jakarta
+    volumes:
+      - linnms-db:/var/lib/mysql
+      - linnms-run:/run/mysqld
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mariadb --protocol=SOCKET --socket=/run/mysqld/mysqld.sock --user=root linnms_appliance --execute='SELECT 1' >/dev/null 2>&1
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+volumes:
+  linnms-state:
+  linnms-db:
+  linnms-run:
