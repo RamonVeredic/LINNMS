@@ -200,7 +200,7 @@ jobs:
           build-args: |
             VERSION=${{ steps.release.outputs.version }}
             SOURCE_REVISION=${{ steps.source.outputs.sha }}
-          tags: ghcr.io/ramonveredic/nms:${{ steps.release.outputs.version }}-candidate
+          tags: ghcr.io/ramonveredic/linnms:${{ steps.release.outputs.version }}-candidate
 
       - name: GHCR authentication
         if: ${{ github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.publish == true) }}
@@ -222,5 +222,5 @@ jobs:
             VERSION=${{ steps.release.outputs.version }}
             SOURCE_REVISION=${{ steps.source.outputs.sha }}
           tags: |
-            ghcr.io/ramonveredic/nms:latest
-            ghcr.io/ramonveredic/nms:${{ steps.release.outputs.version }}
+            ghcr.io/ramonveredic/linnms:latest
+            ghcr.io/ramonveredic/linnms:${{ steps.release.outputs.version }}
