@@ -65,7 +65,7 @@ jobs:
         id: release
         env:
           RELEASE_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || (github.event_name == 'workflow_dispatch' && inputs.version || 'v0.0.0') }}
-          SOURCE_TAG: ${{ inputs.source_tag }}
+          SOURCE_TAG: ${{ github.ref_type == 'tag' && format('staging-{0}', github.ref_name) || inputs.source_tag }}
           SOURCE_SHA: ${{ inputs.source_sha }}
           PUBLISH: ${{ github.ref_type == 'tag' || inputs.publish }}
           TAGGED_BUILD: ${{ github.ref_type == 'tag' }}
@@ -77,9 +77,14 @@ jobs:
             exit 1
           fi
           if [[ -n "$SOURCE_TAG" ]]; then
-            if [[ ! "$SOURCE_TAG" =~ ^[vV][0-9]+\.[0-9]+\.[0-9]+$ ]] ||
-               [[ "v${SOURCE_TAG:1}" != "$RELEASE_VERSION" ]]; then
-              echo 'Source tag must match release version (case-insensitive V)' >&2
+            normalized_tag="${SOURCE_TAG#staging-}"
+            if [[ ! "$normalized_tag" =~ ^[vV][0-9]+\.[0-9]+\.[0-9]+$ ]] ||
+               [[ "${normalized_tag:1}" != "${RELEASE_VERSION:1}" ]]; then
+              echo 'Source tag must match release version (allow staging-v/V prefix)' >&2
+              exit 1
+            fi
+            if [[ "$TAGGED_BUILD" == "true" && "$SOURCE_TAG" != "staging-$RELEASE_VERSION" ]]; then
+              echo 'Production tag must use matching staging test tag' >&2
               exit 1
             fi
           fi
@@ -104,11 +109,11 @@ jobs:
           set -eu
           test -n "$READ_TOKEN" || { echo 'Missing LINNMS_READ_TOKEN' >&2; exit 1; }
 
-      - name: Fetch protected source from the exact staging release tag
+      - name: Fetch exact tested LINNMS-Staging source tag (or master for CI-only build)
         id: source
         env:
           READ_TOKEN: ${{ secrets.LINNMS_READ_TOKEN }}
-          SOURCE_TAG: ${{ inputs.source_tag }}
+          SOURCE_TAG: ${{ github.ref_type == 'tag' && format('staging-{0}', github.ref_name) || inputs.source_tag }}
           SOURCE_SHA: ${{ inputs.source_sha }}
         shell: bash
         run: |
