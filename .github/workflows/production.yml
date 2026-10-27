@@ -56,7 +56,8 @@ jobs:
             echo "Invalid production tag format: $GITHUB_REF_NAME" >&2
             exit 1
           fi
-          if ! git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main; then
+          release_commit="$(git rev-parse --verify "${GITHUB_REF}^{commit}")"
+          if ! git merge-base --is-ancestor "$release_commit" refs/remotes/origin/main; then
             echo 'Production tag must point to a commit reachable from LINNMS/main' >&2
             exit 1
           fi
