@@ -124,7 +124,7 @@ jobs:
           git -c advice.detachedHead=false clone -q --depth 1 --branch master \
             "https://x-access-token:${READ_TOKEN}@github.com/RamonVeredic/LINNMS-Staging.git" "$work/staging"
           if [[ -n "$SOURCE_TAG" ]]; then
-          master.
+            # Pastikan tag staging berasal dari branch master.
           git -C "$work/staging" fetch -q --unshallow origin master
             git -C "$work/staging" fetch -q origin "refs/tags/${SOURCE_TAG}:refs/tags/${SOURCE_TAG}"
             pinned_sha="$(git -C "$work/staging" rev-parse --verify "refs/tags/${SOURCE_TAG}^{commit}")"

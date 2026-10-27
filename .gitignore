@@ -8,3 +8,7 @@
 *.so
 *.lnc
 .vscode/
+# Konfigurasi lokal dan rahasia instalasi
+.env
+.env.*
+!.env.example
