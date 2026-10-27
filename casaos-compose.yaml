@@ -1,9 +1,9 @@
-name: linnms
+name: LINNMS
 services:
   app:
     image: ghcr.io/ramonveredic/linnms:latest
-    container_name: linnms
-    hostname: linnms
+    container_name: LINNMS
+    hostname: LINNMS
     restart: unless-stopped
     environment:
       - PUID=1000
@@ -22,10 +22,10 @@ services:
         protocol: tcp
     volumes:
       - type: bind
-        source: /DATA/AppData/linnms/state
+        source: /DATA/AppData/LINNMS/state
         target: /config
       - type: bind
-        source: /DATA/AppData/linnms/run
+        source: /DATA/AppData/LINNMS/run
         target: /run/mysqld
     depends_on:
       db:
@@ -33,7 +33,7 @@ services:
 
   db:
     image: mariadb:11.4
-    container_name: linnms-db
+    container_name: LINNMS-db
     restart: unless-stopped
     command:
       - --skip-networking
@@ -45,10 +45,10 @@ services:
       - TZ=Asia/Jakarta
     volumes:
       - type: bind
-        source: /DATA/AppData/linnms/database
+        source: /DATA/AppData/LINNMS/database
         target: /var/lib/mysql
       - type: bind
-        source: /DATA/AppData/linnms/run
+        source: /DATA/AppData/LINNMS/run
         target: /run/mysqld
     healthcheck:
       test:
@@ -66,16 +66,16 @@ x-casaos:
   author: RamonVeredic
   category: Network
   description:
-    en_us: LINNMS Production Appliance.
-  developer: LINNMS
+    en_us: Network Management System
+  developer: RamonVeredic
   hostname: ""
-  icon: https://cdn.jsdelivr.net/gh/RamonVeredic/icon@main/LINNMS/LINNMS_icon.ico
+  icon: https://cdn.jsdelivr.net/gh/RamonVeredic/icon@main/LINNMS/original.png
   index: /
   is_uncontrolled: false
   main: app
   port_map: "84"
   scheme: http
-  store_app_id: linnms
+  store_app_id: LINNMS
   tagline:
     en_us: Network Management System.
   title:
