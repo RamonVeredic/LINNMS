@@ -54,3 +54,22 @@ Perlu dibedakan: mekanisme otomatis dari tag staging ke repository LINNMS ini be
 Saya juga sudah mengecek GitHub Actions production terbaru. Tahap filter, encoding, dan Docker build AMD64/ARM64 semuanya berhasil. Image belum dipublikasikan karena build tersebut merupakan validasi otomatis dengan push=false.
 
 Rekomendasi saya: gunakan satu pintu rilis, yaitu LINNMS-Staging/master. Untuk sementara jalankan production secara manual di LINNMS. Selanjutnya kita ubah agar cukup membuat tag vX.Y.Z di LINNMS-Staging, dan seluruh proses production berjalan otomatis di repository LINNMS, tanpa perlu membuat tag kedua.
+
+
+## Release automation
+
+- `LINNMS-Staging` tag `staging-vX.Y.Z` continues running **the existing staging image build** (unchanged).
+- `LINNMS-Staging` tag `vX.Y.Z` after merging tested code to `master` triggers `.github/workflows/trigger-production.yml`. It dispatches this repository's `production.yml` on `main`, passing version, exact tag and tag commit SHA, with publishing enabled.
+- Tagged production runs independently verify the tag SHA and that it is on `master`. **They build the tag snapshot, not moving master**, and publish `ghcr.io/ramonveredic/nms:X.Y.Z` and `nms:latest` only after build tests succeed.
+- There is deliberately no production Git tag required in `LINNMS`. Direct manual workflow runs remain possible; publishing requires a `source_tag` that matches `version`.
+- A push to `LINNMS/main` affecting build scripts still runs a no-publish `v0.0.0-candidate` validation build.
+
+### One-time cross-repository GitHub permission
+
+A GitHub Actions workflow in one repository **cannot dispatch another repository with its default `GITHUB_TOKEN`**. Create a **fine-grained PAT** with access only to `RamonVeredic/LINNMS`, permission **Actions: Read and write**, then add it to the **LINNMS-Staging** repository's Actions secrets under the name `LINNMS_DISPATCH_TOKEN`. Never commit or log this token. The `LINNMS` repository continues using its existing `LINNMS_READ_TOKEN` to read both private source/protection repositories.
+
+### GHCR ownership/access prerequisite
+
+The most recent publishing attempt failed with `denied: permission_denied: read_package` for existing package `ghcr.io/ramonveredic/nms:latest` despite a successful build. Under GitHub Packages → package `nms` → **Package settings → Manage Actions access**, grant `RamonVeredic/LINNMS` **Write** access (or otherwise ensure its workflow token has read/write package access). This is separate from the cross-repository dispatch token. Until corrected, version-tag dispatch may build successfully but its publishing step will fail without overwriting `latest`.
+
+For production, restrict release-tag creation to trusted maintainers (repository rulesets / tag protection) because creating a release tag triggers publication.

@@ -13,6 +13,14 @@ on:
         description: "Production release tag (e.g. v1.2.3)"
         required: true
         type: string
+      source_tag:
+        description: "Optional immutable source tag from LINNMS-Staging (e.g. v1.2.3)"
+        required: false
+        type: string
+      source_sha:
+        description: "Expected commit SHA for source_tag (sent by staging dispatcher)"
+        required: false
+        type: string
       publish:
         description: "Push both GHCR tags (latest and version) after successful build"
         required: true
@@ -23,6 +31,10 @@ permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: linnms-production-${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref }}
+  cancel-in-progress: false
+
 jobs:
   production:
     runs-on: ubuntu-latest
@@ -30,15 +42,34 @@ jobs:
       - name: Checkout production build recipes only
         uses: actions/checkout@v4
 
-      - name: Validate release version and image tags
+      - name: Validate release version and source tag
         id: release
         env:
           RELEASE_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || 'v0.0.0' }}
+          SOURCE_TAG: ${{ inputs.source_tag }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          PUBLISH: ${{ inputs.publish }}
         shell: bash
         run: |
           set -euo pipefail
           if [[ ! "$RELEASE_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo 'Release version must be vMAJOR.MINOR.PATCH (for example v1.2.3)' >&2
+            exit 1
+          fi
+          if [[ -n "$SOURCE_TAG" && "$SOURCE_TAG" != "$RELEASE_VERSION" ]]; then
+            echo 'Source tag and release version must match' >&2
+            exit 1
+          fi
+          if [[ -n "$SOURCE_SHA" && ! "$SOURCE_SHA" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo 'Invalid 40-character source commit SHA' >&2
+            exit 1
+          fi
+          if [[ -n "$SOURCE_SHA" && -z "$SOURCE_TAG" ]]; then
+            echo 'source_sha requires source_tag' >&2
+            exit 1
+          fi
+          if [[ "$PUBLISH" == "true" && -z "$SOURCE_TAG" ]]; then
+            echo 'Publishing requires an immutable staging source_tag' >&2
             exit 1
           fi
           echo "version=${RELEASE_VERSION#v}" >> "$GITHUB_OUTPUT"
@@ -50,18 +81,40 @@ jobs:
           set -eu
           test -n "$READ_TOKEN" || { echo 'Missing LINNMS_READ_TOKEN' >&2; exit 1; }
 
-      - name: Fetch source and protection from private repositories
+      - name: Fetch protected source from the exact staging release tag
+        id: source
         env:
           READ_TOKEN: ${{ secrets.LINNMS_READ_TOKEN }}
+          SOURCE_TAG: ${{ inputs.source_tag }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+        shell: bash
         run: |
-          set -eu
+          set -euo pipefail
           work="$RUNNER_TEMP/linnms-protected"
           mkdir -p "$work"
           git -c advice.detachedHead=false clone -q --depth 1 --branch master \
             "https://x-access-token:${READ_TOKEN}@github.com/RamonVeredic/LINNMS-Staging.git" "$work/staging"
+          if [[ -n "$SOURCE_TAG" ]]; then
+            # Verify the tag resolves to the requested commit AND belongs to master.
+            # Never compile newer master files during a tagged release.
+            git -C "$work/staging" fetch -q --unshallow origin master
+            git -C "$work/staging" fetch -q origin "refs/tags/${SOURCE_TAG}:refs/tags/${SOURCE_TAG}"
+            pinned_sha="$(git -C "$work/staging" rev-parse --verify "refs/tags/${SOURCE_TAG}^{commit}")"
+            if [[ -n "$SOURCE_SHA" && "$pinned_sha" != "$SOURCE_SHA" ]]; then
+              echo 'Staging source tag moved or SHA does not match dispatch' >&2
+              exit 1
+            fi
+            if ! git -C "$work/staging" merge-base --is-ancestor "$pinned_sha" origin/master; then
+              echo 'Refusing release: staging tag is not reachable from master' >&2
+              exit 1
+            fi
+            git -C "$work/staging" checkout -q --detach "$pinned_sha"
+          fi
           git -c advice.detachedHead=false clone -q --depth 1 --branch main \
             "https://x-access-token:${READ_TOKEN}@github.com/RamonVeredic/LINNMS-protection.git" "$work/protection"
-          echo "Source commit: $(git -C "$work/staging" rev-parse HEAD)"
+          resolved_sha="$(git -C "$work/staging" rev-parse HEAD)"
+          echo "sha=$resolved_sha" >> "$GITHUB_OUTPUT"
+          echo "Source commit: $resolved_sha"
           echo "Protection commit: $(git -C "$work/protection" rev-parse HEAD)"
 
       - uses: docker/setup-qemu-action@v3
@@ -114,6 +167,9 @@ jobs:
           file: ${{ runner.temp }}/linnms-protected/context/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: false
+          build-args: |
+            VERSION=${{ steps.release.outputs.version }}
+            SOURCE_REVISION=${{ steps.source.outputs.sha }}
           tags: ghcr.io/ramonveredic/nms:${{ steps.release.outputs.version }}-candidate
 
       - name: GHCR authentication
@@ -132,6 +188,9 @@ jobs:
           file: ${{ runner.temp }}/linnms-protected/context/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
+          build-args: |
+            VERSION=${{ steps.release.outputs.version }}
+            SOURCE_REVISION=${{ steps.source.outputs.sha }}
           tags: |
             ghcr.io/ramonveredic/nms:latest
             ghcr.io/ramonveredic/nms:${{ steps.release.outputs.version }}
