@@ -95,6 +95,18 @@ Untuk CasaOS, perbarui image melalui pengaturan aplikasi dengan mempertahankan s
 
 **Jangan menjalankan `docker compose down -v` untuk update atau troubleshooting:** opsi `-v` menghapus named volume yang dapat memuat database dan konfigurasi penting.
 
+## Build production dari staging terbaru
+
+**Source aplikasi production berasal dari `RamonVeredic/LINNMS-Staging`, bukan dari isi repository LINNMS.** Repository ini menyediakan resep build, penyaringan file, dan konfigurasi instalasi. Image diberi label `org.opencontainers.image.revision` berisi commit SHA staging yang digunakan.
+
+Di [GitHub Actions → LINNMS](https://github.com/RamonVeredic/LINNMS/actions/workflows/production.yml), pilih **Run workflow** pada branch `main`:
+
+1. Untuk memeriksa kode terbaru, pilih `source_mode: master` dan `publish: false`. Workflow akan mengambil commit terbaru `LINNMS-Staging/master` saat proses fetch berlangsung, lalu mencatat SHA di log dan ringkasan Actions. Build ini **tidak** mendorong image ke registry.
+2. Untuk menerbitkan kode `master` secara manual, gunakan `source_mode: master`, isi `source_sha` dengan SHA lengkap 40 karakter yang sudah diperiksa, tetapkan versi baru, lalu aktifkan `publish: true`. Pipeline menolak penerbitan apabila commit `master` saat fetch berbeda dari `source_sha`.
+3. Untuk rilis yang dapat diulang, pilih `source_mode: tag` dan isi `source_tag`, misalnya `staging-v1.2.0`; versi production harus cocok. Jika memakai trigger tag `v1.2.0` di repository LINNMS, sumber otomatis dipatok ke `staging-v1.2.0` agar tidak berubah diam-diam.
+
+**Penting:** Menjalankan ulang rilis dengan tag staging lama tidak mengambil perubahan terbaru di `master`. Gunakan versi/tag staging baru atau build manual dari `master` dengan SHA yang sudah ditentukan. Selalu jalankan pengujian sebelum memublikasikan perubahan untuk perangkat operasional.
+
 ## Referensi
 
 - [Compose untuk Docker](deploy/compose.yaml) — versi file instalasi dalam folder `deploy`.

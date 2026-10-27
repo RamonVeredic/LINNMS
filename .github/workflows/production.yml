@@ -10,12 +10,20 @@ on:
         description: "Release tag (e.g. v1.2.3)"
         required: true
         type: string
+      source_mode:
+        description: "Sumber kode LINNMS-Staging untuk build manual"
+        type: choice
+        required: true
+        default: master
+        options:
+          - master
+          - tag
       source_tag:
-        description: "Optional (e.g. v1.2.3)"
+        description: "Tag staging, misalnya staging-v1.2.0 (hanya saat source_mode=tag)"
         required: false
         type: string
       source_sha:
-        description: ")"
+        description: "SHA commit staging (wajib jika publish dari master)"
         required: false
         type: string
       publish:
@@ -60,7 +68,8 @@ jobs:
         id: release
         env:
           RELEASE_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || (github.event_name == 'workflow_dispatch' && inputs.version || 'v0.0.0') }}
-          SOURCE_TAG: ${{ github.ref_type == 'tag' && format('staging-{0}', github.ref_name) || inputs.source_tag }}
+          SOURCE_MODE: ${{ github.ref_type == 'tag' && 'tag' || (inputs.source_mode || 'master') }}
+          SOURCE_TAG: ${{ github.ref_type == 'tag' && format('staging-{0}', github.ref_name) || (inputs.source_mode == 'tag' && inputs.source_tag || '') }}
           SOURCE_SHA: ${{ inputs.source_sha }}
           PUBLISH: ${{ github.ref_type == 'tag' || inputs.publish }}
           TAGGED_BUILD: ${{ github.ref_type == 'tag' }}
@@ -69,6 +78,18 @@ jobs:
           set -euo pipefail
           if [[ ! "$RELEASE_VERSION" =~ ^[vV][0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo 'Release version must be vMAJOR.MINOR.PATCH (for example v1.2.3)' >&2
+            exit 1
+          fi
+          if [[ "$SOURCE_MODE" != 'master' && "$SOURCE_MODE" != 'tag' ]]; then
+            echo 'Invalid source mode: expected master or tag' >&2
+            exit 1
+          fi
+          if [[ "$SOURCE_MODE" == 'tag' && -z "$SOURCE_TAG" ]]; then
+            echo 'source_mode=tag requires a staging source_tag' >&2
+            exit 1
+          fi
+          if [[ "$SOURCE_MODE" == 'master' && -n "$SOURCE_TAG" ]]; then
+            echo 'source_tag is only supported in tag mode' >&2
             exit 1
           fi
           if [[ -n "$SOURCE_TAG" ]]; then
@@ -87,15 +108,13 @@ jobs:
             echo 'Invalid 40-character source commit SHA' >&2
             exit 1
           fi
-          if [[ -n "$SOURCE_SHA" && -z "$SOURCE_TAG" ]]; then
-            echo 'source_sha requires source_tag' >&2
-            exit 1
-          fi
-          if [[ "$PUBLISH" == "true" && -z "$SOURCE_TAG" && "$TAGGED_BUILD" != "true" ]]; then
-            echo 'Manual publishing requires an immutable source_tag' >&2
+          if [[ "$PUBLISH" == "true" && "$SOURCE_MODE" == "master" && -z "$SOURCE_SHA" ]]; then
+            echo 'Publishing from staging/master requires source_sha to pin the exact commit' >&2
             exit 1
           fi
           echo "version=${RELEASE_VERSION:1}" >> "$GITHUB_OUTPUT"
+          echo "source_mode=$SOURCE_MODE" >> "$GITHUB_OUTPUT"
+          echo "source_tag=$SOURCE_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Validate Release filtering and plaintext rejection
         run: |
@@ -110,11 +129,12 @@ jobs:
           set -eu
           test -n "$READ_TOKEN" || { echo 'Missing LINNMS_READ_TOKEN' >&2; exit 1; }
 
-      - name: Fetch exact tested LINNMS-Staging source tag (or master for CI-only build)
+      - name: Fetch LINNMS-Staging source (latest master or pinned release tag)
         id: source
         env:
           READ_TOKEN: ${{ secrets.LINNMS_READ_TOKEN }}
-          SOURCE_TAG: ${{ github.ref_type == 'tag' && format('staging-{0}', github.ref_name) || inputs.source_tag }}
+          SOURCE_MODE: ${{ steps.release.outputs.source_mode }}
+          SOURCE_TAG: ${{ steps.release.outputs.source_tag }}
           SOURCE_SHA: ${{ inputs.source_sha }}
         shell: bash
         run: |
@@ -123,27 +143,34 @@ jobs:
           mkdir -p "$work"
           git -c advice.detachedHead=false clone -q --depth 1 --branch master \
             "https://x-access-token:${READ_TOKEN}@github.com/RamonVeredic/LINNMS-Staging.git" "$work/staging"
-          if [[ -n "$SOURCE_TAG" ]]; then
-            # Pastikan tag staging berasal dari branch master.
-          git -C "$work/staging" fetch -q --unshallow origin master
+          if [[ "$SOURCE_MODE" == "tag" ]]; then
+            # Rilis bertag mengambil commit staging yang sama dengan tag rilis.
+            git -C "$work/staging" fetch -q --unshallow origin master
             git -C "$work/staging" fetch -q origin "refs/tags/${SOURCE_TAG}:refs/tags/${SOURCE_TAG}"
             pinned_sha="$(git -C "$work/staging" rev-parse --verify "refs/tags/${SOURCE_TAG}^{commit}")"
-            if [[ -n "$SOURCE_SHA" && "$pinned_sha" != "$SOURCE_SHA" ]]; then
-              echo 'Staging source tag moved or SHA does not match dispatch' >&2
-              exit 1
-            fi
             if ! git -C "$work/staging" merge-base --is-ancestor "$pinned_sha" origin/master; then
               echo 'Refusing release: staging tag is not reachable from master' >&2
               exit 1
             fi
             git -C "$work/staging" checkout -q --detach "$pinned_sha"
           fi
+          resolved_sha="$(git -C "$work/staging" rev-parse HEAD)"
+          if [[ -n "$SOURCE_SHA" && "$resolved_sha" != "$SOURCE_SHA" ]]; then
+            echo "Staging source SHA mismatch: expected $SOURCE_SHA, resolved $resolved_sha" >&2
+            exit 1
+          fi
           git -c advice.detachedHead=false clone -q --depth 1 --branch main \
             "https://x-access-token:${READ_TOKEN}@github.com/RamonVeredic/LINNMS-protection.git" "$work/protection"
-          resolved_sha="$(git -C "$work/staging" rev-parse HEAD)"
+          protection_sha="$(git -C "$work/protection" rev-parse HEAD)"
           echo "sha=$resolved_sha" >> "$GITHUB_OUTPUT"
-          echo "Source commit: $resolved_sha"
-          echo "Protection commit: $(git -C "$work/protection" rev-parse HEAD)"
+          echo "Source: LINNMS-Staging/$SOURCE_MODE commit $resolved_sha"
+          echo "Protection commit: $protection_sha"
+          {
+            echo "### LINNMS Production build"
+            echo "- Staging source: `$SOURCE_MODE`"
+            echo "- Staging commit: `$resolved_sha`"
+            echo "- Protection commit: `$protection_sha`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
