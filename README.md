@@ -1,75 +1,57 @@
-1. Alur pengembangan sampai production
-LINNMS-Staging / deplopment
+# LINNMS — Production Image Repository
 
-Pengembangan fitur dan perbaikan bug
+This repository owns **production-only Docker build, source filtering, encryption integration, validation and GHCR release**. It does **not** store raw application PHP.
 
-Merge untuk pengujian
+Repositories:
+- `RamonVeredic/LINNMS-Staging`: application source (`master`) and staging-only image workflow.
+- `RamonVeredic/LINNMS`: production release tags, Dockerfile, CI, Compose templates, published image.
+- `RamonVeredic/LINNMS-protection`: PHP 8.5 offline encoder and native Zend loader.
 
-LINNMS-Staging / staging
+## Tag-triggered release (separate repositories)
 
-Testing aplikasi dengan source PHP asli
+| Repository where you create the tag | Tag examples | Result |
+| --- | --- | --- |
+| **LINNMS-Staging** | `staging-v1.0.1` or `staging-V1.0.1` | Builds `ghcr.io/ramonveredic/dev:1.0.1` and `dev:latest` in staging CI |
+| **LINNMS** | `v1.0.1` or `V1.0.1` | Builds **and attempts to publish** `ghcr.io/ramonveredic/nms:1.0.1` and `nms:latest` in production CI |
 
-Pengujian lulus → merge
+**Production tags are created in LINNMS, not LINNMS-Staging.** Source development and merging continue in LINNMS-Staging. Its old production-dispatch workflow was removed. There is no cross-repository dispatch token or release workflow in staging.
 
-LINNMS-Staging / master
+After source changes have passed staging tests and are merged to `LINNMS-Staging/master`, create the production Git tag on **LINNMS/main**:
 
-Source resmi yang siap dirilis
+```bash
+git clone git@github.com:RamonVeredic/LINNMS.git
+cd LINNMS
+git switch main
+git pull --ff-only origin main
+git tag V1.0.1
+git push origin V1.0.1
+```
 
-Jalankan production workflow
+Create a **new** release version each time. Production tag push triggers `.github/workflows/production.yml` in this repository. Releasing a GitHub Release with a new Git tag also works.
 
-LINNMS + LINNMS-protection
+A normal change to LINNMS production tooling under `main` runs a no-publish validation build; a normal merge of source code in LINNMS-Staging does **not** publish production.
 
-Ambil source master → filter → encode → build AMD64/ARM64
+## Build chain and security controls
 
+1. LINNMS CI checks out the tagged LINNMS production **build recipes**.
+2. Using `LINNMS_READ_TOKEN`, it checks out `LINNMS-Staging/master` and `LINNMS-protection/main`. It records the source commit SHA and labels the Docker image with the source revision.
+3. It validates the native loader on AMD64 and ARM64, applies an explicit production allowlist, and generates a fresh 32-byte symmetric key.
+4. It encrypts the selected PHP files and builds a multi-arch Docker image with an embedded native loader. The generated header, encoder, staging Dockerfile, test files, CI secrets, and plaintext application source do not enter the final runtime image.
+5. Both GHCR release tags are pushed only if the production Docker build and its smoke checks succeed.
 
-GHCR — Production Image
+**Current reproducibility limitation:** a production Git tag pins the *LINNMS build recipes*, but automatic tagged builds take whichever staging `master` SHA exists when the build starts. The SHA is recorded in the image metadata. Retrying a tag later can therefore select newer source. For a strictly immutable source release, use the manual production workflow with `source_tag` (tag in LINNMS-Staging) and optionally `source_sha`; that workflow verifies the source tag belongs to staging master. Immutable release-source pinning for fully automatic production tags is future work.
 
-nms:latest + nms:1.0.0
+**Security limitation:** the auto-generated key is compiled into the native loader and can be extracted by a customer who controls the image. It obstructs casual inspection of encrypted source, not full reverse engineering. PHP 8.5 ABI and end-to-end database, device, HTTP, worker and OPcache behavior must be tested in an actual deployment.
 
+## Required permissions
 
-2. Cara memicu production saat ini
-Setelah perubahan di LINNMS-Staging berhasil di-merge ke master:
-1. Buka LINNMS → Production Workflow.
-2. Klik Run workflow.
-3. Pilih branch main, isi versi v1.0.0, kemudian jalankan dengan publish=false untuk validasi.
-4. Setelah build dan pengujian deployment lulus, jalankan lagi dengan publish=true.
-3. Tetapi saya menyarankan alur yang lebih otomatis
-Untuk jangka panjang, lebih baik kamu cukup membuat tag rilis di LINNMS-Staging/master, bukan di LINNMS.
+`LINNMS` GitHub Actions secret:
+- `LINNMS_READ_TOKEN`: read access to the private `LINNMS-Staging` and `LINNMS-protection` repositories. No `LINNMS_DISPATCH_TOKEN` is required anymore.
 
-Contoh:
-git switch master
-git pull origin master
+GHCR: The existing `ghcr.io/ramonveredic/nms` package rejected a previous production publish with `permission_denied: read_package`. In package settings → Manage Actions access, grant **RamonVeredic/LINNMS** **Write** access. The staging `dev` package independently requires **RamonVeredic/LINNMS-Staging** **Write** access. Granting repo-level `packages: write` in YAML does not necessarily repair existing GHCR package ACLs.
 
-git tag v1.0.0
-git push origin v1.0.0
+## Deployment files
 
+Production-only Compose examples are under `deploy/` and reference `ghcr.io/ramonveredic/nms:latest`. They are not copied into the final Docker image.
 
-Lalu sistem yang kita atur nantinya:
-- Tag staging-v1.0.0 di LINNMS-Staging → membuat image staging.
-- Tag v1.0.0 di LINNMS-Staging/master → otomatis memicu build production di LINNMS.
-- LINNMS mengambil source tepat dari commit tag tersebut, bukan dari master yang mungkin sudah berubah.
-- Setelah validasi berhasil, pipeline memublikasikan nms:1.0.0 dan nms:latest.
-Perlu dibedakan: mekanisme otomatis dari tag staging ke repository LINNMS ini belum diimplementasikan. Saat ini tag v1.0.0 di LINNMS-Staging tidak otomatis memicu production.
-4. Kabar baik: build production lengkap sudah lulus
-Saya juga sudah mengecek GitHub Actions production terbaru. Tahap filter, encoding, dan Docker build AMD64/ARM64 semuanya berhasil. Image belum dipublikasikan karena build tersebut merupakan validasi otomatis dengan push=false.
-
-Rekomendasi saya: gunakan satu pintu rilis, yaitu LINNMS-Staging/master. Untuk sementara jalankan production secara manual di LINNMS. Selanjutnya kita ubah agar cukup membuat tag vX.Y.Z di LINNMS-Staging, dan seluruh proses production berjalan otomatis di repository LINNMS, tanpa perlu membuat tag kedua.
-
-
-## Release automation
-
-- `LINNMS-Staging` tag `staging-vX.Y.Z` continues running **the existing staging image build** (unchanged).
-- `LINNMS-Staging` tag `vX.Y.Z` after merging tested code to `master` triggers `.github/workflows/trigger-production.yml`. It dispatches this repository's `production.yml` on `main`, passing version, exact tag and tag commit SHA, with publishing enabled.
-- Tagged production runs independently verify the tag SHA and that it is on `master`. **They build the tag snapshot, not moving master**, and publish `ghcr.io/ramonveredic/nms:X.Y.Z` and `nms:latest` only after build tests succeed.
-- There is deliberately no production Git tag required in `LINNMS`. Direct manual workflow runs remain possible; publishing requires a `source_tag` that matches `version`.
-- A push to `LINNMS/main` affecting build scripts still runs a no-publish `v0.0.0-candidate` validation build.
-
-### One-time cross-repository GitHub permission
-
-A GitHub Actions workflow in one repository **cannot dispatch another repository with its default `GITHUB_TOKEN`**. Create a **fine-grained PAT** with access only to `RamonVeredic/LINNMS`, permission **Actions: Read and write**, then add it to the **LINNMS-Staging** repository's Actions secrets under the name `LINNMS_DISPATCH_TOKEN`. Never commit or log this token. The `LINNMS` repository continues using its existing `LINNMS_READ_TOKEN` to read both private source/protection repositories.
-
-### GHCR ownership/access prerequisite
-
-The most recent publishing attempt failed with `denied: permission_denied: read_package` for existing package `ghcr.io/ramonveredic/nms:latest` despite a successful build. Under GitHub Packages → package `nms` → **Package settings → Manage Actions access**, grant `RamonVeredic/LINNMS` **Write** access (or otherwise ensure its workflow token has read/write package access). This is separate from the cross-repository dispatch token. Until corrected, version-tag dispatch may build successfully but its publishing step will fail without overwriting `latest`.
-
-For production, restrict release-tag creation to trusted maintainers (repository rulesets / tag protection) because creating a release tag triggers publication.
+Never push a real production tag before validating your deployment and access to GHCR, because **tag pushes request publication automatically**. Failed attempts can be diagnosed from the production repository's Actions tab.
