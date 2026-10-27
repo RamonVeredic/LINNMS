@@ -2,14 +2,9 @@ name: LINNMS Protected Production
 
 on:
   push:
-    branches: [main]
     tags:
       - 'v*.*.*'
       - 'V*.*.*'
-    paths:
-      - '.github/workflows/production.yml'
-      - 'docker/**'
-      - 'scripts/**'
   workflow_dispatch:
     inputs:
       version:
@@ -102,6 +97,12 @@ jobs:
             exit 1
           fi
           echo "version=${RELEASE_VERSION:1}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate production filtering and plaintext rejection
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q scripts tests
+          python3 -m unittest discover -v -s tests
 
       - name: Check required private-repository credentials
         env:
