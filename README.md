@@ -1,39 +1,56 @@
-# LINNMS — Production-only build
+1. Alur pengembangan sampai production
+LINNMS-Staging / deplopment
 
-The application source of truth is **RamonVeredic/LINNMS-Staging** `master`.
-This repository owns only the production filter, production Dockerfile, and build workflow.
-The encoder/native loader are fetched from **RamonVeredic/LINNMS-protection** `main`.
+Pengembangan fitur dan perbaikan bug
 
-```
-LINNMS-Staging/master --source--> isolated production allowlist/filter
-LINNMS-protection/main ---------> offline PHP encoder + native loader build
-                                     |
-                                 encrypted PHP
-                                     |
-                                final image only
-```
+Merge untuk pengujian
 
-No staging Dockerfiles, Git history, `.github`, docs, testing files, source-seed or staging mount support are copied into the final image. The source-mount branch of the staging init script is removed during packaging. Source is encrypted across runtime, configuration templates, and frontend PHP. CSS/JS/HTML remain cleartext, as required by the browser.
+LINNMS-Staging / staging
 
-## Required GitHub Action secrets
+Testing aplikasi dengan source PHP asli
 
-- `LINNMS_READ_TOKEN`: fine-grained personal access token (read access) to both private repositories `LINNMS-Staging` and `LINNMS-protection`. The normal `GITHUB_TOKEN` for LINNMS may not read those repositories.
-- Encryption is automatic: each build generates a fresh 32-byte random key using `openssl rand -hex 32`, encrypts the PHP sources, then compiles that key into the `linnms_loader.so` binary. No `LINNMS_ENCRYPTION_KEY_HEX` GitHub secret is needed.
+Pengujian lulus → merge
 
-The workflow `LINNMS Protected Production` is manual-only and requires a release version of the form `vMAJOR.MINOR.PATCH`. By default it builds only a candidate without pushing. When **publish=true** and all build checks succeed it publishes both `ghcr.io/ramonveredic/nms:latest` and `ghcr.io/ramonveredic/nms:MAJOR.MINOR.PATCH` from the same source+protection snapshot. It does not test actual OLT/SNMP hardware or end-to-end database migrations, so publish only after deployment validation.
+LINNMS-Staging / master
 
-## Production deployment definitions
+Source resmi yang siap dirilis
 
-Production Compose templates were moved here from staging and now target `ghcr.io/ramonveredic/nms:latest` (version-pinning is recommended for reproducibility). They are not included in the container filesystem. Be aware `latest` might still point to an earlier legacy image until a new production build is validated and published. The production repository is the only home for deployment examples.
+Jalankan production workflow
 
-## Automatic encryption key and security tradeoff
+LINNMS + LINNMS-protection
 
-Production CI generates a fresh key for every build. It is **not** stored as a separate file in the final image, and no key-volume setup is required on the customer's deployment. The generated C header and encoder plaintext stay in the CI working directory/build stage; never upload logs, caches, or artifacts containing these files.
+Ambil source master → filter → encode → build AMD64/ARM64
 
-**Security limitation:** the key is embedded in the native loader binary and can be recovered by anyone who controls the customer-side Docker image. This protects source from direct viewing, but does **not** guarantee secrecy against reverse engineering. For a stronger custody model, maintain a separate runtime key outside the container and manage it through a dedicated secret store.
 
-## Status and known limitations
+GHCR — Production Image
 
-**Experimental. Not yet validated end to end.** The native Zend hook requires testing with actual PHP 8.5 Alpine binaries and the deployed nginx/PHP-FPM environment. Smoke tests do not cover database, OLT, SNMP, internal API, or web routes. If the native-loader tests or packaging checks fail, the workflow does not publish.
+nms:latest + nms:1.0.0
 
-OPcache is disabled pending compatibility testing. GitHub-hosted runners process plaintext source during build, and require appropriate restricted access; encoded-only Docker context protects distributed images, not the CI host. Use a dedicated trusted runner if this is unacceptable.
+
+2. Cara memicu production saat ini
+Setelah perubahan di LINNMS-Staging berhasil di-merge ke master:
+1. Buka LINNMS → Production Workflow.
+2. Klik Run workflow.
+3. Pilih branch main, isi versi v1.0.0, kemudian jalankan dengan publish=false untuk validasi.
+4. Setelah build dan pengujian deployment lulus, jalankan lagi dengan publish=true.
+3. Tetapi saya menyarankan alur yang lebih otomatis
+Untuk jangka panjang, lebih baik kamu cukup membuat tag rilis di LINNMS-Staging/master, bukan di LINNMS.
+
+Contoh:
+git switch master
+git pull origin master
+
+git tag v1.0.0
+git push origin v1.0.0
+
+
+Lalu sistem yang kita atur nantinya:
+- Tag staging-v1.0.0 di LINNMS-Staging → membuat image staging.
+- Tag v1.0.0 di LINNMS-Staging/master → otomatis memicu build production di LINNMS.
+- LINNMS mengambil source tepat dari commit tag tersebut, bukan dari master yang mungkin sudah berubah.
+- Setelah validasi berhasil, pipeline memublikasikan nms:1.0.0 dan nms:latest.
+Perlu dibedakan: mekanisme otomatis dari tag staging ke repository LINNMS ini belum diimplementasikan. Saat ini tag v1.0.0 di LINNMS-Staging tidak otomatis memicu production.
+4. Kabar baik: build production lengkap sudah lulus
+Saya juga sudah mengecek GitHub Actions production terbaru. Tahap filter, encoding, dan Docker build AMD64/ARM64 semuanya berhasil. Image belum dipublikasikan karena build tersebut merupakan validasi otomatis dengan push=false.
+
+Rekomendasi saya: gunakan satu pintu rilis, yaitu LINNMS-Staging/master. Untuk sementara jalankan production secara manual di LINNMS. Selanjutnya kita ubah agar cukup membuat tag vX.Y.Z di LINNMS-Staging, dan seluruh proses production berjalan otomatis di repository LINNMS, tanpa perlu membuat tag kedua.
