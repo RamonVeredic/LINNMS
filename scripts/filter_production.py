@@ -1,13 +1,12 @@
-"""Fail-closed extraction of LINNMS-Staging/master into a production-only tree."""
+"""Fail-closed extraction of LINNMS-Staging/master into a release-only bundle."""
 from __future__ import annotations
 import argparse
 import pathlib
 import re
 import shutil
 import sys
-RUNTIME = "config/app/runtime"
-FRONTEND = "config/www"
-CONFIG = "config/app/config"
+RELEASE_RUNTIME_DIRECTORY = "config/app/runtime"
+RELEASE_FRONTEND_DIRECTORY = "config/www"
 NGINX_FILES = {
     "nginx/nginx.conf", "nginx/resolver.conf", "nginx/ssl.conf",
     "nginx/worker_processes.conf", "nginx/php/php-local.ini",
@@ -54,24 +53,24 @@ def permitted(rel: pathlib.PurePosixPath) -> bool:
         return True
     if s == "linnms.init.d/50-linnms-public-init":
         return True
-    if s.startswith(RUNTIME + "/") and rel.suffix.lower() in RUNTIME_SUFFIXES:
+    if s.startswith(RELEASE_RUNTIME_DIRECTORY + "/") and rel.suffix.lower() in RUNTIME_SUFFIXES:
         return True
-    if s.startswith(FRONTEND + "/") and rel.suffix.lower() in WEB_SUFFIXES:
+    if s.startswith(RELEASE_FRONTEND_DIRECTORY + "/") and rel.suffix.lower() in WEB_SUFFIXES:
         return True
     return False
 
-def production_init(text: str) -> str:
+def release_init(text: str) -> str:
     """Remove staging's complete source-mount branch and its dormant setup logic."""
     start_marker = 'if [ "$SOURCE_MOUNTS" = "1" ]; then\n'
     start = text.find(start_marker)
     else_marker = '\nelse\n  CONFIG_TEMPLATE="$CONFIG_IMAGE"'
-    choice = text.find(else_marker, start)
+    release_branch_start = text.find(else_marker, start)
     end_marker = '\nfi\n\nif [ -L /config/nginx/log ]; then'
-    end = text.find(end_marker, choice)
-    if min(start, choice, end) < 0:
+    release_branch_end = text.find(end_marker, release_branch_start)
+    if start == -1 or release_branch_start == -1 or release_branch_end == -1:
         raise ValueError("Unknown init structure; refusing unsafe conversion")
-    prod = text[choice + len('\nelse\n'):end]
-    text = text[:start] + prod + text[end + len('\nfi\n'):]
+    release_branch = text[release_branch_start + len('\nelse\n'):release_branch_end]
+    text = text[:start] + release_branch + text[release_branch_end + len('\nfi\n'):]
     text = re.sub(r'^SOURCE_ROOT=.*\n|^SOURCE_SEED=.*\n|^SOURCE_MOUNTS=.*\n',
                   '', text, flags=re.MULTILINE)
     chown_block = ('if [ "$SOURCE_MOUNTS" = "1" ]; then\n'
@@ -100,27 +99,27 @@ def main() -> None:
     if dest.exists() or dest.is_relative_to(source) or source.is_relative_to(dest):
         raise SystemExit("Refusing existing or nested output tree")
     if any(not (source / item).is_file() for item in REQUIRED):
-        raise SystemExit("Missing mandatory LINNMS production components")
+        raise SystemExit("Missing required LINNMS release bundle components")
     dest.mkdir(parents=True, mode=0o700)
-    count = 0
+    release_file_count = 0
     for path in source.rglob("*"):
         rel = pathlib.PurePosixPath(path.relative_to(source).as_posix())
         if path.is_symlink():
             if permitted(rel):
-                raise SystemExit(f"Symlink in allowed production tree: {rel}")
+                raise SystemExit(f"Symlink in allowed release bundle: {rel}")
             continue
         if path.is_file() and permitted(rel):
             target = dest.joinpath(*rel.parts)
             target.parent.mkdir(parents=True, exist_ok=True)
             if rel.as_posix() == "linnms.init.d/50-linnms-public-init":
-                target.write_text(production_init(path.read_text(encoding="utf-8")), encoding="utf-8")
+                target.write_text(release_init(path.read_text(encoding="utf-8")), encoding="utf-8")
             else:
                 shutil.copyfile(path, target)
             if rel.parts[0] in {"linnms.init.d", "linnms.service.d"}:
                 target.chmod(0o755)
-            count += 1
-    print(f"Filtered {count} production files (no staging build files)")
-    assert count > 250, "Suspiciously small runtime, refusing build"
+            release_file_count += 1
+    print(f"Filtered {release_file_count} release files (no staging build files)")
+    assert release_file_count > 250, "Suspiciously small release bundle; refusing build"
 
 if __name__ == "__main__":
     main()
