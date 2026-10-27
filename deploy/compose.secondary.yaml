@@ -1,13 +1,11 @@
 
 name: linnms-secondary
-
 services:
   app:
     image: ghcr.io/ramonveredic/linnms:latest
     container_name: linnms-secondary
     hostname: linnms-secondary
     restart: unless-stopped
-
     environment:
       - PUID=1000
       - PGID=1000
@@ -16,7 +14,6 @@ services:
       - DB_NAME=linnms_appliance
       - DB_USER=root
       - DB_PASSWORD=
-
     ports:
       - target: 80
         published: "85"
@@ -24,7 +21,6 @@ services:
       - target: 443
         published: "4144"
         protocol: tcp
-
     volumes:
       - type: bind
         source: /DATA/AppData/linnms-secondary/state
@@ -32,11 +28,9 @@ services:
       - type: bind
         source: /DATA/AppData/linnms-secondary/run
         target: /run/mysqld
-
     depends_on:
       db:
         condition: service_healthy
-
   db:
     image: mariadb:11.4
     container_name: linnms-secondary-db
@@ -45,13 +39,11 @@ services:
     command:
       - --skip-networking
       - --socket=/run/mysqld/mysqld.sock
-
     environment:
       - MARIADB_DATABASE=linnms_appliance
       - MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1
       - MARIADB_AUTO_UPGRADE=1
       - TZ=Asia/Jakarta
-
     volumes:
       - type: bind
         source: /DATA/AppData/linnms-secondary/database
@@ -59,7 +51,6 @@ services:
       - type: bind
         source: /DATA/AppData/linnms-secondary/run
         target: /run/mysqld
-
     healthcheck:
       test:
         - CMD-SHELL
@@ -68,7 +59,6 @@ services:
       timeout: 5s
       retries: 30
       start_period: 10s
-
 x-casaos:
   architectures:
     - amd64

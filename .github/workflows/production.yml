@@ -1,5 +1,4 @@
-name: LINNMS Protected Production
-
+name: LINNMS
 on:
   push:
     tags:
@@ -8,19 +7,19 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Production release tag (e.g. v1.2.3)"
+        description: "Release tag (e.g. v1.2.3)"
         required: true
         type: string
       source_tag:
-        description: "Optional immutable source tag from LINNMS-Staging (e.g. v1.2.3)"
+        description: "Optional (e.g. v1.2.3)"
         required: false
         type: string
       source_sha:
-        description: "Expected commit SHA for source_tag (sent by staging dispatcher)"
+        description: ")"
         required: false
         type: string
       publish:
-        description: "Push both GHCR tags (latest and version) after successful build"
+        description: "successful build"
         required: true
         type: boolean
         default: false
@@ -37,23 +36,23 @@ jobs:
   production:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout production build recipes only
+      - name: Checkout Release build recipes only
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Verify LINNMS production tag belongs to main
+      - name: Verify LINNMS Release tag belongs to main
         if: ${{ github.ref_type == 'tag' }}
         shell: bash
         run: |
           set -euo pipefail
           if [[ ! "$GITHUB_REF_NAME" =~ ^[vV][0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Invalid production tag format: $GITHUB_REF_NAME" >&2
+            echo "Invalid Release tag format: $GITHUB_REF_NAME" >&2
             exit 1
           fi
           release_commit="$(git rev-parse --verify "${GITHUB_REF}^{commit}")"
           if ! git merge-base --is-ancestor "$release_commit" refs/remotes/origin/main; then
-            echo 'Production tag must point to a commit reachable from LINNMS/main' >&2
+            echo 'Release tag must point to a commit reachable from LINNMS/main' >&2
             exit 1
           fi
 
@@ -80,7 +79,7 @@ jobs:
               exit 1
             fi
             if [[ "$TAGGED_BUILD" == "true" && "$SOURCE_TAG" != "staging-$RELEASE_VERSION" ]]; then
-              echo 'Production tag must use matching staging test tag' >&2
+              echo 'Release tag must use matching staging test tag' >&2
               exit 1
             fi
           fi
@@ -93,12 +92,12 @@ jobs:
             exit 1
           fi
           if [[ "$PUBLISH" == "true" && -z "$SOURCE_TAG" && "$TAGGED_BUILD" != "true" ]]; then
-            echo 'Manual publishing requires an immutable staging source_tag' >&2
+            echo 'Manual publishing requires an immutable source_tag' >&2
             exit 1
           fi
           echo "version=${RELEASE_VERSION:1}" >> "$GITHUB_OUTPUT"
 
-      - name: Validate production filtering and plaintext rejection
+      - name: Validate Release filtering and plaintext rejection
         run: |
           set -euo pipefail
           python3 -m compileall -q scripts tests
@@ -125,9 +124,8 @@ jobs:
           git -c advice.detachedHead=false clone -q --depth 1 --branch master \
             "https://x-access-token:${READ_TOKEN}@github.com/RamonVeredic/LINNMS-Staging.git" "$work/staging"
           if [[ -n "$SOURCE_TAG" ]]; then
-            # Verify the tag resolves to the requested commit AND belongs to master.
-            # Never compile newer master files during a tagged release.
-            git -C "$work/staging" fetch -q --unshallow origin master
+          master.
+          git -C "$work/staging" fetch -q --unshallow origin master
             git -C "$work/staging" fetch -q origin "refs/tags/${SOURCE_TAG}:refs/tags/${SOURCE_TAG}"
             pinned_sha="$(git -C "$work/staging" rev-parse --verify "refs/tags/${SOURCE_TAG}^{commit}")"
             if [[ -n "$SOURCE_SHA" && "$pinned_sha" != "$SOURCE_SHA" ]]; then
@@ -149,8 +147,7 @@ jobs:
 
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
-
-      - name: Build and smoke-test native loader on AMD64/ARM64
+      - name: smoke-test loader on AMD64/ARM64
         run: |
           set -eu
           cd "$RUNNER_TEMP/linnms-protected/protection"
@@ -166,7 +163,7 @@ jobs:
           test "$(wc -c < "$work/release.key")" -eq 65
           chmod 600 "$work/release.key"
 
-      - name: Filter and encrypt all PHP sources off-context
+      - name: Filter PHP sources off-context
         run: |
           set -eu
           work="$RUNNER_TEMP/linnms-protected"

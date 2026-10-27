@@ -1,5 +1,4 @@
 name: linnms
-
 services:
   app:
     image: ${LINNMS_IMAGE:-ghcr.io/ramonveredic/linnms:latest}
@@ -47,7 +46,6 @@ services:
       timeout: 5s
       retries: 30
       start_period: 10s
-
 volumes:
   linnms-state:
   linnms-db:

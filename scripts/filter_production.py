@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Fail-closed extraction of LINNMS-Staging/master into a production-only tree."""
 from __future__ import annotations
 import argparse
@@ -6,8 +5,6 @@ import pathlib
 import re
 import shutil
 import sys
-
-# No docker/, .github/, docs, source-seed, scripts for staging, or repo metadata.
 RUNTIME = "config/app/runtime"
 FRONTEND = "config/www"
 CONFIG = "config/app/config"

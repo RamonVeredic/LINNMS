@@ -24,7 +24,7 @@ fi
 if [ -L /config/nginx/log ]; then
   echo hello
 fi
-# staging atau ke image production; hanya database.php
+# Image Releases; hanya database.php
 if [ "$SOURCE_MOUNTS" = "1" ]; then
   chown -R abc:users "$SOURCE_ROOT/config/www"
 fi

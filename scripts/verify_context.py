@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Reject any plaintext PHP or staging/development artifacts before Docker build."""
 from __future__ import annotations
 import pathlib
@@ -6,7 +5,7 @@ import sys
 
 root = pathlib.Path(sys.argv[1]).resolve(strict=True)
 if not (root / "bundle/config/www/index.php").is_file():
-    raise SystemExit("Production entrypoint missing")
+    raise SystemExit("entrypoint missing")
 if not (root / "protection/loader/linnms_loader.c").is_file():
     raise SystemExit("Native loader source missing")
 header = root / "protection/loader/linnms_auto_key.h"
@@ -17,11 +16,10 @@ deny = {".git", ".github", "docker", "tests", "tools", "source-seed", "doc",
 php_count = 0
 for file in root.rglob("*"):
     if file.is_symlink():
-        raise SystemExit(f"Symlink in build context: {file}")
+        raise SystemExit(f"build context: {file}")
     if not file.is_file():
         continue
     rel = file.relative_to(root)
-    # Dockerfile and loader source belong to the build context, not the final image.
     if rel.parts[0] not in {"bundle", "protection"} and rel.as_posix() != "Dockerfile":
         raise SystemExit(f"Unexpected build context item: {rel}")
     if rel.parts[0] == "protection" and rel.suffix not in {".c", ".h", ".m4"}:

@@ -1,5 +1,4 @@
 name: linnms
-
 services:
   app:
     image: ghcr.io/ramonveredic/linnms:latest
