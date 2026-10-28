@@ -8,8 +8,8 @@ Repository ini menyediakan **image LINNMS** dan contoh instalasinya untuk **Dock
 
 | Lingkungan | File | Penggunaan |
 | --- | --- | --- |
-| Docker Compose | [`docker-compose.yml`](docker-compose.yml) | Jalankan LINNMS dari terminal di server Linux. |
-| CasaOS | [`casaos-compose.yaml`](casaos-compose.yaml) | Impor konfigurasi ke CasaOS melalui *Custom Install*. |
+| Docker Compose | [`docker-compose.yml`](docker/docker-compose.yml) | Jalankan LINNMS dari terminal di server Linux. |
+| CasaOS | [`casaos-compose.yaml`](docker/casaos-compose.yaml) | Impor konfigurasi ke CasaOS melalui *Custom Install*. |
 
 ## Instalasi melalui Docker Compose
 
@@ -21,7 +21,7 @@ Repository ini menyediakan **image LINNMS** dan contoh instalasinya untuk **Dock
    cd LINNMS
    ```
 
-3. Periksa konfigurasi dan port di [`docker-compose.yml`](docker-compose.yml). Secara default file ini menggunakan `ghcr.io/ramonveredic/linnms:latest`. Untuk memakai tag rilis tertentu, buat file `.env` di root repository:
+3. Periksa konfigurasi dan port di [`docker-compose.yml`](docker/docker-compose.yml). Secara default file ini menggunakan `ghcr.io/ramonveredic/linnms:latest`. Untuk memakai tag rilis tertentu, buat file `.env` di root repository:
 
    ```dotenv
    LINNMS_IMAGE=ghcr.io/ramonveredic/linnms:1.0.0
@@ -32,10 +32,10 @@ Repository ini menyediakan **image LINNMS** dan contoh instalasinya untuk **Dock
 4. Validasi konfigurasi, ambil image, kemudian jalankan:
 
    ```bash
-   docker compose -f docker-compose.yml config
-   docker compose -f docker-compose.yml pull
-   docker compose -f docker-compose.yml up -d
-   docker compose -f docker-compose.yml ps
+   docker compose -f docker/docker-compose.yml config
+   docker compose -f docker/docker-compose.yml pull
+   docker compose -f docker/docker-compose.yml up -d
+   docker compose -f docker/docker-compose.yml ps
    ```
 
 5. Buka `http://IP-SERVER:84` dari browser, kemudian ikuti penyiapan awal pada aplikasi. Port HTTPS container diteruskan melalui `4143`; penggunaan HTTPS publik perlu konfigurasi sertifikat yang sesuai.
@@ -45,9 +45,9 @@ Jika registry meminta autentikasi, lakukan `docker login ghcr.io` menggunakan ak
 ### Periksa layanan dan log
 
 ```bash
-docker compose -f docker-compose.yml ps
-docker compose -f docker-compose.yml logs --tail=100 app
-docker compose -f docker-compose.yml logs --tail=100 db
+docker compose -f docker/docker-compose.yml ps
+docker compose -f docker/docker-compose.yml logs --tail=100 app
+docker compose -f docker/docker-compose.yml logs --tail=100 db
 ```
 
 Nama container utama pada contoh ini adalah `linnms` dan `linnms-db`. Docker Compose menggunakan named volume `linnms-state`, `linnms-db`, dan `linnms-run` untuk data persisten dan komunikasi database.
@@ -56,7 +56,7 @@ Nama container utama pada contoh ini adalah `linnms` dan `linnms-db`. Docker Com
 
 1. Buka antarmuka web CasaOS dan masuk ke **App Store**.
 2. Pilih **Custom Install** / **Install a customized app**, kemudian **Import**.
-3. Buka [`casaos-compose.yaml`](casaos-compose.yaml) dan salin seluruh isi YAML ke kolom impor. Tinjau pengaturan container, port, dan volume sebelum memasang.
+3. Buka [`casaos-compose.yaml`](docker/casaos-compose.yaml) dan salin seluruh isi YAML ke kolom impor. Tinjau pengaturan container, port, dan volume sebelum memasang.
 4. Pastikan direktori **`/DATA/AppData/linnms/`** dapat dibuat dan ditulisi oleh Docker.
 5. Selesaikan instalasi, lalu buka `http://IP-SERVER:84`.
 
@@ -73,9 +73,9 @@ CasaOS menggunakan image rilis `ghcr.io/ramonveredic/linnms:latest` pada contoh 
 Sebelum pembaruan, catat tag image yang digunakan dan **cadangkan data aplikasi serta database secara konsisten**. Pada Docker Compose, untuk mengambil image baru dan menjalankannya kembali:
 
 ```bash
-docker compose -f docker-compose.yml pull
-docker compose -f docker-compose.yml up -d
-docker compose -f docker-compose.yml ps
+docker compose -f docker/docker-compose.yml pull
+docker compose -f docker/docker-compose.yml up -d
+docker compose -f docker/docker-compose.yml ps
 ```
 
 Untuk CasaOS, perbarui image melalui pengaturan aplikasi dengan mempertahankan seluruh lokasi penyimpanan. Pastikan data yang dicadangkan dapat dipulihkan sebelum melakukan upgrade.

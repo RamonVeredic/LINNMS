@@ -35,6 +35,13 @@ class ReleaseSourceContractTest(unittest.TestCase):
         self.assertNotIn("ARG SOURCE_REVISION", DOCKERFILE)
         self.assertIn("ghcr.io/ramonveredic/linnms:latest", WORKFLOW)
 
+    def test_updated_paths(self):
+        self.assertIn("github.com/RamonVeredic/linnms-protect.git", WORKFLOW)
+        self.assertNotIn("LINNMS-protection.git", WORKFLOW)
+        self.assertIn("python3 scripts/release.py", WORKFLOW)
+        self.assertIn("python3 -m unittest discover -v -s tests -p '*.py'", WORKFLOW)
+        self.assertIn('cp docker/Dockerfile "$work/context/Dockerfile"', WORKFLOW)
+
     def test_checked_out_commit_and_pq_scope(self):
         self.assertIn('resolved_sha="$(git -C "$work/source" rev-parse HEAD)"', WORKFLOW)
         self.assertIn('echo "sha=$resolved_sha" >> "$GITHUB_OUTPUT"', WORKFLOW)

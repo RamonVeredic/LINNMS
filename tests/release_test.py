@@ -5,7 +5,7 @@ import tempfile
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-FILTER = ROOT / "scripts" / "filter_release.py"
+FILTER = ROOT / "scripts" / "release.py"
 VERIFY = ROOT / "scripts" / "verify_context.py"
 
 INIT = '''#!/usr/bin/with-contenv sh

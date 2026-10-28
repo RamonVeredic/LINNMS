@@ -8,8 +8,8 @@ if not (build_context / "bundle/config/www/index.php").is_file():
     raise SystemExit("entrypoint missing")
 if not (build_context / "pq/loader/linnms_loader.c").is_file():
     raise SystemExit("Loader source missing")
-header = build_context / "pq/loader/linnms_auto.h"
-if not header.is_file() or "#define LINNMS_EMBEDDED 1" not in header.read_text():
+header = build_context / "pq/loader/linnms_auto_key.h"
+if not header.is_file() or "#define LINNMS_EMBEDDED_KEY 1" not in header.read_text():
     raise SystemExit("Missing per-build embedded header")
 deny = {".git", ".github", "docker", "tests", "tools", "source-seed", "doc",
         "linnms-staging", "staging", "__pycache__"}
@@ -34,7 +34,7 @@ for file in build_context.rglob("*"):
             file_count += 1
             with file.open("rb") as source_php:
                 if source_php.read(4) != b"LNC1":
-                    raise SystemExit(f"{rel}")
+                    raise SystemExit(f"Plaintext PHP inside runtime/vendor: {rel}")
         if rel.name.startswith("Dockerfile") or rel.suffix.lower() in {".yml", ".yaml", ".sample"}:
             raise SystemExit(f"{rel}")
 if file_count < 20:

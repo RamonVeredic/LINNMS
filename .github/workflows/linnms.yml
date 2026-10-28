@@ -102,7 +102,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m compileall -q scripts tests
-          python3 -m unittest discover -v -s tests
+          python3 -m unittest discover -v -s tests -p '*.py'
 
       - name: Check source access
         env:
@@ -139,7 +139,7 @@ jobs:
           # Manual master releases do not require an SHA input.
           resolved_sha="$(git -C "$work/source" rev-parse HEAD)"
           git -c advice.detachedHead=false clone -q --depth 1 --branch main \
-            "https://x-access-token:${READ_TOKEN}@github.com/RamonVeredic/LINNMS-protection.git" "$work/pq"
+            "https://x-access-token:${READ_TOKEN}@github.com/RamonVeredic/linnms-protect.git" "$work/pq"
           pq_sha="$(git -C "$work/pq" rev-parse HEAD)"
           echo "sha=$resolved_sha" >> "$GITHUB_OUTPUT"
           echo "Source: LINNMS-Staging/${SOURCE_TAG:-master} commit $resolved_sha"
@@ -174,7 +174,7 @@ jobs:
           set -eu
           work="$RUNNER_TEMP/linnms"
           umask 077
-          python3 scripts/filter_release.py "$work/source" "$work/plain"
+          python3 scripts/release.py "$work/source" "$work/plain"
           docker run --rm --user "$(id -u):$(id -g)" \
             -v "$work:/work" php:8.5-cli-alpine sh -euc '
               find /work/plain/config/app/runtime/vendor -type f -name "*.php" -print0 |
