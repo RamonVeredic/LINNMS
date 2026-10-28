@@ -1,12 +1,12 @@
-"""Fail-closed extraction of LINNMS-Staging/master into a release-only bundle."""
+"""release-only bundle"""
 from __future__ import annotations
 import argparse
 import pathlib
 import re
 import shutil
 import sys
-RELEASE_RUNTIME_DIRECTORY = "config/app/runtime"
-RELEASE_FRONTEND_DIRECTORY = "config/www"
+RUNTIME_DIRECTORY = "config/app/runtime"
+FRONTEND_DIRECTORY = "config/www"
 NGINX_FILES = {
     "nginx/nginx.conf", "nginx/resolver.conf", "nginx/ssl.conf",
     "nginx/worker_processes.conf", "nginx/php/php-local.ini",
@@ -53,33 +53,32 @@ def permitted(rel: pathlib.PurePosixPath) -> bool:
         return True
     if s == "linnms.init.d/50-linnms-public-init":
         return True
-    if s.startswith(RELEASE_RUNTIME_DIRECTORY + "/") and rel.suffix.lower() in RUNTIME_SUFFIXES:
+    if s.startswith(RUNTIME_DIRECTORY + "/") and rel.suffix.lower() in RUNTIME_SUFFIXES:
         return True
-    if s.startswith(RELEASE_FRONTEND_DIRECTORY + "/") and rel.suffix.lower() in WEB_SUFFIXES:
+    if s.startswith(FRONTEND_DIRECTORY + "/") and rel.suffix.lower() in WEB_SUFFIXES:
         return True
     return False
 
-def release_init(text: str) -> str:
-    """Remove staging's complete source-mount branch and its dormant setup logic."""
+def init(text: str) -> str:
+    """Remove"""
     start_marker = 'if [ "$SOURCE_MOUNTS" = "1" ]; then\n'
     start = text.find(start_marker)
     else_marker = '\nelse\n  CONFIG_TEMPLATE="$CONFIG_IMAGE"'
-    release_branch_start = text.find(else_marker, start)
+    branch_start = text.find(else_marker, start)
     end_marker = '\nfi\n\nif [ -L /config/nginx/log ]; then'
-    release_branch_end = text.find(end_marker, release_branch_start)
-    if start == -1 or release_branch_start == -1 or release_branch_end == -1:
+    branch_end = text.find(end_marker, branch_start)
+    if start == -1 or branch_start == -1 or branch_end == -1:
         raise ValueError("Unknown init structure; refusing unsafe conversion")
-    release_branch = text[release_branch_start + len('\nelse\n'):release_branch_end]
-    text = text[:start] + release_branch + text[release_branch_end + len('\nfi\n'):]
+    branch = text[branch_start + len('\nelse\n'):branch_end]
+    text = text[:start] + branch + text[branch_end + len('\nfi\n'):]
     text = re.sub(r'^SOURCE_ROOT=.*\n|^SOURCE_SEED=.*\n|^SOURCE_MOUNTS=.*\n',
                   '', text, flags=re.MULTILINE)
     chown_block = ('if [ "$SOURCE_MOUNTS" = "1" ]; then\n'
                    '  chown -R abc:users "$SOURCE_ROOT/config/www"\n'
                    'fi\n\n')
     if text.count(chown_block) != 1:
-        raise ValueError("Cannot remove staging-only chmod block")
+        raise ValueError("remove block")
     text = text.replace(chown_block, '')
-    text = text.replace('staging atau ke image production;', 'image production;')
     rejected = ("SOURCE_MOUNTS", "SOURCE_ROOT", "SOURCE_SEED",
                 "source-seed", "Dockerfile.staging", "LINNMS_SOURCE_MOUNTS",
                 "staging", "/workspace/linnms-source")
@@ -99,27 +98,27 @@ def main() -> None:
     if dest.exists() or dest.is_relative_to(source) or source.is_relative_to(dest):
         raise SystemExit("Refusing existing or nested output tree")
     if any(not (source / item).is_file() for item in REQUIRED):
-        raise SystemExit("Missing required LINNMS release bundle components")
+        raise SystemExit("Missing required LINNMS bundle components")
     dest.mkdir(parents=True, mode=0o700)
-    release_file_count = 0
+    file_count = 0
     for path in source.rglob("*"):
         rel = pathlib.PurePosixPath(path.relative_to(source).as_posix())
         if path.is_symlink():
             if permitted(rel):
-                raise SystemExit(f"Symlink in allowed release bundle: {rel}")
+                raise SystemExit(f"Symlink in allowed bundle: {rel}")
             continue
         if path.is_file() and permitted(rel):
             target = dest.joinpath(*rel.parts)
             target.parent.mkdir(parents=True, exist_ok=True)
             if rel.as_posix() == "linnms.init.d/50-linnms-public-init":
-                target.write_text(release_init(path.read_text(encoding="utf-8")), encoding="utf-8")
+                target.write_text(init(path.read_text(encoding="utf-8")), encoding="utf-8")
             else:
                 shutil.copyfile(path, target)
             if rel.parts[0] in {"linnms.init.d", "linnms.service.d"}:
                 target.chmod(0o755)
-            release_file_count += 1
-    print(f"Filtered {release_file_count} release files (no staging build files)")
-    assert release_file_count > 250, "Suspiciously small release bundle; refusing build"
+            file_count += 1
+    print(f"Filtered {file_count}")
+    assert file_count > 250, " refusing build"
 
 if __name__ == "__main__":
     main()

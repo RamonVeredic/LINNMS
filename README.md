@@ -10,19 +10,6 @@ Repository ini menyediakan **image LINNMS** dan contoh instalasinya untuk **Dock
 | --- | --- | --- |
 | Docker Compose | [`docker-compose.yml`](docker-compose.yml) | Jalankan LINNMS dari terminal di server Linux. |
 | CasaOS | [`casaos-compose.yaml`](casaos-compose.yaml) | Impor konfigurasi ke CasaOS melalui *Custom Install*. |
-| Instalasi tambahan | [`deploy/compose.secondary.yaml`](deploy/compose.secondary.yaml) | Contoh instance kedua dengan port dan direktori data terpisah. |
-
-File yang sudah ada di [`deploy/`](deploy/) tetap dipertahankan. `docker-compose.yml` dan `casaos-compose.yaml` di root disediakan agar pengguna langsung menemukan konfigurasi instalasi. **Pilih salah satu metode untuk instance utama**; jangan menjalankan keduanya bersamaan pada host yang sama karena nama container dan portnya sama.
-
-## Persyaratan
-
-- Server Linux **amd64** atau **arm64**, dengan Docker Engine dan Docker Compose v2; untuk CasaOS gunakan server dengan CasaOS yang sudah berjalan.
-- Koneksi internet untuk mengambil image dari GHCR, atau image yang sudah tersedia secara lokal.
-- Port host **84/TCP** untuk HTTP dan **4143/TCP** untuk HTTPS, tidak sedang dipakai layanan lain.
-- Koneksi dari server LINNMS ke alamat manajemen perangkat. Untuk perangkat yang menggunakan SNMP, periksa routing, ACL, dan akses **UDP 161**.
-- Penyimpanan persisten untuk konfigurasi LINNMS dan database MariaDB.
-
-> **Catatan keamanan:** File Compose yang disediakan mengikuti konfigurasi instalasi LINNMS saat ini: MariaDB berjalan melalui Unix socket lokal tanpa akses TCP, tetapi **akun database `root` menggunakan kata sandi kosong**. Konfigurasi ini ditujukan untuk host yang terisolasi dan dikelola administrator. Sebelum mengekspos aplikasi ke jaringan tidak tepercaya, gunakan kredensial database yang kuat, batasi akses host, dan siapkan HTTPS/reverse proxy. Perubahan kata sandi pada database yang sudah berisi data memerlukan migrasi kredensial; jangan hanya mengganti variabel lingkungan lalu menjalankan ulang container.
 
 ## Instalasi melalui Docker Compose
 
@@ -94,23 +81,3 @@ docker compose -f docker-compose.yml ps
 Untuk CasaOS, perbarui image melalui pengaturan aplikasi dengan mempertahankan seluruh lokasi penyimpanan. Pastikan data yang dicadangkan dapat dipulihkan sebelum melakukan upgrade.
 
 **Jangan menjalankan `docker compose down -v` untuk update atau troubleshooting:** opsi `-v` menghapus named volume yang dapat memuat database dan konfigurasi penting.
-
-## Build LINNMS
-
-**Source aplikasi rilis berasal dari `RamonVeredic/LINNMS-Staging`, bukan dari isi repository LINNMS.** Repository ini menyediakan resep build, penyaringan file, dan konfigurasi instalasi. Image diberi label `org.opencontainers.image.revision` berisi commit SHA staging yang digunakan.
-
-Di [GitHub Actions → LINNMS](https://github.com/RamonVeredic/LINNMS/actions/workflows/linnms.yml), pilih **Run workflow** pada branch `main`:
-
-1. Untuk membangun sumber yang sudah digabungkan ke `LINNMS-Staging/master`, pilih `source_mode: master` dan isi nomor versi, misalnya `v1.3.2`.
-2. Untuk rilis dari commit tetap, pilih `source_mode: tag` dan isi `source_tag: vX.Y.Z` yang sudah masuk `LINNMS-Staging/master`. Tag `staging-vX.Y.Z` hanya dipakai untuk pengujian.
-3. Jalankan workflow. Tidak ada pilihan `publish`. Setelah semua tes dan build AMD64/ARM64 berhasil, workflow mengunggah **satu image** `ghcr.io/ramonveredic/linnms` dengan dua tag: `latest` dan nomor versi. Jika ada tahap gagal, image tidak dipublikasikan.
-
-Versi dan commit sumber dicatat otomatis melalui metadata OCI image, tanpa `build-args` atau input SHA. `master` menggunakan commit terbaru pada saat fetch; gunakan `source_mode: tag` untuk rilis dengan sumber tetap. Workflow lama pada tag LINNMS yang sudah dibuat tidak otomatis berubah. Untuk menggunakan alur terbaru, jalankan workflow pada branch `main`.
-
-## Referensi
-
-- [Compose untuk Docker](deploy/compose.yaml) — versi file instalasi dalam folder `deploy`.
-- [Compose untuk CasaOS](deploy/compose.casaos.yaml) — versi file instalasi dalam folder `deploy`.
-- [Compose instance kedua](deploy/compose.secondary.yaml) — opsi instance tambahan.
-
-- [Dockerfile](docker/Dockerfile) — definisi image LINNMS.
