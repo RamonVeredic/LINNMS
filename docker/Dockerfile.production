@@ -22,7 +22,7 @@ RUN apk add --no-cache \
 COPY --from=loader-build /build/loader/modules/linnms_loader.so /usr/lib/php85/modules/linnms_loader.so
 RUN printf '%s\n' \
       'extension=linnms_loader' \
-      'linnms_loader.roots=/opt/linnms/runtime,/opt/linnms/config,/opt/linnms/frontend' \
+      'linnms_loader.roots=/opt/linnms/runtime/vendor' \
       'opcache.enable=0' \
       'opcache.enable_cli=0' \
       > /etc/php85/conf.d/99-linnms-loader.ini \
@@ -40,8 +40,12 @@ COPY bundle/linnms.service.d/ /custom-services.d/
 RUN set -eu; \
     ! find /opt/linnms -name .github -o -name .git -o -name 'Dockerfile*' -o -name '*.sample' | grep .; \
     ! grep -E 'SOURCE_(MOUNTS|ROOT|SEED)|staging|source-seed' /custom-cont-init.d/50-linnms-public-init; \
-    find /opt/linnms -type f -name '*.php' -exec php -r \
-      'foreach(array_slice($argv,1) as $f) { $h=fopen($f,"rb"); $b=fread($h,4); fclose($h); if ($b!=="LNC1") {fwrite(STDERR, "Unencoded PHP: $f\n");exit(1);} }' \
+    find /opt/linnms/runtime/vendor -type f -name '*.php' -exec php -r \
+      'foreach(array_slice($argv,1) as $f) { $h=fopen($f,"rb"); $b=fread($h,4); fclose($h); if ($b!=="LNC1") {fwrite(STDERR, "Unencoded vendor PHP: $f\n");exit(1);} }' \
+      -- {} +; \
+    find /opt/linnms/runtime /opt/linnms/config /opt/linnms/frontend \
+      -type f -name '*.php' ! -path '/opt/linnms/runtime/vendor/*' -exec php -r \
+      'foreach(array_slice($argv,1) as $f) { $h=fopen($f,"rb"); $b=fread($h,4); fclose($h); if ($b==="LNC1") {fwrite(STDERR, "Unexpected encrypted application PHP: $f\n");exit(1);} }' \
       -- {} +; \
     test -f /opt/linnms/runtime/app/runtime.php; \
     test -f /opt/linnms/frontend/index.php; \

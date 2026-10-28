@@ -197,10 +197,15 @@ jobs:
           umask 077
           python3 scripts/filter_production.py "$work/staging" "$work/plain"
           docker run --rm --user "$(id -u):$(id -g)" \
+            -v "$work:/work" php:8.5-cli-alpine sh -euc '
+              find /work/plain/config -type f -name "*.php" -print0 |
+              xargs -0 -r -n 1 php -l >/dev/null
+            '
+          docker run --rm --user "$(id -u):$(id -g)" \
             -v "$work:/work" \
             -e LINNMS_PROTECTION_KEY_FILE=/work/release.key \
             php:8.5-cli-alpine php /work/protection/encoder/encode.php \
-            /work/plain /work/encoded
+            /work/plain /work/encoded config/app/runtime/vendor
           rm -rf "$work/plain"
           mkdir -p "$work/context/bundle" "$work/context/protection"
           cp -a "$work/encoded/." "$work/context/bundle/"

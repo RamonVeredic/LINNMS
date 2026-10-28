@@ -2,7 +2,7 @@
 
 **LINNMS** adalah *Network Management System* untuk membantu pemantauan dan pengelolaan informasi perangkat jaringan, termasuk OLT dan ONU.
 
-Repository ini menyediakan **image LINNMS Production** dan contoh instalasinya untuk **Docker Compose** maupun **CasaOS**. Source aplikasi yang dilindungi tidak disertakan di repository ini. Image production tersedia melalui `ghcr.io/ramonveredic/linnms`.
+Repository ini menyediakan **image LINNMS Production** dan contoh instalasinya untuk **Docker Compose** maupun **CasaOS**. Source aplikasi tidak disertakan di repository ini. Pada image production, **hanya PHP di `runtime/vendor/` yang terenkripsi**; PHP aplikasi, halaman web, dan konfigurasi lain tetap plaintext. Image production tersedia melalui `ghcr.io/ramonveredic/linnms`.
 
 ## Pilih cara instalasi
 

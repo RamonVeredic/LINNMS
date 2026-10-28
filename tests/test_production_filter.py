@@ -52,6 +52,10 @@ class ProductionFilterTest(unittest.TestCase):
         self._write(".github/workflows/build-staging.yml", "on: push")
         self._write("doc/notes.md", "for development only")
         self._write("linnms.service.d/linnms-reader-1", "#!/bin/sh\necho work")
+        self._write("linnms.service.d/linnms-sampler-1", "#!/bin/sh\necho sampler")
+        self._write("config/www/assets/pages/dashboard/assets.json", '{"styles":[],"scripts":[]}')
+        for i in range(25):
+            self._write(f"config/app/runtime/vendor/driver/example{i}.php", "<?php echo 1;")
         for i in range(255):
             self._write(f"config/app/runtime/app/example{i}.php", "<?php echo 1;")
 
@@ -72,6 +76,8 @@ class ProductionFilterTest(unittest.TestCase):
         self.assertIn('CONFIG_TEMPLATE="$CONFIG_IMAGE"', init)
         self.assertIn("production-ready", init)
         self.assertTrue((self.output / "config/app/runtime/app/example1.php").exists())
+        self.assertTrue((self.output / "config/www/assets/pages/dashboard/assets.json").exists())
+        self.assertTrue((self.output / "linnms.service.d/linnms-sampler-1").exists())
 
     def test_auditor_rejects_plaintext(self):
         subprocess.run([sys.executable, str(FILTER), str(self.stage), str(self.output)],
@@ -84,14 +90,22 @@ class ProductionFilterTest(unittest.TestCase):
         (context / "Dockerfile").write_text("FROM scratch")
         import shutil
         shutil.copytree(self.output, context / "bundle", dirs_exist_ok=True)
-        for php in (context / "bundle").rglob("*.php"):
+        for php in (context / "bundle/config/app/runtime/vendor").rglob("*.php"):
             php.write_bytes(b"LNC1" + bytes(64))
         subprocess.run([sys.executable, str(VERIFY), str(context)], check=True)
-        (context / "bundle/config/www/index.php").write_text("<?php source")
+        unprotected = context / "bundle/config/www/index.php"
+        unprotected.write_bytes(b"LNC1" + bytes(64))
         result = subprocess.run([sys.executable, str(VERIFY), str(context)],
                                 capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Plaintext", result.stderr + result.stdout)
+        self.assertIn("Unexpected encrypted PHP outside runtime/vendor", result.stderr + result.stdout)
+        unprotected.write_text("<?php echo 1;")
+        protected = context / "bundle/config/app/runtime/vendor/driver/example1.php"
+        protected.write_text("<?php echo 1;")
+        result = subprocess.run([sys.executable, str(VERIFY), str(context)],
+                                capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Plaintext PHP inside protected runtime/vendor", result.stderr + result.stdout)
 
 if __name__ == "__main__":
     unittest.main()
