@@ -9,13 +9,9 @@ RUN cd /build/loader \
     && test -s linnms_auto_key.h
 
 FROM lscr.io/linuxserver/nginx:1.30.4
-ARG VERSION=dev
-ARG SOURCE_REVISION=unknown
 LABEL org.opencontainers.image.title="LINNMS" \
-      org.opencontainers.image.description="LINNMS release image" \
-      org.opencontainers.image.source="https://github.com/RamonVeredic/LINNMS" \
-      org.opencontainers.image.version="$VERSION" \
-      org.opencontainers.image.revision="$SOURCE_REVISION"
+      org.opencontainers.image.description="LINNMS" \
+      org.opencontainers.image.source="https://github.com/RamonVeredic/LINNMS"
 
 RUN apk add --no-cache \
       inetutils-telnet net-snmp-tools php85-pdo_mysql php85-snmp php85-sodium libsodium

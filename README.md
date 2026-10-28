@@ -2,7 +2,7 @@
 
 **LINNMS** adalah *Network Management System* untuk membantu pemantauan dan pengelolaan informasi perangkat jaringan, termasuk OLT dan ONU.
 
-Repository ini menyediakan **image LINNMS Release** dan contoh instalasinya untuk **Docker Compose** maupun **CasaOS**. Source aplikasi tidak disertakan di repository ini. Pada image rilis, **hanya PHP di `runtime/vendor/` yang terenkripsi dan diperiksa sebagai payload PQ**. PHP aplikasi, halaman web, dan konfigurasi lain disalin apa adanya. Pemeriksaan sintaks PHP sebelum enkripsi hanya dijalankan pada `runtime/vendor/`. Image rilis tersedia melalui `ghcr.io/ramonveredic/linnms`.
+Repository ini menyediakan **image LINNMS** dan contoh instalasinya untuk **Docker Compose** maupun **CasaOS**. Source aplikasi tidak disertakan di repository ini. Pada image rilis, **hanya PHP di `runtime/vendor/` yang terenkripsi dan diperiksa sebagai payload PQ**. PHP aplikasi, halaman web, dan konfigurasi lain disalin apa adanya. Pemeriksaan sintaks PHP sebelum enkripsi hanya dijalankan pada `runtime/vendor/`. Image rilis tersedia melalui `ghcr.io/ramonveredic/linnms`.
 
 ## Pilih cara instalasi
 
@@ -95,17 +95,17 @@ Untuk CasaOS, perbarui image melalui pengaturan aplikasi dengan mempertahankan s
 
 **Jangan menjalankan `docker compose down -v` untuk update atau troubleshooting:** opsi `-v` menghapus named volume yang dapat memuat database dan konfigurasi penting.
 
-## Build rilis dari master hasil merge
+## Build LINNMS
 
 **Source aplikasi rilis berasal dari `RamonVeredic/LINNMS-Staging`, bukan dari isi repository LINNMS.** Repository ini menyediakan resep build, penyaringan file, dan konfigurasi instalasi. Image diberi label `org.opencontainers.image.revision` berisi commit SHA staging yang digunakan.
 
-Di [GitHub Actions → LINNMS Release](https://github.com/RamonVeredic/LINNMS/actions/workflows/release.yml), pilih **Run workflow** pada branch `main`:
+Di [GitHub Actions → LINNMS](https://github.com/RamonVeredic/LINNMS/actions/workflows/linnms.yml), pilih **Run workflow** pada branch `main`:
 
-1. Untuk memeriksa kode terbaru, pilih `source_mode: master` dan `publish: false`. Workflow akan mengambil commit terbaru `LINNMS-Staging/master` saat proses fetch berlangsung, lalu mencatat SHA di log dan ringkasan Actions. Build ini **tidak** mendorong image ke registry.
-2. Untuk menerbitkan kode `master` secara manual, gunakan `source_mode: master`, tentukan **versi rilis baru**, lalu aktifkan `publish: true`. Tidak perlu mengisi commit SHA. Workflow mengambil snapshot `LINNMS-Staging/master` saat proses fetch dan otomatis mencatat SHA hasil checkout di log, ringkasan Actions, dan metadata image.
-3. Untuk rilis yang dapat diulang, pilih `source_mode: tag` dan isi `source_tag` dengan **tag rilis hasil merge ke `LINNMS-Staging/master`**, misalnya `v1.3.0`. Tag `staging-v*` hanya untuk pengujian dan tidak boleh dipakai sebagai sumber rilis. Saat tag `v1.3.0` dibuat di repository LINNMS, workflow otomatis mengambil **tag `v1.3.0` dari LINNMS-Staging**, bukan `staging-v1.3.0`. Pipeline memastikan commit tag sumber dapat dijangkau dari `master`.
+1. Untuk membangun sumber yang sudah digabungkan ke `LINNMS-Staging/master`, pilih `source_mode: master` dan isi nomor versi, misalnya `v1.3.2`.
+2. Untuk rilis dari commit tetap, pilih `source_mode: tag` dan isi `source_tag: vX.Y.Z` yang sudah masuk `LINNMS-Staging/master`. Tag `staging-vX.Y.Z` hanya dipakai untuk pengujian.
+3. Jalankan workflow. Tidak ada pilihan `publish`. Setelah semua tes dan build AMD64/ARM64 berhasil, workflow mengunggah **satu image** `ghcr.io/ramonveredic/linnms` dengan dua tag: `latest` dan nomor versi. Jika ada tahap gagal, image tidak dipublikasikan.
 
-**Penting:** Branch `master` dapat berubah setelah merge: build manual dari `master` mengambil HEAD pada saat fetch, bukan commit tetap yang ditentukan oleh nomor versi. Untuk rilis yang benar-benar dapat diulang, gunakan `source_mode: tag`. Hindari menerbitkan ulang tag image untuk versi yang sudah dipakai pengguna. Tag rilis `vX.Y.Z` pada LINNMS-Staging harus dibuat dari commit yang sudah masuk `master`; contoh `v1.3.0` menunjuk ke Merge #17 (`505ab32`). Tag pengujian `staging-vX.Y.Z` tidak digunakan untuk rilis. Menjalankan ulang workflow dari tag LINNMS lama memakai versi file workflow pada commit tag tersebut, bukan perubahan terbaru di `main`. Jika tag LINNMS sudah ada, jalankan **workflow_dispatch** dari `main` dengan `source_mode: tag`, `source_tag: vX.Y.Z`, dan `publish: false` dahulu. Jangan memindahkan tag yang sudah terbit; perbarui versi atau jalankan rilis manual sesuai prosedur. Selalu uji sebelum memublikasikan perubahan.
+Versi dan commit sumber dicatat otomatis melalui metadata OCI image, tanpa `build-args` atau input SHA. `master` menggunakan commit terbaru pada saat fetch; gunakan `source_mode: tag` untuk rilis dengan sumber tetap. Workflow lama pada tag LINNMS yang sudah dibuat tidak otomatis berubah. Untuk menggunakan alur terbaru, jalankan workflow pada branch `main`.
 
 ## Referensi
 
@@ -113,4 +113,4 @@ Di [GitHub Actions → LINNMS Release](https://github.com/RamonVeredic/LINNMS/ac
 - [Compose untuk CasaOS](deploy/compose.casaos.yaml) — versi file instalasi dalam folder `deploy`.
 - [Compose instance kedua](deploy/compose.secondary.yaml) — opsi instance tambahan.
 
-- [Dockerfile release](docker/Dockerfile.release) — definisi image rilis.
+- [Dockerfile](Dockerfile) — definisi image LINNMS.

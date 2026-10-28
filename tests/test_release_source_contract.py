@@ -1,10 +1,10 @@
-"""Guard production release resolution against staging test tags."""
+"""Check LINNMS workflow source selection and publishing rules."""
 from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-WORKFLOW = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
-DOCKERFILE = (ROOT / "docker/Dockerfile.release").read_text(encoding="utf-8")
+WORKFLOW = (ROOT / ".github/workflows/linnms.yml").read_text(encoding="utf-8")
+DOCKERFILE = (ROOT / "Dockerfile").read_text(encoding="utf-8")
 
 class ReleaseSourceContractTest(unittest.TestCase):
     def test_auto_tag_resolves_promoted_release_tag(self):
@@ -23,16 +23,29 @@ class ReleaseSourceContractTest(unittest.TestCase):
         self.assertNotIn('requires source_sha', WORKFLOW)
         self.assertNotIn('resolved_sha" != "$SOURCE_SHA"', WORKFLOW)
 
+    def test_auto_publish_single_image(self):
+        self.assertEqual(WORKFLOW.count("uses: docker/build-push-action@v6"), 1)
+        self.assertIn("push: true", WORKFLOW)
+        self.assertNotIn("push: false", WORKFLOW)
+        self.assertNotIn("inputs.publish", WORKFLOW)
+        self.assertNotIn("      publish:", WORKFLOW)
+        self.assertNotIn("-candidate", WORKFLOW)
+        self.assertNotIn("build-args:", WORKFLOW)
+        self.assertNotIn("ARG VERSION", DOCKERFILE)
+        self.assertNotIn("ARG SOURCE_REVISION", DOCKERFILE)
+        self.assertIn("ghcr.io/ramonveredic/linnms:latest", WORKFLOW)
+
     def test_checked_out_commit_and_pq_scope(self):
         self.assertIn('resolved_sha="$(git -C "$work/source" rev-parse HEAD)"', WORKFLOW)
         self.assertIn('echo "sha=$resolved_sha" >> "$GITHUB_OUTPUT"', WORKFLOW)
-        self.assertIn("SOURCE_REVISION=${{ steps.source.outputs.sha }}", WORKFLOW)
+        self.assertIn("org.opencontainers.image.version=${{ steps.release.outputs.version }}", WORKFLOW)
+        self.assertIn("org.opencontainers.image.revision=${{ steps.source.outputs.sha }}", WORKFLOW)
         self.assertIn("LINNMS_PQ_KEY_FILE=/work/pq.key", WORKFLOW)
         self.assertIn("find /work/plain/config/app/runtime/vendor", WORKFLOW)
         self.assertNotIn("find /work/plain/config -type f", WORKFLOW)
-        self.assertIn("docker/Dockerfile.release", WORKFLOW)
-        self.assertIn('cd "$RUNNER_TEMP/linnms-release/pq"', WORKFLOW)
-        self.assertNotIn('linnms-release/protection', WORKFLOW)
+        self.assertIn('cp Dockerfile "$work/context/Dockerfile"', WORKFLOW)
+        self.assertIn('cd "$RUNNER_TEMP/linnms/pq"', WORKFLOW)
+        self.assertNotIn('linnms/protection', WORKFLOW)
         self.assertIn('"$work/context/pq"', WORKFLOW)
         self.assertIn("find /opt/linnms/runtime/vendor -type f", DOCKERFILE)
         self.assertNotIn("Unexpected encrypted application PHP", DOCKERFILE)
