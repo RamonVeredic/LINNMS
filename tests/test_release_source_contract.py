@@ -4,7 +4,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = (ROOT / ".github/workflows/linnms.yml").read_text(encoding="utf-8")
-DOCKERFILE = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+DOCKERFILE = (ROOT / "docker/Dockerfile").read_text(encoding="utf-8")
 
 class ReleaseSourceContractTest(unittest.TestCase):
     def test_auto_tag_resolves_promoted_release_tag(self):
@@ -43,7 +43,7 @@ class ReleaseSourceContractTest(unittest.TestCase):
         self.assertIn("LINNMS_PQ_KEY_FILE=/work/pq.key", WORKFLOW)
         self.assertIn("find /work/plain/config/app/runtime/vendor", WORKFLOW)
         self.assertNotIn("find /work/plain/config -type f", WORKFLOW)
-        self.assertIn('cp Dockerfile "$work/context/Dockerfile"', WORKFLOW)
+        self.assertIn('cp docker/Dockerfile "$work/context/Dockerfile"', WORKFLOW)
         self.assertIn('cd "$RUNNER_TEMP/linnms/pq"', WORKFLOW)
         self.assertNotIn('linnms/protection', WORKFLOW)
         self.assertIn('"$work/context/pq"', WORKFLOW)

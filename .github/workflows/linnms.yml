@@ -193,7 +193,7 @@ jobs:
             -v "$work:/work" \
             php:8.5-cli-alpine php /work/pq/encoder/generate_header.php \
             /work/pq.key /work/context/pq/loader/linnms_auto_key.h
-          cp Dockerfile "$work/context/Dockerfile"
+          cp docker/Dockerfile "$work/context/Dockerfile"
           python3 scripts/verify_context.py "$work/context"
           rm -f "$work/pq.key"
           rm -rf "$work/encoded"

@@ -113,4 +113,4 @@ Versi dan commit sumber dicatat otomatis melalui metadata OCI image, tanpa `buil
 - [Compose untuk CasaOS](deploy/compose.casaos.yaml) — versi file instalasi dalam folder `deploy`.
 - [Compose instance kedua](deploy/compose.secondary.yaml) — opsi instance tambahan.
 
-- [Dockerfile](Dockerfile) — definisi image LINNMS.
+- [Dockerfile](docker/Dockerfile) — definisi image LINNMS.
