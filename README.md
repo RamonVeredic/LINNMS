@@ -2,7 +2,7 @@
 
 **LINNMS** adalah *Network Management System* untuk membantu pemantauan dan pengelolaan informasi perangkat jaringan, termasuk OLT dan ONU.
 
-Repository ini menyediakan **image LINNMS** dan contoh instalasinya untuk **Docker Compose** maupun **CasaOS**. Source aplikasi tidak disertakan di repository ini. Pada image rilis, **hanya PHP di `runtime/vendor/` yang terenkripsi dan diperiksa sebagai payload PQ**. PHP aplikasi, halaman web, dan konfigurasi lain disalin apa adanya. Pemeriksaan sintaks PHP sebelum enkripsi hanya dijalankan pada `runtime/vendor/`. Image rilis tersedia melalui `ghcr.io/ramonveredic/linnms`.
+Repository ini menyediakan **image LINNMS** dan contoh instalasinya untuk **Docker Compose** maupun **CasaOS**. Kode aplikasi yang telah difilter disinkronkan dari branch sumber; direktori bernama `vendor` tidak disertakan. Pada image rilis, **hanya PHP di `runtime/vendor/` yang terenkripsi dan diperiksa sebagai payload PQ**. PHP aplikasi, halaman web, dan konfigurasi lain disalin apa adanya. Pemeriksaan sintaks PHP sebelum enkripsi hanya dijalankan pada `runtime/vendor/`. Image rilis tersedia melalui `ghcr.io/ramonveredic/linnms`.
 
 ## Pilih cara instalasi
 
@@ -81,3 +81,9 @@ docker compose -f docker/docker-compose.yml ps
 Untuk CasaOS, perbarui image melalui pengaturan aplikasi dengan mempertahankan seluruh lokasi penyimpanan. Pastikan data yang dicadangkan dapat dipulihkan sebelum melakukan upgrade.
 
 **Jangan menjalankan `docker compose down -v` untuk update atau troubleshooting:** opsi `-v` menghapus named volume yang dapat memuat database dan konfigurasi penting.
+
+## Sinkronisasi source
+
+Workflow [LINNMS Sync](.github/workflows/sync.yml) memperbarui kode aplikasi dari `LINNMS-Staging/master` secara otomatis setiap enam jam dan bisa dijalankan manual dari GitHub Actions. Sinkronisasi hanya membuat commit saat ada perubahan. Semua direktori `vendor` dikecualikan, termasuk `config/app/runtime/vendor` dan `config/www/assets/vendor`; file build, workflow, skrip, tes, dan README pada repositori ini tidak ditimpa.
+
+Source aplikasi di luar `vendor` menjadi **publik**. Pastikan kode di branch sumber tidak menyimpan kredensial atau informasi rahasia. Pengambilan kode menggunakan secret `LINNMS_READ_TOKEN` yang sudah dipakai oleh workflow build; publikasi commit memerlukan izin `contents: write` untuk GitHub Actions. Build image tetap menggunakan sumber privat secara terpisah, sehingga vendor yang dikecualikan dari repositori publik tetap tersedia untuk proses build.
