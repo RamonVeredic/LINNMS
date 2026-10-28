@@ -95,7 +95,7 @@ Untuk CasaOS, perbarui image melalui pengaturan aplikasi dengan mempertahankan s
 
 **Jangan menjalankan `docker compose down -v` untuk update atau troubleshooting:** opsi `-v` menghapus named volume yang dapat memuat database dan konfigurasi penting.
 
-## Build production dari staging terbaru
+## Build production dari master hasil merge
 
 **Source aplikasi production berasal dari `RamonVeredic/LINNMS-Staging`, bukan dari isi repository LINNMS.** Repository ini menyediakan resep build, penyaringan file, dan konfigurasi instalasi. Image diberi label `org.opencontainers.image.revision` berisi commit SHA staging yang digunakan.
 
@@ -103,9 +103,9 @@ Di [GitHub Actions → LINNMS](https://github.com/RamonVeredic/LINNMS/actions/wo
 
 1. Untuk memeriksa kode terbaru, pilih `source_mode: master` dan `publish: false`. Workflow akan mengambil commit terbaru `LINNMS-Staging/master` saat proses fetch berlangsung, lalu mencatat SHA di log dan ringkasan Actions. Build ini **tidak** mendorong image ke registry.
 2. Untuk menerbitkan kode `master` secara manual, gunakan `source_mode: master`, isi `source_sha` dengan SHA lengkap 40 karakter yang sudah diperiksa, tetapkan versi baru, lalu aktifkan `publish: true`. Pipeline menolak penerbitan apabila commit `master` saat fetch berbeda dari `source_sha`.
-3. Untuk rilis yang dapat diulang, pilih `source_mode: tag` dan isi `source_tag`, misalnya `staging-v1.2.0`; versi production harus cocok. Jika memakai trigger tag `v1.2.0` di repository LINNMS, sumber otomatis dipatok ke `staging-v1.2.0` agar tidak berubah diam-diam.
+3. Untuk rilis yang dapat diulang, pilih `source_mode: tag` dan isi `source_tag` dengan **tag rilis hasil merge ke `LINNMS-Staging/master`**, misalnya `v1.3.0`. Tag `staging-v*` hanya untuk pengujian dan tidak boleh dipakai sebagai sumber production. Saat tag `v1.3.0` dibuat di repository LINNMS, workflow otomatis mengambil **tag `v1.3.0` dari LINNMS-Staging**, bukan `staging-v1.3.0`. Pipeline memastikan commit tag sumber dapat dijangkau dari `master`.
 
-**Penting:** Menjalankan ulang rilis dengan tag staging lama tidak mengambil perubahan terbaru di `master`. Gunakan versi/tag staging baru atau build manual dari `master` dengan SHA yang sudah ditentukan. Selalu jalankan pengujian sebelum memublikasikan perubahan untuk perangkat operasional.
+**Penting:** Tag rilis `vX.Y.Z` pada LINNMS-Staging harus dibuat dari commit yang sudah masuk `master`; contoh `v1.3.0` menunjuk ke Merge #17 (`505ab32`). Tag pengujian `staging-vX.Y.Z` tidak digunakan untuk production. Menjalankan ulang workflow dari tag LINNMS lama memakai versi file workflow pada commit tag tersebut, bukan perubahan terbaru di `main`. Jika tag LINNMS sudah ada, jalankan **workflow_dispatch** dari `main` dengan `source_mode: tag`, `source_tag: vX.Y.Z`, dan `publish: false` dahulu. Jangan memindahkan tag yang sudah terbit; perbarui versi atau jalankan rilis manual sesuai prosedur. Selalu uji sebelum memublikasikan perubahan.
 
 ## Referensi
 
