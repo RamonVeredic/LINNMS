@@ -81,11 +81,3 @@ docker compose -f docker/docker-compose.yml ps
 Untuk CasaOS, perbarui image melalui pengaturan aplikasi dengan mempertahankan seluruh lokasi penyimpanan. Pastikan data yang dicadangkan dapat dipulihkan sebelum melakukan upgrade.
 
 **Jangan menjalankan `docker compose down -v` untuk update atau troubleshooting:** opsi `-v` menghapus named volume yang dapat memuat database dan konfigurasi penting.
-
-## Sinkronisasi source
-
-Setiap commit ke `LINNMS-Staging/master` mengirim pemicu ke workflow [LINNMS Sync](.github/workflows/sync.yml) pada repositori ini. Sinkronisasi juga bisa dijalankan secara manual melalui GitHub Actions. Tidak ada jadwal enam jam. Riwayat sinkronisasi tercatat di Actions repositori publik ini.
-
-Hanya file aplikasi dan konfigurasi yang diizinkan yang disalin. Seluruh direktori `vendor` serta dokumentasi, README, dan file build milik repositori ini tidak ikut ditimpa. Commit hanya dibuat jika hasil sinkronisasi berubah; judulnya mengikuti commit sumber dan SHA sumber dicatat dalam isi commit.
-
-Source di luar `vendor` menjadi **publik**. Pastikan tidak ada rahasia atau kredensial dalam source. Workflow pemicu di Staging menggunakan secret `LINNMS_READ_TOKEN` untuk mengirim permintaan sinkronisasi ke `LINNMS`. Nama secret sama di kedua repositori, tetapi harus terpasang secara terpisah: secret yang sudah terpasang di `LINNMS` tidak otomatis tersedia di `LINNMS-Staging`. Gunakan token yang sama, dengan izin menulis ke `LINNMS`, tanpa membuat token baru. Workflow publik juga menggunakan `LINNMS_READ_TOKEN` untuk membaca Staging; nilainya harus tetap privat. GitHub mencatat run pemicu di Staging dan run sinkronisasi di LINNMS.
