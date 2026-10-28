@@ -37,6 +37,9 @@ class ReleaseSourceContractTest(unittest.TestCase):
 
     def test_updated_paths(self):
         self.assertIn("github.com/RamonVeredic/linnms-protect.git", WORKFLOW)
+        self.assertIn("docker buildx build --platform linux/amd64 -f docker/Dockerfile .", WORKFLOW)
+        self.assertIn("docker buildx build --platform linux/arm64 -f docker/Dockerfile .", WORKFLOW)
+        self.assertNotIn("Dockerfile.smoke", WORKFLOW)
         self.assertNotIn("LINNMS-protection.git", WORKFLOW)
         self.assertIn("python3 scripts/release.py", WORKFLOW)
         self.assertIn("python3 -m unittest discover -v -s tests -p '*.py'", WORKFLOW)
