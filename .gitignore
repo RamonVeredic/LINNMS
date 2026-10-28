@@ -3,7 +3,7 @@
 /bundle/
 /context/
 /staging/
-/protection/
+/pq/
 /*.key
 *.so
 *.lnc
@@ -12,3 +12,7 @@
 .env
 .env.*
 !.env.example
+
+# Generated Python test artifacts
+__pycache__/
+*.py[cod]
