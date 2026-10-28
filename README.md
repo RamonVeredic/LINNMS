@@ -112,8 +112,3 @@ Di [GitHub Actions → LINNMS](https://github.com/RamonVeredic/LINNMS/actions/wo
 - [Compose untuk Docker](deploy/compose.yaml) — versi file instalasi dalam folder `deploy`.
 - [Compose untuk CasaOS](deploy/compose.casaos.yaml) — versi file instalasi dalam folder `deploy`.
 - [Compose instance kedua](deploy/compose.secondary.yaml) — opsi instance tambahan.
-- [Dockerfile production](docker/Dockerfile.production) — resep pembuatan image terenkripsi.
-- [LINNMS-Staging](https://github.com/RamonVeredic/LINNMS-Staging) — repository pengembangan.
-- [LINNMS-protection](https://github.com/RamonVeredic/LINNMS-protection) — encoder dan native loader.
-
-> File Compose di root adalah salinan dari konfigurasi `deploy/` saat dibuat. Jika mengubah port, image, volume, atau layanan, jaga kedua salinan tetap sinkron. Image production dibangun melalui workflow rilis, bukan dengan menjalankan Dockerfile production langsung tanpa konteks build terlindungi.
