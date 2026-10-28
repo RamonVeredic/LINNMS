@@ -29,7 +29,7 @@ if [ "$SOURCE_MOUNTS" = "1" ]; then
   chown -R abc:users "$SOURCE_ROOT/config/www"
 fi
 
-echo production-ready
+echo release-ready
 '''
 
 class ReleaseFilterTest(unittest.TestCase):
@@ -74,7 +74,7 @@ class ReleaseFilterTest(unittest.TestCase):
         self.assertNotIn("SOURCE_MOUNTS", init)
         self.assertNotIn("staging", init)
         self.assertIn('CONFIG_TEMPLATE="$CONFIG_IMAGE"', init)
-        self.assertIn("production-ready", init)
+        self.assertIn("release-ready", init)
         self.assertTrue((self.output / "config/app/runtime/app/example1.php").exists())
         self.assertTrue((self.output / "config/www/assets/pages/dashboard/assets.json").exists())
         self.assertTrue((self.output / "linnms.service.d/linnms-sampler-1").exists())

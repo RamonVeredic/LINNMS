@@ -88,10 +88,10 @@ jobs:
             exit 1
           fi
           if [[ -n "$SOURCE_TAG" ]]; then
-            # Production tags use the promoted vX.Y.Z ref, never a staging-vX.Y.Z test ref.
+            # Release tags use the promoted vX.Y.Z ref, never a staging-vX.Y.Z test ref.
             if [[ ! "$SOURCE_TAG" =~ ^[vV][0-9]+\.[0-9]+\.[0-9]+$ ]] ||
                [[ "${SOURCE_TAG:1}" != "${RELEASE_VERSION:1}" ]]; then
-              echo 'Source must be a matching production vX.Y.Z tag from LINNMS-Staging/master' >&2
+              echo 'Source must be a matching release vX.Y.Z tag from LINNMS-Staging/master' >&2
               exit 1
             fi
             if [[ "$TAGGED_BUILD" == "true" && "$SOURCE_TAG" != "$RELEASE_VERSION" ]]; then
@@ -130,7 +130,7 @@ jobs:
           git -c advice.detachedHead=false clone -q --depth 1 --branch master \
             "https://x-access-token:${READ_TOKEN}@github.com/RamonVeredic/LINNMS-Staging.git" "$work/source"
           if [[ "$SOURCE_MODE" == "tag" ]]; then
-            # Production uses the promoted vX.Y.Z tag (must be merged into master), not staging-vX.Y.Z.
+            # Release uses the promoted vX.Y.Z tag (must be merged into master), not staging-vX.Y.Z.
             git -C "$work/source" fetch -q --unshallow origin master
             git -C "$work/source" fetch -q origin "refs/tags/${SOURCE_TAG}:refs/tags/${SOURCE_TAG}"
             pinned_sha="$(git -C "$work/source" rev-parse --verify "refs/tags/${SOURCE_TAG}^{commit}")"
@@ -161,7 +161,7 @@ jobs:
       - name: Test PHP runtime (amd64, arm64)
         run: |
           set -eu
-          cd "$RUNNER_TEMP/linnms-release/protection"
+          cd "$RUNNER_TEMP/linnms-release/pq"
           docker buildx build --platform linux/amd64 -f docker/Dockerfile.smoke .
           docker buildx build --platform linux/arm64 -f docker/Dockerfile.smoke .
 
