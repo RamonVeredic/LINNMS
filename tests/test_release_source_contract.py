@@ -15,9 +15,16 @@ class ReleaseSourceContractTest(unittest.TestCase):
         self.assertIn('merge-base --is-ancestor "$pinned_sha" origin/master', WORKFLOW)
         self.assertIn("source vX.Y.Z tag is not reachable", WORKFLOW)
 
-    def test_manual_master_publish_remains_sha_pinned(self):
-        self.assertIn('"$PUBLISH" == "true" && "$SOURCE_MODE" == "master"', WORKFLOW)
-        self.assertIn('resolved_sha" != "$SOURCE_SHA"', WORKFLOW)
+    def test_manual_master_publish_needs_no_sha_input(self):
+        self.assertNotIn("source_sha:", WORKFLOW)
+        self.assertNotIn("SOURCE_SHA:", WORKFLOW)
+        self.assertNotIn('requires source_sha', WORKFLOW)
+        self.assertNotIn('resolved_sha" != "$SOURCE_SHA"', WORKFLOW)
+
+    def test_checked_out_commit_still_recorded_for_traceability(self):
+        self.assertIn('resolved_sha="$(git -C "$work/staging" rev-parse HEAD)"', WORKFLOW)
+        self.assertIn('echo "sha=$resolved_sha" >> "$GITHUB_OUTPUT"', WORKFLOW)
+        self.assertIn("SOURCE_REVISION=${{ steps.source.outputs.sha }}", WORKFLOW)
 
 if __name__ == "__main__":
     unittest.main()

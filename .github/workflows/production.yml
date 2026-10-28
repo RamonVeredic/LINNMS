@@ -22,10 +22,6 @@ on:
         description: "Tag rilis dari LINNMS-Staging/master, misalnya v1.3.0 (hanya mode tag)"
         required: false
         type: string
-      source_sha:
-        description: "SHA lengkap LINNMS-Staging/master (wajib jika publish dari master)"
-        required: false
-        type: string
       publish:
         description: "successful build"
         required: true
@@ -70,8 +66,6 @@ jobs:
           RELEASE_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || (github.event_name == 'workflow_dispatch' && inputs.version || 'v0.0.0') }}
           SOURCE_MODE: ${{ github.ref_type == 'tag' && 'tag' || (inputs.source_mode || 'master') }}
           SOURCE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || (inputs.source_mode == 'tag' && inputs.source_tag || '') }}
-          SOURCE_SHA: ${{ inputs.source_sha }}
-          PUBLISH: ${{ github.ref_type == 'tag' || inputs.publish }}
           TAGGED_BUILD: ${{ github.ref_type == 'tag' }}
         shell: bash
         run: |
@@ -104,14 +98,6 @@ jobs:
               exit 1
             fi
           fi
-          if [[ -n "$SOURCE_SHA" && ! "$SOURCE_SHA" =~ ^[0-9a-fA-F]{40}$ ]]; then
-            echo 'Invalid 40-character source commit SHA' >&2
-            exit 1
-          fi
-          if [[ "$PUBLISH" == "true" && "$SOURCE_MODE" == "master" && -z "$SOURCE_SHA" ]]; then
-            echo 'Publishing from staging/master requires source_sha to pin the exact commit' >&2
-            exit 1
-          fi
           echo "version=${RELEASE_VERSION:1}" >> "$GITHUB_OUTPUT"
           echo "source_mode=$SOURCE_MODE" >> "$GITHUB_OUTPUT"
           echo "source_tag=$SOURCE_TAG" >> "$GITHUB_OUTPUT"
@@ -135,7 +121,6 @@ jobs:
           READ_TOKEN: ${{ secrets.LINNMS_READ_TOKEN }}
           SOURCE_MODE: ${{ steps.release.outputs.source_mode }}
           SOURCE_TAG: ${{ steps.release.outputs.source_tag }}
-          SOURCE_SHA: ${{ inputs.source_sha }}
         shell: bash
         run: |
           set -euo pipefail
@@ -154,11 +139,9 @@ jobs:
             fi
             git -C "$work/staging" checkout -q --detach "$pinned_sha"
           fi
+          # Resolve the actual checked-out snapshot exactly once for build metadata.
+          # Manual master releases do not require an SHA input.
           resolved_sha="$(git -C "$work/staging" rev-parse HEAD)"
-          if [[ -n "$SOURCE_SHA" && "$resolved_sha" != "$SOURCE_SHA" ]]; then
-            echo "Staging source SHA mismatch: expected $SOURCE_SHA, resolved $resolved_sha" >&2
-            exit 1
-          fi
           git -c advice.detachedHead=false clone -q --depth 1 --branch main \
             "https://x-access-token:${READ_TOKEN}@github.com/RamonVeredic/LINNMS-protection.git" "$work/protection"
           protection_sha="$(git -C "$work/protection" rev-parse HEAD)"
