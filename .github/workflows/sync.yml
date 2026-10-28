@@ -72,5 +72,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           revision="$(cat "$work/revision")"
-          git commit -m "sync: source ${revision:0:12}"
+          subject="$(git -C "$work/source" log -1 --format=%s)"
+          test -n "$subject" || { echo 'Source commit subject is empty' >&2; exit 1; }
+          git commit -m "$subject" -m "Source: LINNMS-Staging@${revision}"
           git push origin HEAD:main

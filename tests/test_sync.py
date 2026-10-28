@@ -17,6 +17,11 @@ class SyncContractTest(unittest.TestCase):
         self.assertIn("git add -A -- config nginx linnms.init.d linnms.service.d", SYNC)
         self.assertNotIn("git add -A .", SYNC)
 
+    def test_subject_matches_source_master(self):
+        self.assertIn('git -C "$work/source" log -1 --format=%s', SYNC)
+        self.assertIn('git commit -m "$subject" -m "Source: LINNMS-Staging@${revision}"', SYNC)
+        self.assertNotIn('git commit -m "sync: source', SYNC)
+
     def test_idempotent_scheduling(self):
         self.assertIn("workflow_dispatch:", SYNC)
         self.assertIn("schedule:", SYNC)
