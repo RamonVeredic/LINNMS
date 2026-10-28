@@ -2,7 +2,9 @@
 from pathlib import Path
 import unittest
 
-WORKFLOW = (Path(__file__).resolve().parents[1] / ".github/workflows/release.yml").read_text(encoding="utf-8")
+ROOT = Path(__file__).resolve().parents[1]
+WORKFLOW = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+DOCKERFILE = (ROOT / "docker/Dockerfile.release").read_text(encoding="utf-8")
 
 class ReleaseSourceContractTest(unittest.TestCase):
     def test_auto_tag_resolves_promoted_release_tag(self):
@@ -29,6 +31,9 @@ class ReleaseSourceContractTest(unittest.TestCase):
         self.assertIn("find /work/plain/config/app/runtime/vendor", WORKFLOW)
         self.assertNotIn("find /work/plain/config -type f", WORKFLOW)
         self.assertIn("docker/Dockerfile.release", WORKFLOW)
+        self.assertIn("find /opt/linnms/runtime/vendor -type f", DOCKERFILE)
+        self.assertNotIn("Unexpected encrypted application PHP", DOCKERFILE)
+        self.assertNotIn("dashboard detail modal template missing", DOCKERFILE)
 
 if __name__ == "__main__":
     unittest.main()

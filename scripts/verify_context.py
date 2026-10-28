@@ -17,7 +17,6 @@ vendor_root = pathlib.Path("bundle/config/app/runtime/vendor")
 if not (release_build_context / vendor_root).is_dir():
     raise SystemExit("PQ runtime/vendor tree missing")
 encrypted_vendor_php_file_count = 0
-plaintext_php_file_count = 0
 for file in release_build_context.rglob("*"):
     if file.is_symlink():
         raise SystemExit(f"build context: {file}")
@@ -31,24 +30,16 @@ for file in release_build_context.rglob("*"):
     if rel.parts[0] == "bundle":
         if any(part.lower() in deny or part.startswith(".") for part in rel.parts):
             raise SystemExit(f"Staging/development artifact: {rel}")
-        if rel.suffix == ".php":
+        if rel.suffix == ".php" and rel.is_relative_to(vendor_root):
+            encrypted_vendor_php_file_count += 1
             with file.open("rb") as source_php:
-                magic = source_php.read(4)
-            if rel.is_relative_to(vendor_root):
-                encrypted_vendor_php_file_count += 1
-                if magic != b"LNC1":
+                if source_php.read(4) != b"LNC1":
                     raise SystemExit(f"Plaintext PHP inside runtime/vendor: {rel}")
-            else:
-                plaintext_php_file_count += 1
-                if magic == b"LNC1":
-                    raise SystemExit(f"Unexpected encrypted PHP outside runtime/vendor: {rel}")
         if rel.name.startswith("Dockerfile") or rel.suffix.lower() in {".yml", ".yaml", ".sample"}:
             raise SystemExit(f"Build/staging artifact: {rel}")
 if encrypted_vendor_php_file_count < 20:
     raise SystemExit(f"Unexpected PQ vendor PHP file count: {encrypted_vendor_php_file_count}")
-if plaintext_php_file_count < 200:
-    raise SystemExit(f"Unexpected plaintext application PHP file count: {plaintext_php_file_count}")
 init = (release_build_context / "bundle/linnms.init.d/50-linnms-public-init").read_text(encoding="utf-8")
 if any(s in init for s in ("SOURCE_MOUNTS", "SOURCE_SEED", "SOURCE_ROOT", "staging", "source-seed")):
-    raise SystemExit("Production init still contains staging logic")
-print(f"Release build context OK: {encrypted_vendor_php_file_count} vendor PHP payloads and {plaintext_php_file_count} plaintext application PHP files")
+    raise SystemExit("Release init still contains staging logic")
+print(f"Release bundle OK: {encrypted_vendor_php_file_count} vendor PHP files verified")

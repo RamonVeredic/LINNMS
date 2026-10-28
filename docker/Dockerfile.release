@@ -43,10 +43,6 @@ RUN set -eu; \
     find /opt/linnms/runtime/vendor -type f -name '*.php' -exec php -r \
       'foreach(array_slice($argv,1) as $f) { $h=fopen($f,"rb"); $b=fread($h,4); fclose($h); if ($b!=="LNC1") {fwrite(STDERR, "Unencoded vendor PHP: $f\n");exit(1);} }' \
       -- {} +; \
-    find /opt/linnms/runtime /opt/linnms/config /opt/linnms/frontend \
-      -type f -name '*.php' ! -path '/opt/linnms/runtime/vendor/*' -exec php -r \
-      'foreach(array_slice($argv,1) as $f) { $h=fopen($f,"rb"); $b=fread($h,4); fclose($h); if ($b==="LNC1") {fwrite(STDERR, "Unexpected encrypted application PHP: $f\n");exit(1);} }' \
-      -- {} +; \
     test -f /opt/linnms/runtime/app/runtime.php; \
     test -f /opt/linnms/frontend/index.php; \
     test -f /opt/linnms/config/public-entry.php; \

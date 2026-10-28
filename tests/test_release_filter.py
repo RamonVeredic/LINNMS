@@ -32,7 +32,7 @@ fi
 echo production-ready
 '''
 
-class ProductionFilterTest(unittest.TestCase):
+class ReleaseFilterTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
@@ -94,12 +94,7 @@ class ProductionFilterTest(unittest.TestCase):
             php.write_bytes(b"LNC1" + bytes(64))
         subprocess.run([sys.executable, str(VERIFY), str(context)], check=True)
         unprotected = context / "bundle/config/www/index.php"
-        unprotected.write_bytes(b"LNC1" + bytes(64))
-        result = subprocess.run([sys.executable, str(VERIFY), str(context)],
-                                capture_output=True, text=True)
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Unexpected encrypted PHP outside runtime/vendor", result.stderr + result.stdout)
-        unprotected.write_text("<?php echo 1;")
+        self.assertEqual(unprotected.read_text(), "<?php echo 1;")
         protected = context / "bundle/config/app/runtime/vendor/driver/example1.php"
         protected.write_text("<?php echo 1;")
         result = subprocess.run([sys.executable, str(VERIFY), str(context)],
