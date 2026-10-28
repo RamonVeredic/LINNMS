@@ -1,0 +1,84 @@
+name: LINNMS Sync
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [linnms-sync]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: linnms-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout LINNMS
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Read source
+        env:
+          READ_TOKEN: ${{ secrets.LINNMS_READ_TOKEN }}
+          SOURCE_SHA: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.sha || '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$READ_TOKEN" || { echo 'Missing LINNMS_READ_TOKEN' >&2; exit 1; }
+          work="$RUNNER_TEMP/linnms-sync"
+          mkdir -p "$work"
+          git clone -q --depth 1 --branch master \
+            "https://x-access-token:${READ_TOKEN}@github.com/RamonVeredic/LINNMS-Staging.git" \
+            "$work/source"
+          if [[ -n "$SOURCE_SHA" ]]; then
+            [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo 'Invalid source revision' >&2; exit 1; }
+            git -C "$work/source" fetch -q --unshallow origin master
+            git -C "$work/source" merge-base --is-ancestor "$SOURCE_SHA" origin/master || {
+              echo 'Source revision is not in master' >&2
+              exit 1
+            }
+            git -C "$work/source" checkout -q --detach "$SOURCE_SHA"
+          fi
+          git -C "$work/source" rev-parse HEAD > "$work/revision"
+          python3 scripts/release.py "$work/source" "$work/export"
+
+      - name: Update public source
+        shell: bash
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/linnms-sync"
+          export_root="$work/export"
+
+          # Never publish any vendor directory, including frontend libraries.
+          find "$export_root" -type d -name vendor -prune -exec rm -rf -- '{}' +
+
+          # Only application/config files. Preserve this repository's workflows,
+          # Docker recipes, tests, documentation and scripts.
+          for dir in config nginx linnms.init.d linnms.service.d; do
+            test -d "$export_root/$dir" || { echo "Missing $dir" >&2; exit 1; }
+            mkdir -p "$dir"
+            rsync -a --delete "$export_root/$dir/" "$dir/"
+          done
+
+          if find config nginx linnms.init.d linnms.service.d -type d -name vendor -print -quit | grep -q .; then
+            echo 'Vendor directory found; refusing commit' >&2
+            exit 1
+          fi
+
+          git add -A -- config nginx linnms.init.d linnms.service.d
+          if git diff --cached --quiet; then
+            echo 'No source changes'
+            exit 0
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          revision="$(cat "$work/revision")"
+          subject="$(git -C "$work/source" log -1 --format=%s)"
+          test -n "$subject" || { echo 'Source commit subject is empty' >&2; exit 1; }
+          git commit -m "$subject" -m "Source: LINNMS-Staging@${revision}"
+          git push origin HEAD:main

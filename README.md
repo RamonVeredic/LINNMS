@@ -84,8 +84,8 @@ Untuk CasaOS, perbarui image melalui pengaturan aplikasi dengan mempertahankan s
 
 ## Sinkronisasi source
 
-Setiap commit ke `LINNMS-Staging/master` memicu sinkronisasi ke repositori ini. Sinkronisasi juga dapat dijalankan secara manual dari workflow privat `LINNMS-Staging/.github/workflows/sync.yml`. Tidak ada lagi jadwal enam jam ataupun workflow sinkronisasi di Actions repositori publik ini.
+Setiap commit ke `LINNMS-Staging/master` mengirim pemicu ke workflow [LINNMS Sync](.github/workflows/sync.yml) pada repositori ini. Sinkronisasi juga bisa dijalankan secara manual melalui GitHub Actions. Tidak ada jadwal enam jam. Riwayat sinkronisasi tercatat di Actions repositori publik ini.
 
 Hanya file aplikasi dan konfigurasi yang diizinkan yang disalin. Seluruh direktori `vendor` serta dokumentasi, README, dan file build milik repositori ini tidak ikut ditimpa. Commit hanya dibuat jika hasil sinkronisasi berubah; judulnya mengikuti commit sumber dan SHA sumber dicatat dalam isi commit.
 
-Source di luar `vendor` menjadi **publik**. Pastikan tidak ada rahasia atau kredensial dalam source. Workflow privat membutuhkan secret `LINNMS_SYNC_TOKEN` dengan izin `Contents: Read and write` untuk repositori `LINNMS`. GitHub masih mencatat riwayat workflow di repositori privat; proses ini tidak membuat run sinkronisasi di repositori publik.
+Source di luar `vendor` menjadi **publik**. Pastikan tidak ada rahasia atau kredensial dalam source. Workflow pemicu di Staging membutuhkan secret `LINNMS_SYNC_TOKEN` dengan izin `Contents: Read and write` pada repositori `LINNMS`. Workflow publik menggunakan `LINNMS_READ_TOKEN` untuk membaca Staging; token tersebut harus tetap privat. GitHub mencatat run pemicu di Staging dan run sinkronisasi di LINNMS.
