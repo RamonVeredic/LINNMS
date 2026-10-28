@@ -15,7 +15,7 @@ services:
       - DB_PASSWORD=
     ports:
       - target: 80
-        published: "84"
+        published: "88"
         protocol: tcp
       - target: 443
         published: "4143"
@@ -73,7 +73,7 @@ x-casaos:
   index: /
   is_uncontrolled: false
   main: app
-  port_map: "84"
+  port_map: "88"
   scheme: http
   store_app_id: LINNMS
   tagline:
