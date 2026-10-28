@@ -1,0 +1,45 @@
+.whatsapp-connection-actions {
+  flex-wrap: wrap;
+}
+
+.channel-credentials-form #whatsappProvider {
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+}
+
+.channel-credentials-form .select-value {
+  font-weight: 400;
+}
+
+.whatsapp-connection-actions > .button[hidden] {
+  display: none !important;
+}
+
+[data-whatsapp-credential-fields] {
+  display: grid;
+  gap: 12px;
+}
+
+.input-button-group > .select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.input-button-group > .select .select-button,
+.input-button-group > .select .select-button:hover {
+  height: 42px;
+  min-height: 42px;
+  font-size: var(--font-size-sm);
+  background: var(--surface-input);
+  border-color: var(--bg-line) !important;
+}
+
+.input-button-group > .select.is-open .select-button,
+.input-button-group > .select .select-button:focus-visible {
+  border-color: var(--focus-border) !important;
+}
+
+.channel-credentials-form [hidden],
+.input-button-group [hidden] {
+  display: none;
+}

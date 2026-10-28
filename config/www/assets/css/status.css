@@ -1,0 +1,16 @@
+.status-card .lead {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.status-card .login-button {
+  margin-top: 24px;
+}
+.status-card-center {
+  text-align: center;
+}
+.status-card .status-code {
+  margin: 0 0 12px;
+  font-size: clamp(4rem, 14vw, 7.5rem);
+  line-height: 1;
+  color: var(--primary);
+}

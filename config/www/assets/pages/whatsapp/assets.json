@@ -1,0 +1,10 @@
+{
+  "styles": [
+    "assets/components/notification-channel/notification-channel.css",
+    "assets/pages/whatsapp/whatsapp.css"
+  ],
+  "scripts": [
+    "assets/components/notification-channel/credential-editor.js",
+    "assets/pages/whatsapp/whatsapp-settings.js"
+  ]
+}

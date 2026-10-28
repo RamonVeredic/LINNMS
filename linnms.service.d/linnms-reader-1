@@ -1,0 +1,2 @@
+#!/usr/bin/with-contenv sh
+exec sh /opt/linnms/runtime/workers/slot-service.sh reader 1

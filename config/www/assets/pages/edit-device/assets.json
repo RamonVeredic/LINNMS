@@ -1,0 +1,8 @@
+{
+  "styles": [
+    "assets/pages/add-device/add-device.css"
+  ],
+  "scripts": [
+    "assets/pages/add-device/device-form.js"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "styles": [
+    "assets/pages/add-device/add-device.css"
+  ],
+  "scripts": [
+    "assets/pages/edit-api-olt/connection-test.js"
+  ]
+}

@@ -1,0 +1,10 @@
+#!/usr/bin/with-contenv sh
+set -u
+PHP_BIN="$(command -v php85 || command -v php || true)"; [ -n "$PHP_BIN" ] || exit 127
+while true; do
+  [ -d /opt/linnms/runtime/vendor/driver ] || exit 0
+  if s6-setuidgid abc "$PHP_BIN" /opt/linnms/runtime/workers/access-ready.php >/dev/null; then
+    s6-setuidgid abc env LINNMS_SYNC_PIPELINE=1 LINNMS_INITIAL_SLOT=1 "$PHP_BIN" /opt/linnms/runtime/workers/initial-olt.php || true
+  fi
+  sleep 2
+done

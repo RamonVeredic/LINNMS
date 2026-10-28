@@ -1,0 +1,331 @@
+#!/usr/bin/with-contenv sh
+set -eu
+
+APP_ROOT=/config/app
+LEGACY_APP_ROOT=/config/linnms-public
+RUNTIME_ROOT=/opt/linnms/runtime
+CONFIG_IMAGE=/opt/linnms/config
+FRONTEND_IMAGE=/opt/linnms/frontend
+NGINX_IMAGE=/opt/linnms/nginx
+PHP_IMAGE="$NGINX_IMAGE/php"
+DATA_ROOT="$APP_ROOT/data"
+NGINX_LOG_ROOT=/config/log/nginx
+PHP_LOG_ROOT=/config/log/php
+APP_LOG_ROOT=/config/log/app
+DATABASE_FILE="$APP_ROOT/config/database.php"
+
+# Migrasikan state runtime dari nama direktori lama.
+if [ -d "$LEGACY_APP_ROOT" ]; then
+  if [ ! -e "$APP_ROOT" ]; then
+    mv "$LEGACY_APP_ROOT" "$APP_ROOT"
+  else
+    cp -a "$LEGACY_APP_ROOT/." "$APP_ROOT/"
+    rm -rf "$LEGACY_APP_ROOT"
+  fi
+fi
+
+mkdir -p \
+  "$APP_ROOT/config" \
+  "$DATA_ROOT/cache/core" \
+  "$DATA_ROOT/core" \
+  "$DATA_ROOT/lock" \
+  "$NGINX_LOG_ROOT" \
+  "$PHP_LOG_ROOT" \
+  "$APP_LOG_ROOT" \
+  /config/nginx \
+  /config/php
+
+INTERNAL_KEY_FILE="$DATA_ROOT/core/internal.key"
+if [ ! -s "$INTERNAL_KEY_FILE" ]; then
+  head -c 32 /dev/urandom | base64 | tr -d '\n' > "$INTERNAL_KEY_FILE"
+fi
+chmod 0600 "$INTERNAL_KEY_FILE" 2>/dev/null || true
+chown abc:users "$INTERNAL_KEY_FILE" 2>/dev/null || true
+
+rm -f "$APP_ROOT/.init-ready"
+
+  CONFIG_TEMPLATE="$CONFIG_IMAGE"
+  NGINX_TEMPLATE="$NGINX_IMAGE"
+  PHP_TEMPLATE="$PHP_IMAGE"
+  rm -rf /config/www
+  ln -s "$FRONTEND_IMAGE" /config/www
+  if [ "$(readlink -f /config/www)" != "$FRONTEND_IMAGE" ]; then
+    echo "[LINNMS] Target webroot salah." >&2
+    exit 1
+  fi
+if [ -L /config/nginx/log ]; then
+  legacy_log_dir="$(readlink /config/nginx/log 2>/dev/null || true)"
+  rm -f /config/nginx/log
+  mkdir -p /config/nginx/log
+  if [ -n "$legacy_log_dir" ] && [ -d "$legacy_log_dir" ]; then
+    cp -a "$legacy_log_dir/." /config/nginx/log/ 2>/dev/null || true
+  fi
+fi
+
+mkdir -p "$APP_ROOT/config"
+find "$APP_ROOT/config" -mindepth 1 -maxdepth 1 ! -name database.php -exec rm -rf -- {} +
+
+for config_file in \
+  monitoring-drivers.php \
+  public-entry.php \
+  service.php \
+  session.php \
+  whatsapp-gateways.php
+do
+  if [ ! -f "$CONFIG_TEMPLATE/$config_file" ]; then
+    echo "[LINNMS] Config  tidak ditemukan: $CONFIG_TEMPLATE/$config_file" >&2
+    exit 1
+  fi
+  ln -s "$CONFIG_TEMPLATE/$config_file" "$APP_ROOT/config/$config_file"
+done
+
+find /config/nginx -mindepth 1 -maxdepth 1 ! -name log -exec rm -rf -- {} +
+find "$NGINX_TEMPLATE" -mindepth 1 -maxdepth 1 ! -name log -exec cp -a -- {} /config/nginx/ \;
+
+cp -a "$PHP_TEMPLATE/." /config/php/
+
+for php_fpm_conf in /etc/php*/php-fpm.conf; do
+  [ -f "$php_fpm_conf" ] || continue
+  sed -i 's#^error_log = .*#error_log = /config/log/php/php-err.log#' "$php_fpm_conf"
+done
+
+if [ -f /etc/logrotate.d/nginx ]; then
+  sed -i 's#/config/nginx/log/nginx-\*\.log#/config/log/nginx/*.log#' /etc/logrotate.d/nginx
+fi
+if [ -f /etc/logrotate.d/php-fpm ]; then
+  sed -i 's#/config/nginx/log/php-\*\.log#/config/log/php/*.log#' /etc/logrotate.d/php-fpm
+fi
+
+for required_file in \
+  /config/www/index.php \
+  /config/app/config/public-entry.php \
+  /config/nginx/nginx.conf \
+  /config/nginx/site-confs/default.conf \
+  /config/php/php-local.ini
+do
+  if [ ! -f "$required_file" ]; then
+    echo "[LINNMS] File tidak ditemukan: $required_file" >&2
+    exit 1
+  fi
+done
+
+APP_RUNTIME_UNAVAILABLE=0
+if [ ! -d "$RUNTIME_ROOT" ] || {
+  [ -f "$DATA_ROOT/core/expired-delete-at" ] && [ ! -d "$RUNTIME_ROOT/vendor/driver" ]
+}; then
+  APP_RUNTIME_UNAVAILABLE=1
+else
+  for required_file in \
+    "$RUNTIME_ROOT/app/paths.php" \
+    "$RUNTIME_ROOT/app/runtime.php" \
+    "$RUNTIME_ROOT/backend/api.php"
+  do
+    if [ ! -f "$required_file" ]; then
+      echo "[LINNMS] File tidak ditemukan: $required_file" >&2
+      exit 1
+    fi
+  done
+fi
+
+if ! grep -F "include /config/nginx/site-confs/*.conf;" /config/nginx/nginx.conf >/dev/null; then
+  echo "[LINNMS] nginx.conf tidak memuat site-confs LINNMS." >&2
+  exit 1
+fi
+if ! grep -F "root /config/www;" /config/nginx/site-confs/default.conf >/dev/null; then
+  echo "[LINNMS] Site LINNMS tidak menggunakan root /config/www." >&2
+  exit 1
+fi
+if grep -F 'set $root /config/www;' /config/nginx/site-confs/default.conf >/dev/null; then
+  echo "[LINNMS] Site default LinuxServer masih aktif." >&2
+  exit 1
+fi
+if ! nginx -t -c /config/nginx/nginx.conf >/dev/null 2>&1; then
+  nginx -t -c /config/nginx/nginx.conf >&2 || true
+  echo "[LINNMS] Konfigurasi Nginx LINNMS tidak valid." >&2
+  exit 1
+fi
+
+move_log_file() {
+  old_file="$1"
+  new_file="$2"
+  [ -f "$old_file" ] || return 0
+  [ "$old_file" != "$new_file" ] || return 0
+  if [ -e "$new_file" ] && [ ! -s "$new_file" ]; then
+    rm -f "$new_file"
+  fi
+  if [ -e "$new_file" ]; then
+    if [ ! -s "$old_file" ]; then
+      rm -f "$old_file"
+      return 0
+    fi
+    legacy_number=1
+    while [ -e "$new_file.legacy-$legacy_number" ]; do
+      legacy_number=$((legacy_number + 1))
+    done
+    new_file="$new_file.legacy-$legacy_number"
+  fi
+  mv "$old_file" "$new_file"
+}
+
+migrate_log_series() {
+  old_base="$1"
+  new_base="$2"
+  for old_file in "$old_base" "$old_base".*; do
+    [ -f "$old_file" ] || continue
+    suffix="${old_file#"$old_base"}"
+    move_log_file "$old_file" "$new_base$suffix"
+  done
+}
+
+migrate_log_series /config/nginx/log/nginx-access.log "$NGINX_LOG_ROOT/nginx-access.log"
+migrate_log_series /config/nginx/log/nginx-err.log "$NGINX_LOG_ROOT/nginx-err.log"
+migrate_log_series /config/nginx/log/php-err.log "$PHP_LOG_ROOT/php-err.log"
+migrate_log_series /config/log/nginx/access.log "$NGINX_LOG_ROOT/nginx-access.log"
+migrate_log_series /config/log/nginx/error.log "$NGINX_LOG_ROOT/nginx-err.log"
+migrate_log_series /config/log/php/error.log "$PHP_LOG_ROOT/php-err.log"
+
+for old_file in "$DATA_ROOT/log/"*; do
+  [ -f "$old_file" ] || continue
+  move_log_file "$old_file" "$APP_LOG_ROOT/${old_file##*/}"
+done
+
+rmdir /config/nginx/log "$DATA_ROOT/log" 2>/dev/null || true
+
+touch \
+  "$NGINX_LOG_ROOT/nginx-access.log" \
+  "$NGINX_LOG_ROOT/nginx-err.log" \
+  "$PHP_LOG_ROOT/php-err.log"
+
+chown root:root "$APP_ROOT/config"
+chmod 0755 "$APP_ROOT/config"
+
+chown -R abc:abc \
+  "$DATA_ROOT" \
+  /config/log
+
+chmod 0770 \
+  "$DATA_ROOT/cache" \
+  "$DATA_ROOT/cache/core" \
+  "$DATA_ROOT/core" \
+  "$DATA_ROOT/lock"
+
+find /config/log -type d -exec chmod 0770 {} \;
+find /config/log -type f -name '*.log*' -exec chmod 0660 {} \;
+
+if [ -f "$DATA_ROOT/core/node.bin" ]; then
+  chown abc:abc "$DATA_ROOT/core/node.bin"
+  chmod 0600 "$DATA_ROOT/core/node.bin"
+fi
+
+if [ "$APP_RUNTIME_UNAVAILABLE" = "1" ]; then
+  touch "$APP_ROOT/.init-ready"
+  chown abc:abc "$APP_ROOT/.init-ready"
+  chmod 0640 "$APP_ROOT/.init-ready"
+  exit 0
+fi
+
+DB_SOCKET_PATH="${DB_SOCKET:-}"
+DB_HOST_VALUE="${DB_HOST:-}"
+DB_PORT_VALUE="${DB_PORT:-3306}"
+DB_NAME_VALUE="${DB_NAME:-}"
+DB_USER_VALUE="${DB_USER:-}"
+
+if [ -z "$DB_NAME_VALUE" ] || [ -z "$DB_USER_VALUE" ]; then
+  echo "[LINNMS] DB_NAME dan DB_USER wajib pada deployment." >&2
+  exit 1
+fi
+if [ -z "$DB_SOCKET_PATH" ] && [ -z "$DB_HOST_VALUE" ]; then
+  echo "[LINNMS] DB_SOCKET atau DB_HOST wajib pada deployment." >&2
+  exit 1
+fi
+case "$DB_PORT_VALUE" in
+  *[!0-9]*|'')
+    echo "[LINNMS] DB_PORT harus berupa angka." >&2
+    exit 1
+    ;;
+esac
+
+php -r '
+  $path = "/config/app/config/database.php";
+  $socket = trim((string)getenv("DB_SOCKET"));
+  $host = trim((string)getenv("DB_HOST"));
+  $port = (int)(getenv("DB_PORT") ?: 3306);
+  $name = trim((string)getenv("DB_NAME"));
+  $user = trim((string)getenv("DB_USER"));
+  $password = getenv("DB_PASSWORD");
+
+  if (($socket === "" && $host === "") || $name === "" || $user === "") {
+      fwrite(STDERR, "[LINNMS] Konfigurasi database deployment tidak lengkap." . PHP_EOL);
+      exit(1);
+  }
+  if ($port < 1 || $port > 65535) {
+      fwrite(STDERR, "[LINNMS] DB_PORT tidak valid." . PHP_EOL);
+      exit(1);
+  }
+  if ($password === false) {
+      $password = "";
+  }
+  if (preg_match("/^[A-Za-z0-9_]+$/", $name) !== 1) {
+      fwrite(STDERR, "[LINNMS] DB_NAME tidak valid." . PHP_EOL);
+      exit(1);
+  }
+
+  $data = "<?php\n\ndeclare(strict_types=1);\n\nreturn " . var_export([
+      "socket" => $socket,
+      "host" => $host,
+      "port" => $port,
+      "name" => $name,
+      "user" => $user,
+      "password" => (string)$password,
+      "charset" => "utf8mb4",
+  ], true) . ";\n";
+
+  if (file_put_contents($path . ".tmp", $data, LOCK_EX) === false) {
+      fwrite(STDERR, "[LINNMS] Gagal menulis konfigurasi database deployment." . PHP_EOL);
+      exit(1);
+  }
+  if (!rename($path . ".tmp", $path)) {
+      fwrite(STDERR, "[LINNMS] Gagal mengaktifkan konfigurasi database deployment." . PHP_EOL);
+      exit(1);
+  }
+'
+
+chown root:abc "$DATABASE_FILE"
+chmod 0440 "$DATABASE_FILE"
+
+if ! php -r '$d=require "/config/app/config/database.php"; $s=trim((string)($d["socket"]??"")); $h=trim((string)($d["host"]??"")); if(!is_array($d) || ($s==="" && $h==="")){fwrite(STDERR,"[LINNMS] Konfigurasi database hasil materialisasi tidak valid.".PHP_EOL); exit(1);}'; then
+  exit 1
+fi
+
+if ! php -r 'exit(in_array("mysql", PDO::getAvailableDrivers(), true) ? 0 : 1);'; then
+  echo "[LINNMS] Driver PDO MySQL tidak tersedia pada image." >&2
+  exit 1
+fi
+
+i=0
+while ! php -r '$d=require "/config/app/config/database.php"; $s=trim((string)($d["socket"]??"")); $h=trim((string)($d["host"]??"")); $port=(int)($d["port"]??3306); $dsn=$s!=="" ? "mysql:unix_socket={$s};charset={$d["charset"]}" : "mysql:host={$h};port={$port};charset={$d["charset"]}"; try{$p=new PDO($dsn,$d["user"],$d["password"],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]); $p->query("SELECT 1")->fetchColumn(); exit(0);}catch(Throwable $e){fwrite(STDERR,"[LINNMS] Menunggu server database: ".$e->getMessage().PHP_EOL); exit(1);}'; do
+  i=$((i+1))
+  if [ "$i" -ge 30 ]; then
+    echo "[LINNMS] Server database tidak tersedia setelah 30 detik." >&2
+    exit 1
+  fi
+  sleep 1
+done
+
+if ! php "$RUNTIME_ROOT/database/migrate.php" >/dev/null; then
+  echo "[LINNMS] Peringatan: migrasi database gagal dijalankan." >&2
+  echo "[LINNMS] Aplikasi tetap dijalankan dengan skema yang ada; selaraskan dengan:" >&2
+  echo "[LINNMS]   docker exec -it <container> php /opt/linnms/runtime/database/migrate.php" >&2
+fi
+
+if ! s6-setuidgid abc php -r '$d=require "/config/app/config/database.php"; $s=trim((string)($d["socket"]??"")); $h=trim((string)($d["host"]??"")); $port=(int)($d["port"]??3306); $dsn=$s!=="" ? "mysql:unix_socket={$s};dbname={$d["name"]};charset={$d["charset"]}" : "mysql:host={$h};port={$port};dbname={$d["name"]};charset={$d["charset"]}"; try{$p=new PDO($dsn,$d["user"],$d["password"],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]); $p->query("SELECT 1")->fetchColumn(); exit(0);}catch(Throwable $e){fwrite(STDERR,"[LINNMS] User aplikasi abc gagal akses database: ".$e->getMessage().PHP_EOL); exit(1);}'; then
+  exit 1
+fi
+
+if ! s6-setuidgid abc php -r 'try { require "/opt/linnms/runtime/app/paths.php"; require project_path("app","bootstrap.php"); } catch (Throwable $e) { fwrite(STDERR,"[LINNMS] Bootstrap aplikasi gagal: ".get_class($e).": ".$e->getMessage()." at ".$e->getFile().":".$e->getLine().PHP_EOL); exit(1); }'; then
+  exit 1
+fi
+
+touch "$APP_ROOT/.init-ready"
+chown abc:abc "$APP_ROOT/.init-ready"
+chmod 0640 "$APP_ROOT/.init-ready"

@@ -1,0 +1,8 @@
+#!/usr/bin/with-contenv sh
+set -u
+PHP_BIN="$(command -v php85 || command -v php || true)"; [ -n "$PHP_BIN" ] || exit 127
+while true; do
+  [ -d /opt/linnms/runtime/vendor/driver ] || exit 0
+  s6-setuidgid abc "$PHP_BIN" /opt/linnms/runtime/workers/access-refresh.php --daemon >/dev/null || true
+  sleep 5
+done

@@ -1,0 +1,10 @@
+{
+  "styles": [
+    "assets/pages/view-olt/view-olt.css"
+  ],
+  "scripts": [
+    "assets/pages/view-olt/olt-details.js",
+    "assets/components/device/device-details.js",
+    "assets/components/traffic/traffic-chart.js"
+  ]
+}

@@ -1,0 +1,14 @@
+#!/usr/bin/with-contenv sh
+set -u
+PHP_BIN="$(command -v php85 || command -v php || true)"; [ -n "$PHP_BIN" ] || exit 127
+INTERVAL=180
+READY_CHECK=60
+while true; do
+  [ -d /opt/linnms/runtime/vendor/driver ] || exit 0
+  if s6-setuidgid abc "$PHP_BIN" /opt/linnms/runtime/workers/access-ready.php >/dev/null; then
+    s6-setuidgid abc "$PHP_BIN" /opt/linnms/runtime/workers/notify.php >/dev/null || true
+    sleep "$INTERVAL"
+  else
+    sleep "$READY_CHECK"
+  fi
+done
