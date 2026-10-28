@@ -2,7 +2,7 @@
 
 **LINNMS** adalah *Network Management System* untuk membantu pemantauan dan pengelolaan informasi perangkat jaringan, termasuk OLT dan ONU.
 
-Repository ini menyediakan **image LINNMS Production** dan contoh instalasinya untuk **Docker Compose** maupun **CasaOS**. Source aplikasi tidak disertakan di repository ini. Pada image production, **hanya PHP di `runtime/vendor/` yang terenkripsi**; PHP aplikasi, halaman web, dan konfigurasi lain tetap plaintext. Image production tersedia melalui `ghcr.io/ramonveredic/linnms`.
+Repository ini menyediakan **image LINNMS Release** dan contoh instalasinya untuk **Docker Compose** maupun **CasaOS**. Source aplikasi tidak disertakan di repository ini. Pada image rilis, **hanya PHP di `runtime/vendor/` yang terenkripsi**; PHP aplikasi, halaman web, dan konfigurasi lain tetap plaintext. Image rilis tersedia melalui `ghcr.io/ramonveredic/linnms`.
 
 ## Pilih cara instalasi
 
@@ -79,7 +79,7 @@ Konfigurasi CasaOS menyimpan data secara terpisah di:
 - `/DATA/AppData/linnms/database` — data MariaDB.
 - `/DATA/AppData/linnms/run` — socket komunikasi database.
 
-CasaOS menggunakan image production `ghcr.io/ramonveredic/linnms:latest` pada contoh awal. Anda dapat menggantinya dengan tag rilis yang tersedia sebelum instalasi atau pembaruan. Jika port `84` atau `4143` telah terpakai, ubah port host pada konfigurasi terlebih dahulu.
+CasaOS menggunakan image rilis `ghcr.io/ramonveredic/linnms:latest` pada contoh awal. Anda dapat menggantinya dengan tag rilis yang tersedia sebelum instalasi atau pembaruan. Jika port `84` atau `4143` telah terpakai, ubah port host pada konfigurasi terlebih dahulu.
 
 ## Pembaruan dan pencadangan
 
@@ -95,11 +95,11 @@ Untuk CasaOS, perbarui image melalui pengaturan aplikasi dengan mempertahankan s
 
 **Jangan menjalankan `docker compose down -v` untuk update atau troubleshooting:** opsi `-v` menghapus named volume yang dapat memuat database dan konfigurasi penting.
 
-## Build production dari master hasil merge
+## Build rilis dari master hasil merge
 
-**Source aplikasi production berasal dari `RamonVeredic/LINNMS-Staging`, bukan dari isi repository LINNMS.** Repository ini menyediakan resep build, penyaringan file, dan konfigurasi instalasi. Image diberi label `org.opencontainers.image.revision` berisi commit SHA staging yang digunakan.
+**Source aplikasi rilis berasal dari `RamonVeredic/LINNMS-Staging`, bukan dari isi repository LINNMS.** Repository ini menyediakan resep build, penyaringan file, dan konfigurasi instalasi. Image diberi label `org.opencontainers.image.revision` berisi commit SHA staging yang digunakan.
 
-Di [GitHub Actions → LINNMS](https://github.com/RamonVeredic/LINNMS/actions/workflows/production.yml), pilih **Run workflow** pada branch `main`:
+Di [GitHub Actions → LINNMS Release](https://github.com/RamonVeredic/LINNMS/actions/workflows/release.yml), pilih **Run workflow** pada branch `main`:
 
 1. Untuk memeriksa kode terbaru, pilih `source_mode: master` dan `publish: false`. Workflow akan mengambil commit terbaru `LINNMS-Staging/master` saat proses fetch berlangsung, lalu mencatat SHA di log dan ringkasan Actions. Build ini **tidak** mendorong image ke registry.
 2. Untuk menerbitkan kode `master` secara manual, gunakan `source_mode: master`, tentukan **versi rilis baru**, lalu aktifkan `publish: true`. Tidak perlu mengisi commit SHA. Workflow mengambil snapshot `LINNMS-Staging/master` saat proses fetch dan otomatis mencatat SHA hasil checkout di log, ringkasan Actions, dan metadata image.
@@ -112,3 +112,5 @@ Di [GitHub Actions → LINNMS](https://github.com/RamonVeredic/LINNMS/actions/wo
 - [Compose untuk Docker](deploy/compose.yaml) — versi file instalasi dalam folder `deploy`.
 - [Compose untuk CasaOS](deploy/compose.casaos.yaml) — versi file instalasi dalam folder `deploy`.
 - [Compose instance kedua](deploy/compose.secondary.yaml) — opsi instance tambahan.
+
+- [Dockerfile release](docker/Dockerfile.release) — definisi image rilis.

@@ -5,7 +5,7 @@ import tempfile
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-FILTER = ROOT / "scripts" / "filter_production.py"
+FILTER = ROOT / "scripts" / "filter_release.py"
 VERIFY = ROOT / "scripts" / "verify_context.py"
 
 INIT = '''#!/usr/bin/with-contenv sh
@@ -84,9 +84,9 @@ class ProductionFilterTest(unittest.TestCase):
                        check=True)
         context = self.root / "context"
         (context / "bundle").mkdir(parents=True)
-        (context / "protection/loader").mkdir(parents=True)
-        (context / "protection/loader/linnms_loader.c").write_text("/* build only */")
-        (context / "protection/loader/linnms_auto_key.h").write_text("#define LINNMS_EMBEDDED_KEY 1")
+        (context / "pq/loader").mkdir(parents=True)
+        (context / "pq/loader/linnms_loader.c").write_text("/* build only */")
+        (context / "pq/loader/linnms_auto_key.h").write_text("#define LINNMS_EMBEDDED_KEY 1")
         (context / "Dockerfile").write_text("FROM scratch")
         import shutil
         shutil.copytree(self.output, context / "bundle", dirs_exist_ok=True)
@@ -105,7 +105,7 @@ class ProductionFilterTest(unittest.TestCase):
         result = subprocess.run([sys.executable, str(VERIFY), str(context)],
                                 capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Plaintext PHP inside protected runtime/vendor", result.stderr + result.stdout)
+        self.assertIn("Plaintext PHP inside runtime/vendor", result.stderr + result.stdout)
 
 if __name__ == "__main__":
     unittest.main()

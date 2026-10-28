@@ -2,7 +2,7 @@
 from pathlib import Path
 import unittest
 
-WORKFLOW = (Path(__file__).resolve().parents[1] / ".github/workflows/production.yml").read_text(encoding="utf-8")
+WORKFLOW = (Path(__file__).resolve().parents[1] / ".github/workflows/release.yml").read_text(encoding="utf-8")
 
 class ReleaseSourceContractTest(unittest.TestCase):
     def test_auto_tag_resolves_promoted_release_tag(self):
@@ -21,10 +21,14 @@ class ReleaseSourceContractTest(unittest.TestCase):
         self.assertNotIn('requires source_sha', WORKFLOW)
         self.assertNotIn('resolved_sha" != "$SOURCE_SHA"', WORKFLOW)
 
-    def test_checked_out_commit_still_recorded_for_traceability(self):
-        self.assertIn('resolved_sha="$(git -C "$work/staging" rev-parse HEAD)"', WORKFLOW)
+    def test_checked_out_commit_and_pq_scope(self):
+        self.assertIn('resolved_sha="$(git -C "$work/source" rev-parse HEAD)"', WORKFLOW)
         self.assertIn('echo "sha=$resolved_sha" >> "$GITHUB_OUTPUT"', WORKFLOW)
         self.assertIn("SOURCE_REVISION=${{ steps.source.outputs.sha }}", WORKFLOW)
+        self.assertIn("LINNMS_PQ_KEY_FILE=/work/pq.key", WORKFLOW)
+        self.assertIn("find /work/plain/config/app/runtime/vendor", WORKFLOW)
+        self.assertNotIn("find /work/plain/config -type f", WORKFLOW)
+        self.assertIn("docker/Dockerfile.release", WORKFLOW)
 
 if __name__ == "__main__":
     unittest.main()

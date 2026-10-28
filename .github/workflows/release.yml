@@ -1,4 +1,4 @@
-name: LINNMS
+name: LINNMS Release
 on:
   push:
     tags:
@@ -33,19 +33,20 @@ permissions:
   packages: write
 
 concurrency:
-  group: linnms-production-${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref }}
+  group: linnms-release-${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref }}
   cancel-in-progress: false
 
 jobs:
-  production:
+  build:
+    name: Release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Release build recipes only
+      - name: Checkout release files
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Verify LINNMS Release tag belongs to main
+      - name: Verify release tag
         if: ${{ github.ref_type == 'tag' }}
         shell: bash
         run: |
@@ -60,7 +61,7 @@ jobs:
             exit 1
           fi
 
-      - name: Validate release version and source tag
+      - name: Validate version and source
         id: release
         env:
           RELEASE_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || (github.event_name == 'workflow_dispatch' && inputs.version || 'v0.0.0') }}
@@ -102,20 +103,20 @@ jobs:
           echo "source_mode=$SOURCE_MODE" >> "$GITHUB_OUTPUT"
           echo "source_tag=$SOURCE_TAG" >> "$GITHUB_OUTPUT"
 
-      - name: Validate Release filtering and plaintext rejection
+      - name: Test release rules
         run: |
           set -euo pipefail
           python3 -m compileall -q scripts tests
           python3 -m unittest discover -v -s tests
 
-      - name: Check required private-repository credentials
+      - name: Check source access
         env:
           READ_TOKEN: ${{ secrets.LINNMS_READ_TOKEN }}
         run: |
           set -eu
           test -n "$READ_TOKEN" || { echo 'Missing LINNMS_READ_TOKEN' >&2; exit 1; }
 
-      - name: Fetch promoted LINNMS-Staging source (master or vX.Y.Z tag)
+      - name: Fetch release source
         id: source
         env:
           READ_TOKEN: ${{ secrets.LINNMS_READ_TOKEN }}
@@ -124,89 +125,89 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          work="$RUNNER_TEMP/linnms-protected"
+          work="$RUNNER_TEMP/linnms-release"
           mkdir -p "$work"
           git -c advice.detachedHead=false clone -q --depth 1 --branch master \
-            "https://x-access-token:${READ_TOKEN}@github.com/RamonVeredic/LINNMS-Staging.git" "$work/staging"
+            "https://x-access-token:${READ_TOKEN}@github.com/RamonVeredic/LINNMS-Staging.git" "$work/source"
           if [[ "$SOURCE_MODE" == "tag" ]]; then
             # Production uses the promoted vX.Y.Z tag (must be merged into master), not staging-vX.Y.Z.
-            git -C "$work/staging" fetch -q --unshallow origin master
-            git -C "$work/staging" fetch -q origin "refs/tags/${SOURCE_TAG}:refs/tags/${SOURCE_TAG}"
-            pinned_sha="$(git -C "$work/staging" rev-parse --verify "refs/tags/${SOURCE_TAG}^{commit}")"
-            if ! git -C "$work/staging" merge-base --is-ancestor "$pinned_sha" origin/master; then
+            git -C "$work/source" fetch -q --unshallow origin master
+            git -C "$work/source" fetch -q origin "refs/tags/${SOURCE_TAG}:refs/tags/${SOURCE_TAG}"
+            pinned_sha="$(git -C "$work/source" rev-parse --verify "refs/tags/${SOURCE_TAG}^{commit}")"
+            if ! git -C "$work/source" merge-base --is-ancestor "$pinned_sha" origin/master; then
               echo 'Refusing release: source vX.Y.Z tag is not reachable from LINNMS-Staging/master' >&2
               exit 1
             fi
-            git -C "$work/staging" checkout -q --detach "$pinned_sha"
+            git -C "$work/source" checkout -q --detach "$pinned_sha"
           fi
           # Resolve the actual checked-out snapshot exactly once for build metadata.
           # Manual master releases do not require an SHA input.
-          resolved_sha="$(git -C "$work/staging" rev-parse HEAD)"
+          resolved_sha="$(git -C "$work/source" rev-parse HEAD)"
           git -c advice.detachedHead=false clone -q --depth 1 --branch main \
-            "https://x-access-token:${READ_TOKEN}@github.com/RamonVeredic/LINNMS-protection.git" "$work/protection"
-          protection_sha="$(git -C "$work/protection" rev-parse HEAD)"
+            "https://x-access-token:${READ_TOKEN}@github.com/RamonVeredic/LINNMS-protection.git" "$work/pq"
+          pq_sha="$(git -C "$work/pq" rev-parse HEAD)"
           echo "sha=$resolved_sha" >> "$GITHUB_OUTPUT"
           echo "Source: LINNMS-Staging/${SOURCE_TAG:-master} commit $resolved_sha"
-          echo "Protection commit: $protection_sha"
+          echo "PQ revision: $pq_sha"
           {
-            echo "### LINNMS Production build"
+            echo "### LINNMS Release"
             printf -- "- LINNMS-Staging source ref: %s\n" "${SOURCE_TAG:-master}"
             printf -- "- Staging commit: %s\n" "$resolved_sha"
-            printf -- "- Protection commit: %s\n" "$protection_sha"
+            printf -- "- PQ revision: %s\n" "$pq_sha"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
-      - name: smoke-test loader on AMD64/ARM64
+      - name: Test PHP runtime (amd64, arm64)
         run: |
           set -eu
-          cd "$RUNNER_TEMP/linnms-protected/protection"
+          cd "$RUNNER_TEMP/linnms-release/protection"
           docker buildx build --platform linux/amd64 -f docker/Dockerfile.smoke .
           docker buildx build --platform linux/arm64 -f docker/Dockerfile.smoke .
 
-      - name: Generate unique ephemeral encryption key per release
+      - name: Create PQ build key
         run: |
           set -eu
-          work="$RUNNER_TEMP/linnms-protected"
+          work="$RUNNER_TEMP/linnms-release"
           umask 077
-          openssl rand -hex 32 > "$work/release.key"
-          test "$(wc -c < "$work/release.key")" -eq 65
-          chmod 600 "$work/release.key"
+          openssl rand -hex 32 > "$work/pq.key"
+          test "$(wc -c < "$work/pq.key")" -eq 65
+          chmod 600 "$work/pq.key"
 
-      - name: Filter PHP sources off-context
+      - name: Prepare release bundle
         run: |
           set -eu
-          work="$RUNNER_TEMP/linnms-protected"
+          work="$RUNNER_TEMP/linnms-release"
           umask 077
-          python3 scripts/filter_production.py "$work/staging" "$work/plain"
+          python3 scripts/filter_release.py "$work/source" "$work/plain"
           docker run --rm --user "$(id -u):$(id -g)" \
             -v "$work:/work" php:8.5-cli-alpine sh -euc '
-              find /work/plain/config -type f -name "*.php" -print0 |
+              find /work/plain/config/app/runtime/vendor -type f -name "*.php" -print0 |
               xargs -0 -r -n 1 php -l >/dev/null
             '
           docker run --rm --user "$(id -u):$(id -g)" \
             -v "$work:/work" \
-            -e LINNMS_PROTECTION_KEY_FILE=/work/release.key \
-            php:8.5-cli-alpine php /work/protection/encoder/encode.php \
+            -e LINNMS_PQ_KEY_FILE=/work/pq.key \
+            php:8.5-cli-alpine php /work/pq/encoder/encode.php \
             /work/plain /work/encoded config/app/runtime/vendor
           rm -rf "$work/plain"
-          mkdir -p "$work/context/bundle" "$work/context/protection"
+          mkdir -p "$work/context/bundle" "$work/context/pq"
           cp -a "$work/encoded/." "$work/context/bundle/"
-          cp -a "$work/protection/loader" "$work/context/protection/"
+          cp -a "$work/pq/loader" "$work/context/pq/"
           docker run --rm --user "$(id -u):$(id -g)" \
             -v "$work:/work" \
-            php:8.5-cli-alpine php /work/protection/encoder/generate_header.php \
-            /work/release.key /work/context/protection/loader/linnms_auto_key.h
-          cp docker/Dockerfile.production "$work/context/Dockerfile"
+            php:8.5-cli-alpine php /work/pq/encoder/generate_header.php \
+            /work/pq.key /work/context/pq/loader/linnms_auto_key.h
+          cp docker/Dockerfile.release "$work/context/Dockerfile"
           python3 scripts/verify_context.py "$work/context"
-          rm -f "$work/release.key"
+          rm -f "$work/pq.key"
           rm -rf "$work/encoded"
 
-      - name: Build (no push unless publish explicitly enabled)
+      - name: Build image
         uses: docker/build-push-action@v6
         with:
-          context: ${{ runner.temp }}/linnms-protected/context
-          file: ${{ runner.temp }}/linnms-protected/context/Dockerfile
+          context: ${{ runner.temp }}/linnms-release/context
+          file: ${{ runner.temp }}/linnms-release/context/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: false
           build-args: |
@@ -214,7 +215,7 @@ jobs:
             SOURCE_REVISION=${{ steps.source.outputs.sha }}
           tags: ghcr.io/ramonveredic/linnms:${{ steps.release.outputs.version }}-candidate
 
-      - name: GHCR authentication
+      - name: Registry login
         if: ${{ github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.publish == true) }}
         uses: docker/login-action@v3
         with:
@@ -222,12 +223,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish protected image (explicit opt-in only)
+      - name: Publish image
         if: ${{ github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.publish == true) }}
         uses: docker/build-push-action@v6
         with:
-          context: ${{ runner.temp }}/linnms-protected/context
-          file: ${{ runner.temp }}/linnms-protected/context/Dockerfile
+          context: ${{ runner.temp }}/linnms-release/context
+          file: ${{ runner.temp }}/linnms-release/context/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           build-args: |

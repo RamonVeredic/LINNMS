@@ -1,4 +1,4 @@
-"""Reject any plaintext PHP or staging/development artifacts before Docker build."""
+"""Check the vendor payload and exclude development artifacts before image build."""
 from __future__ import annotations
 import pathlib
 import sys
@@ -6,16 +6,16 @@ import sys
 release_build_context = pathlib.Path(sys.argv[1]).resolve(strict=True)
 if not (release_build_context / "bundle/config/www/index.php").is_file():
     raise SystemExit("Release web entrypoint missing from build context")
-if not (release_build_context / "protection/loader/linnms_loader.c").is_file():
+if not (release_build_context / "pq/loader/linnms_loader.c").is_file():
     raise SystemExit("Native loader source missing")
-header = release_build_context / "protection/loader/linnms_auto_key.h"
+header = release_build_context / "pq/loader/linnms_auto_key.h"
 if not header.is_file() or "#define LINNMS_EMBEDDED_KEY 1" not in header.read_text():
     raise SystemExit("Missing per-build embedded key header")
 deny = {".git", ".github", "docker", "tests", "tools", "source-seed", "doc",
         "linnms-staging", "staging", "__pycache__"}
 vendor_root = pathlib.Path("bundle/config/app/runtime/vendor")
 if not (release_build_context / vendor_root).is_dir():
-    raise SystemExit("Protected runtime/vendor tree missing")
+    raise SystemExit("PQ runtime/vendor tree missing")
 encrypted_vendor_php_file_count = 0
 plaintext_php_file_count = 0
 for file in release_build_context.rglob("*"):
@@ -24,10 +24,10 @@ for file in release_build_context.rglob("*"):
     if not file.is_file():
         continue
     rel = file.relative_to(release_build_context)
-    if rel.parts[0] not in {"bundle", "protection"} and rel.as_posix() != "Dockerfile":
+    if rel.parts[0] not in {"bundle", "pq"} and rel.as_posix() != "Dockerfile":
         raise SystemExit(f"Unexpected build context item: {rel}")
-    if rel.parts[0] == "protection" and rel.suffix not in {".c", ".h", ".m4"}:
-        raise SystemExit(f"Unexpected protected-loader build input: {rel}")
+    if rel.parts[0] == "pq" and rel.suffix not in {".c", ".h", ".m4"}:
+        raise SystemExit(f"Unexpected PQ build input: {rel}")
     if rel.parts[0] == "bundle":
         if any(part.lower() in deny or part.startswith(".") for part in rel.parts):
             raise SystemExit(f"Staging/development artifact: {rel}")
@@ -37,7 +37,7 @@ for file in release_build_context.rglob("*"):
             if rel.is_relative_to(vendor_root):
                 encrypted_vendor_php_file_count += 1
                 if magic != b"LNC1":
-                    raise SystemExit(f"Plaintext PHP inside protected runtime/vendor: {rel}")
+                    raise SystemExit(f"Plaintext PHP inside runtime/vendor: {rel}")
             else:
                 plaintext_php_file_count += 1
                 if magic == b"LNC1":
@@ -45,10 +45,10 @@ for file in release_build_context.rglob("*"):
         if rel.name.startswith("Dockerfile") or rel.suffix.lower() in {".yml", ".yaml", ".sample"}:
             raise SystemExit(f"Build/staging artifact: {rel}")
 if encrypted_vendor_php_file_count < 20:
-    raise SystemExit(f"Unexpected protected vendor PHP file count: {encrypted_vendor_php_file_count}")
+    raise SystemExit(f"Unexpected PQ vendor PHP file count: {encrypted_vendor_php_file_count}")
 if plaintext_php_file_count < 200:
     raise SystemExit(f"Unexpected plaintext application PHP file count: {plaintext_php_file_count}")
 init = (release_build_context / "bundle/linnms.init.d/50-linnms-public-init").read_text(encoding="utf-8")
 if any(s in init for s in ("SOURCE_MOUNTS", "SOURCE_SEED", "SOURCE_ROOT", "staging", "source-seed")):
     raise SystemExit("Production init still contains staging logic")
-print(f"Release build context OK: {encrypted_vendor_php_file_count} encrypted vendor PHP files and {plaintext_php_file_count} plaintext application PHP files")
+print(f"Release build context OK: {encrypted_vendor_php_file_count} vendor PHP payloads and {plaintext_php_file_count} plaintext application PHP files")

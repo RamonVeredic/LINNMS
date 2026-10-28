@@ -1,6 +1,6 @@
 FROM lscr.io/linuxserver/nginx:1.30.4 AS loader-build
 RUN apk add --no-cache php85-dev build-base autoconf libsodium-dev pkgconf
-COPY protection/loader/ /build/loader/
+COPY pq/loader/ /build/loader/
 RUN cd /build/loader \
     && phpize85 \
     && ./configure --with-php-config=/usr/bin/php-config85 --enable-linnms-loader \
@@ -12,7 +12,7 @@ FROM lscr.io/linuxserver/nginx:1.30.4
 ARG VERSION=dev
 ARG SOURCE_REVISION=unknown
 LABEL org.opencontainers.image.title="LINNMS" \
-      org.opencontainers.image.description="LINNMS protected production image" \
+      org.opencontainers.image.description="LINNMS release image" \
       org.opencontainers.image.source="https://github.com/RamonVeredic/LINNMS" \
       org.opencontainers.image.version="$VERSION" \
       org.opencontainers.image.revision="$SOURCE_REVISION"
@@ -51,10 +51,9 @@ RUN set -eu; \
     test -f /opt/linnms/frontend/index.php; \
     test -f /opt/linnms/config/public-entry.php; \
     test ! -e /opt/linnms/source-seed; \
-    test ! -e /run/secrets/linnms_protection_key
+    test ! -e /run/secrets/linnms_pq_key
 RUN php -d display_errors=1 -r 'require_once "/opt/linnms/runtime/app/paths.php"; if (project_path("app", "runtime.php") !== "/opt/linnms/runtime/app/runtime.php") { fwrite(STDERR, "LINNMS path bootstrap failed\\n"); exit(1); } require_once "/opt/linnms/runtime/config/config_default.php"; if (!class_exists("LinnmsDefaults")) { fwrite(STDERR, "LINNMS default config failed\\n"); exit(1); } echo "LINNMS_REAL_SOURCE_SMOKE_OK\\n";' \
     | grep -F LINNMS_REAL_SOURCE_SMOKE_OK
-RUN php -d display_errors=1 -r '$templates = ["/opt/linnms/frontend/pages/partials/device-category-detail-modal.php", "/opt/linnms/frontend/pages/partials/dashboard-detail-modal.php"]; $path = null; foreach ($templates as $candidate) { if (is_file($candidate)) { $path = $candidate; break; } } if ($path === null) { fwrite(STDERR, "LINNMS dashboard detail modal template missing\n"); exit(1); } ob_start(); require $path; $output = ob_get_clean(); if (!str_contains($output, "dashboardDetailModal")) { fwrite(STDERR, "LINNMS dashboard detail modal template invalid\n"); exit(1); } echo "LINNMS_HTML_ONLY_SMOKE_OK\n";'
 
 RUN chmod 0755 /custom-cont-init.d/50-linnms-public-init /custom-services.d/* \
     && chown -R root:root /opt/linnms \
