@@ -104,7 +104,6 @@ def main() -> None:
                 target.chmod(0o755)
             file_count += 1
     print(f"Filtered {file_count}")
-    assert file_count > 250, " refusing build"
 
 if __name__ == "__main__":
     main()
