@@ -30,9 +30,7 @@ RUNTIME_SUFFIXES = {".php", ".json"}
 FORBIDDEN_COMPONENTS = {".git", ".github", "docker", "doc", "tests", "test", "tools", "source-seed", "__pycache__"}
 FORBIDDEN_SUFFIXES = {".sample", ".bak", ".orig", ".log", ".tmp", ".temp"}
 REQUIRED = {
-    "config/app/config/public-entry.php",
     "config/app/runtime/app/paths.php",
-    "config/app/runtime/app/runtime.php",
     "config/app/runtime/backend/api.php",
     "config/www/index.php",
     "nginx/nginx.conf",
@@ -97,8 +95,9 @@ def main() -> None:
     dest = args.output.resolve()
     if dest.exists() or dest.is_relative_to(source) or source.is_relative_to(dest):
         raise SystemExit("Refusing existing or nested output tree")
-    if any(not (source / item).is_file() for item in REQUIRED):
-        raise SystemExit("Missing required LINNMS bundle components")
+    missing = sorted(item for item in REQUIRED if not (source / item).is_file())
+    if missing:
+        raise SystemExit("Missing required LINNMS bundle components: " + ", ".join(missing))
     dest.mkdir(parents=True, mode=0o700)
     file_count = 0
     for path in source.rglob("*"):
