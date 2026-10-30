@@ -41,7 +41,9 @@ class ReleaseFilterTest(unittest.TestCase):
         self.stage.mkdir()
         self.output = self.root / "plain"
         self._write("linnms.init.d/50-linnms-public-init", INIT)
+        self._write("config/app/config/public-entry.php", "<?php echo 1;")
         self._write("config/app/runtime/app/paths.php", "<?php echo 1;")
+        self._write("config/app/runtime/app/runtime.php", "<?php echo 1;")
         self._write("config/app/runtime/backend/api.php", "<?php echo 1;")
         self._write("config/www/index.php", "<?php echo 1;")
         self._write("nginx/nginx.conf", "user abc;")
@@ -61,18 +63,6 @@ class ReleaseFilterTest(unittest.TestCase):
         file = self.stage / filename
         file.parent.mkdir(parents=True, exist_ok=True)
         file.write_text(data)
-
-    def test_filter_accepts_sparse_source_without_required_files(self):
-        # Filter copies permitted files without imposing an application manifest.
-        self.output = self.root / "sparse-output"
-        sparse = self.root / "sparse"
-        (sparse / "config/www").mkdir(parents=True)
-        (sparse / "config/www/page.php").write_text("<?php echo 1;")
-        (sparse / "config/app/runtime/vendor").mkdir(parents=True)
-        (sparse / "config/app/runtime/vendor/driver.php").write_text("<?php echo 1;")
-        subprocess.run([sys.executable, str(FILTER), str(sparse), str(self.output)], check=True)
-        self.assertTrue((self.output / "config/www/page.php").is_file())
-        self.assertTrue((self.output / "config/app/runtime/vendor/driver.php").is_file())
 
     def test_filters_staging_build_artifacts(self):
         subprocess.run([sys.executable, str(FILTER), str(self.stage), str(self.output)],

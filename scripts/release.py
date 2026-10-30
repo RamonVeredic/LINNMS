@@ -14,6 +14,7 @@ NGINX_FILES = {
 }
 CONFIG_FILES = {
     "config/app/config/monitoring-drivers.php",
+    "config/app/config/public-entry.php",
     "config/app/config/service.php",
     "config/app/config/session.php",
     "config/app/config/whatsapp-gateways.php",
@@ -28,20 +29,35 @@ WEB_SUFFIXES = {".php", ".html", ".css", ".js", ".ico", ".png", ".jpg", ".jpeg",
 RUNTIME_SUFFIXES = {".php", ".json"}
 FORBIDDEN_COMPONENTS = {".git", ".github", "docker", "doc", "tests", "test", "tools", "source-seed", "__pycache__"}
 FORBIDDEN_SUFFIXES = {".sample", ".bak", ".orig", ".log", ".tmp", ".temp"}
+REQUIRED = {
+    "config/app/config/public-entry.php",
+    "config/app/runtime/app/paths.php",
+    "config/app/runtime/app/runtime.php",
+    "config/app/runtime/backend/api.php",
+    "config/www/index.php",
+    "nginx/nginx.conf",
+    "nginx/site-confs/default.conf",
+    "linnms.init.d/50-linnms-public-init",
+}
+
 def permitted(rel: pathlib.PurePosixPath) -> bool:
-    # Mirror every application file in these four trees, including new extensions
-    # and names, while excluding vendors and local/private runtime credentials.
-    if not rel.parts or rel.parts[0] not in {
-        "config", "nginx", "linnms.init.d", "linnms.service.d"
-    }:
+    name = rel.name
+    s = rel.as_posix()
+    if any(part.startswith(".") or part.lower() in FORBIDDEN_COMPONENTS for part in rel.parts):
         return False
-    if any(part in {".git", ".github", "__pycache__", "vendor"} for part in rel.parts):
+    if any(name.lower().endswith(x) for x in FORBIDDEN_SUFFIXES):
         return False
-    if any(part.startswith(".") for part in rel.parts):
-        return False
-    if rel.as_posix() == "config/app/config/database.php":
-        return False
-    return True
+    if s in NGINX_FILES or s in CONFIG_FILES:
+        return True
+    if len(rel.parts) == 2 and rel.parts[0] == "linnms.service.d" and name in SERVICES:
+        return True
+    if s == "linnms.init.d/50-linnms-public-init":
+        return True
+    if s.startswith(RUNTIME_DIRECTORY + "/") and rel.suffix.lower() in RUNTIME_SUFFIXES:
+        return True
+    if s.startswith(FRONTEND_DIRECTORY + "/") and rel.suffix.lower() in WEB_SUFFIXES:
+        return True
+    return False
 
 def init(text: str) -> str:
     """Remove"""
@@ -81,6 +97,8 @@ def main() -> None:
     dest = args.output.resolve()
     if dest.exists() or dest.is_relative_to(source) or source.is_relative_to(dest):
         raise SystemExit("Refusing existing or nested output tree")
+    if any(not (source / item).is_file() for item in REQUIRED):
+        raise SystemExit("Missing required LINNMS bundle components")
     dest.mkdir(parents=True, mode=0o700)
     file_count = 0
     for path in source.rglob("*"):
@@ -99,7 +117,8 @@ def main() -> None:
             if rel.parts[0] in {"linnms.init.d", "linnms.service.d"}:
                 target.chmod(0o755)
             file_count += 1
-    print(f"Mirrored {file_count} files (excluding vendor and private database config)")
+    print(f"Filtered {file_count}")
+    assert file_count > 250, " refusing build"
 
 if __name__ == "__main__":
     main()
