@@ -13,9 +13,8 @@
     <main class="login-shell">
         <section class="login-card">
             <div class="login-brand"><i class="brand-icon bi bi-boxes"></i><span class="brand-copy"><strong><?= h($appName) ?></strong><small>Network Management</small></span></div>
-            <p class="eyebrow">Verifikasi Akun</p>
+            <div class="eyebrow">Verifikasi Akun</div>
             <h1>Aktivasi Aplikasi</h1>
-            <p class="lead">Masukkan username dan key</p>
             <form method="post" action="<?= h(public_app_url('activate')) ?>" class="login-form"><input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>"><input type="hidden" name="action" value="access_submit"><div class="field"><label for="accessUsername">Username</label><input id="accessUsername" name="account" autocomplete="username" required autofocus placeholder="username" value="<?= h($presetUser ?? '') ?>"></div><div class="field"><label for="accessToken">Key</label><input id="accessToken" name="token" autocomplete="off" required placeholder="LINNMS1-XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX"></div><button class="button primary login-button" type="submit">Submit</button></form>
         </section>
     </main><?php render_flash_toast($flashes ?? []); ?><script src="<?= h(asset_url('assets/js/toast.js', 'a')) ?>"></script>

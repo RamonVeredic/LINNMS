@@ -28,7 +28,7 @@ $editApiOltTypeLabel = (string)(olt_type_options()[$editApiOltType] ?? $editApiO
     </div>
 
     <div class="field">
-        <label for="editApiOltHost">IP / Host</label>
+        <label for="editApiOltHost">Host</label>
         <input id="editApiOltHost" name="ip_address" required value="<?= h((string)($editApiOlt['ip_address'] ?? '')) ?>" placeholder="192.168.1.1"
             inputmode="decimal" pattern="(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])">
     </div>
@@ -41,7 +41,7 @@ $editApiOltTypeLabel = (string)(olt_type_options()[$editApiOltType] ?? $editApiO
     <div class="field span-2">
         <label for="editApiOltCommunity">SNMP Community</label>
         <input id="editApiOltCommunity" name="community" type="password"
-            <?= $editApiOltCommunitySaved ? 'placeholder="Tersimpan - kosongkan bila tidak diubah"' : 'required' ?>
+            <?= $editApiOltCommunitySaved ? 'placeholder="Kosongkan jika tidak diubah"' : 'required' ?>
             autocomplete="new-password" spellcheck="false">
     </div>
 
@@ -50,7 +50,7 @@ $editApiOltTypeLabel = (string)(olt_type_options()[$editApiOltType] ?? $editApiO
         <button class="button secondary" type="button" data-connection-test="device"
             data-connection-test-url="<?= h(public_app_url('connection-test.php')) ?>"
             data-connection-test-csrf="<?= h(csrf_token()) ?>">
-            <i class="bi bi-plug" aria-hidden="true"></i> Tes Koneksi API
+            <i class="bi bi-plug" aria-hidden="true"></i> Tes Koneksi
         </button>
         <a class="button secondary" href="<?= h(public_page_url('dashboard')) ?>">Batal</a>
         <span class="connection-test-result text-muted" data-connection-test-result role="status" aria-live="polite" hidden></span>

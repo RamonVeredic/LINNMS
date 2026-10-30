@@ -1,6 +1,11 @@
 #!/usr/bin/with-contenv sh
 set -u
 
+# s6 meneruskan nama service sebagai argumen pertama; abaikan agar mode default berjalan.
+case "${1:-}" in
+  custom-svc-*) set -- ;;
+esac
+
 WORKERS=/opt/linnms/runtime/workers
 PHP_BIN="$(command -v php85 || command -v php || true)"
 [ -n "$PHP_BIN" ] || exit 127

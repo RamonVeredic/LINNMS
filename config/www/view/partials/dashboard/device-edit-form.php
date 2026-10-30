@@ -34,7 +34,7 @@ $editHasTelnetFields = $editTelnetCli;
         </div>
 
         <div class="field">
-            <label for="editDeviceHost">IP / Host</label>
+            <label for="editDeviceHost">Host</label>
             <input id="editDeviceHost" name="ip_address" required value="<?= h((string)($editForm['ip_address'] ?? '')) ?>" placeholder="192.168.1.1"
                 inputmode="decimal" pattern="(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])">
         </div>
@@ -51,7 +51,7 @@ $editHasTelnetFields = $editTelnetCli;
                 <input id="editDeviceCommunity" type="text" name="community"
                     value="<?= h((string)($editForm['community'] ?? '')) ?>"
                     data-snmp-community autocomplete="off" spellcheck="false"
-                    <?= !empty($deviceEdit['has_community']) ? 'placeholder="Tersimpan - kosongkan bila tidak diubah"' : 'required' ?>>
+                    <?= !empty($deviceEdit['has_community']) ? 'placeholder="Kosongkan jika tidak diubah"' : 'required' ?>>
             </div>
         </div>
         <?php endif; ?>
@@ -85,7 +85,7 @@ $editHasTelnetFields = $editTelnetCli;
                         <label for="editDeviceCliPassword">Password</label>
                         <input id="editDeviceCliPassword" type="password" name="password" data-cli-field autocomplete="new-password" required
                             data-secret-stored="<?= !empty($deviceEdit['has_password']) ? '1' : '0' ?>"
-                            placeholder="<?= !empty($deviceEdit['has_password']) ? 'Tersimpan - kosongkan bila tidak diubah' : 'Password harus diisi' ?>">
+                            placeholder="<?= !empty($deviceEdit['has_password']) ? 'Kosongkan jika tidak diubah' : 'Password' ?>">
                     </div>
                 </div>
             </div>

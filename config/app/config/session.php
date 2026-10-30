@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+if (!defined('LINNMS_SESSION_NAME')) {
+    define('LINNMS_SESSION_NAME', 'app_v1_0_1');
+}
+
 const LINNMS_SESSION_IDLE_SECONDS = 43200;
 
 function linnms_start_managed_session(): void

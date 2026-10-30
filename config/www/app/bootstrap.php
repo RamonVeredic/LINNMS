@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/paths.php';
-require_once __DIR__ . '/helpers/session.php';
+require_once dirname(LINNMS_UI_ROOT) . '/app/config/session.php';
 linnms_start_managed_session();
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/internal-api-client.php';

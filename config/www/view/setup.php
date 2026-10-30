@@ -17,7 +17,7 @@ $presetDisplayName = trim((string)($presetDisplayName ?? ''));
     <main class="login-shell">
         <section class="login-card">
             <div class="login-brand"><i class="brand-icon bi bi-boxes"></i><span class="brand-copy"><strong><?= h($appName) ?></strong><small>Network Management</small></span></div>
-            <p class="eyebrow">Setup Akun</p>
+            <div class="eyebrow">Setup Akun</div>
             <h1>Lengkapi Akun Anda</h1>
             <form method="post" action="<?= h(public_app_url('setup')) ?>" class="login-form">
                 <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>"><input type="hidden" name="action" value="setup_submit">

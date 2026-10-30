@@ -113,13 +113,13 @@ if (str_starts_with($serviceWhatsappDigits, '0')) {
                 </div>
                 <div data-register-stage="wa" <?= $registrationStep !== 'wa' ? 'hidden' : '' ?>>
                 <header class="registration-heading">
-                    <p class="eyebrow">Verifikasi WhatsApp</p>
+                    <div class="eyebrow">Verifikasi</div>
                 </header>
                 <form method="post" class="login-form registration-form" data-register-form="phone">
                     <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
                     <input type="hidden" name="action" value="register_otp_request">
                     <div class="field registration-field">
-                        <label for="registerPhone">Nomor WhatsApp</label>
+                        <label for="registerPhone">WhatsApp</label>
                         <input id="registerPhone" name="phone_number" type="tel" inputmode="numeric" value="<?= h($pendingPhone !== '' ? $pendingPhone : (string)($oldRegister['phone_number'] ?? '')) ?>" autocomplete="tel" required pattern="(0|62|8)[0-9]{8,15}" <?= $registrationStep === 'wa' ? 'autofocus' : '' ?> placeholder="Contoh: 08123456789"<?= $registerValidationAttributes('phone_number') ?>>
                     </div>
                     <button class="button primary login-button registration-submit" type="submit" data-otp-request data-otp-rate-phone="<?= h($otpCooldownPhone) ?>" data-otp-rate-wait="<?= $otpCooldownWait ?>"><i class="bi bi-whatsapp" aria-hidden="true"></i><span data-otp-request-label>Kirim kode</span></button>
@@ -129,13 +129,13 @@ if (str_starts_with($serviceWhatsappDigits, '0')) {
                     <form method="post" data-register-form="cancel">
                         <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
                         <input type="hidden" name="action" value="register_otp_cancel">
-                        <button class="registration-text-action button-danger" type="submit">Batalkan</button>
+                        <button class="registration-text-action button-danger" type="submit">Batal</button>
                     </form>
                 </div>
                 </div>
                 <div data-register-stage="otp" <?= $registrationStep !== 'otp' ? 'hidden' : '' ?>>
                 <header class="registration-heading">
-                    <p class="eyebrow">Verifikasi WhatsApp</p>
+                    <div class="eyebrow">Verifikasi</div>
                     <p>Kode dikirim ke <strong data-register-phone-mask><?= h($otpPhoneMasked) ?></strong>. Berlaku <?= (int)$otpTtlMinutes ?> menit.</p>
                 </header>
                 <form method="post" class="login-form registration-form" data-register-form="verify">
@@ -166,7 +166,7 @@ if (str_starts_with($serviceWhatsappDigits, '0')) {
                 </div>
             <?php else: ?>
                 <div class="registration-unavailable">
-                    <p class="eyebrow">Informasi Pendaftaran</p>
+                    <div class="eyebrow">Pendaftaran</div>
                     <h1>Pendaftaran Tidak Tersedia</h1>
                     <p>Silakan hubungi layanan melalui kontak berikut.</p>
                     <div class="registration-contact-list">

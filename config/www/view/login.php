@@ -10,9 +10,10 @@
             <small>Network Management</small>
         </span>
     </div>
-    <p class="eyebrow">Login</p><h1>Masuk ke <?= h($appName) ?></h1>
+    <div class="eyebrow">Login</div>
+    <h1>Masuk ke <?= h($appName) ?></h1>
     <?php if (!empty($_SESSION['registration_completed'])): unset($_SESSION['registration_completed']); ?>
-        <div class="alert success" role="status">Pendaftaran berhasil. Silakan masuk menggunakan akun baru Anda.</div>
+        <div class="alert success" role="status">Pendaftaran berhasil. Silakan masuk menggunakan akun baru Anda</div>
     <?php endif; ?>
     <form method="post" class="login-form required-fields">
         <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>"><input type="hidden" name="action" value="login">
@@ -23,7 +24,7 @@
     <?php if (!empty($publicRegistrationEnabled)): ?>
         <div class="default-login"><p>
             Belum memiliki akun?
-            <a class="text-primary fw-bold" href="<?= h(public_page_url('register')) ?>">Daftar akun baru</a>
+            <a class="text-primary fw-bold me-2" href="<?= h(public_page_url('register')) ?>">Daftar Akun</a>
         </p></div>
     <?php endif; ?>
 </section></main>
