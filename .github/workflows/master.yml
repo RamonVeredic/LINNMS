@@ -46,7 +46,7 @@ jobs:
             git -C "$work/source" checkout -q --detach "$SOURCE_SHA"
           fi
           git -C "$work/source" rev-parse HEAD > "$work/revision"
-          python3 scripts/release.py "$work/source" "$work/export"
+          python3 scripts/master.py "$work/source" "$work/export"
 
       - name: Update public source
         shell: bash
@@ -63,7 +63,7 @@ jobs:
           for dir in config nginx linnms.init.d linnms.service.d; do
             test -d "$export_root/$dir" || { echo "Missing $dir" >&2; exit 1; }
             mkdir -p "$dir"
-            rsync -a --delete "$export_root/$dir/" "$dir/"
+            rsync -a --delete --exclude=vendor/ --exclude=/app/config/database.php "$export_root/$dir/" "$dir/"
           done
 
           if find config nginx linnms.init.d linnms.service.d -type d -name vendor -print -quit | grep -q .; then
