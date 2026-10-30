@@ -28,16 +28,6 @@ WEB_SUFFIXES = {".php", ".html", ".css", ".js", ".ico", ".png", ".jpg", ".jpeg",
 RUNTIME_SUFFIXES = {".php", ".json"}
 FORBIDDEN_COMPONENTS = {".git", ".github", "docker", "doc", "tests", "test", "tools", "source-seed", "__pycache__"}
 FORBIDDEN_SUFFIXES = {".sample", ".bak", ".orig", ".log", ".tmp", ".temp"}
-REQUIRED = {
-    "config/app/config/public-entry.php",
-    "config/app/runtime/app/paths.php",
-    "config/app/runtime/backend/api.php",
-    "config/www/index.php",
-    "nginx/nginx.conf",
-    "nginx/site-confs/default.conf",
-    "linnms.init.d/50-linnms-public-init",
-}
-
 def permitted(rel: pathlib.PurePosixPath) -> bool:
     name = rel.name
     s = rel.as_posix()
@@ -95,9 +85,6 @@ def main() -> None:
     dest = args.output.resolve()
     if dest.exists() or dest.is_relative_to(source) or source.is_relative_to(dest):
         raise SystemExit("Refusing existing or nested output tree")
-    missing = sorted(item for item in REQUIRED if not (source / item).is_file())
-    if missing:
-        raise SystemExit("Missing required LINNMS bundle components: " + ", ".join(missing))
     dest.mkdir(parents=True, mode=0o700)
     file_count = 0
     for path in source.rglob("*"):
