@@ -46,7 +46,7 @@ jobs:
             git -C "$work/source" checkout -q --detach "$SOURCE_SHA"
           fi
           git -C "$work/source" rev-parse HEAD > "$work/revision"
-          python3 scripts/sync_master.py "$work/source" "$work/export"
+          python3 scripts/master.py "$work/source" "$work/export"
 
       - name: Update public source
         shell: bash
