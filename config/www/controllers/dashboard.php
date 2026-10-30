@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 require_once LINNMS_UI_ROOT . '/app/internal-api-client.php';
-require_once project_path('view', 'partials', 'dashboard', 'view.php');
+require_once __DIR__ . '/dashboard-view.php';
 
 function dashboard_recent_activity_rows(array $events): array
 {
@@ -90,7 +90,6 @@ function dashboard_read_data(int $userId, array $query): array
         'recentEvents' => dashboard_recent_activity_rows(is_array($activity['events'] ?? null) ? $activity['events'] : []),
         'recentActivityPage' => $activityPage,
         'recentActivityPages' => $activityPages,
-        'recentActivityPageInfo' => page_info_top($activityPage, $activityPages),
         'recentActivityTotal' => (int)($activity['total'] ?? 0),
         'recentActivitySearch' => $activitySearch,
         'recentActivityDevice' => $activityDevice,

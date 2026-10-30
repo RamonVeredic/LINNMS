@@ -30,17 +30,27 @@ final class PageShellReadService
             'switch_quota' => $this->db->getUserSnmpDeviceQuota($userId, 'cisco_catalyst_2960s'),
         ];
 
-        if ($page === 'edit-device' && $rowId > 0) {
+        if ($page === 'device-edit-form' && $rowId > 0) {
             $result['editable_device'] = $this->db->getEditableDevice($userId, $rowId);
             $result['olt_driver_flags'] = $this->db->getOltDriverSupportFlags();
             $result['snmp_driver_flags'] = $this->db->getSnmpDriverSupportFlags();
-        } elseif ($page === 'edit-api-olt' && $rowId > 0) {
-            $result['editable_api_olt'] = $this->db->getOltByRowId($userId, $rowId);
         } elseif (in_array($page, ['view-mikrotik', 'view-mikrotik-interface', 'view-switch'], true) && $rowId > 0) {
             $result['traffic_interfaces'] = $this->db->getDeviceTrafficInterfaces($userId, $rowId);
         } elseif ($page === 'notification') {
             $result['notification_devices'] = $this->db->getNotificationDeviceRows($userId);
             $result['notification_selected_ids'] = $this->db->getNotificationSelectedDeviceIds($userId);
+            $result['notification_limits'] = [
+                'problem_threshold' => [
+                    'value' => LinnmsRepository::clampOnuRxProblemLimit($result['onu_problem_settings']['rx_power_threshold_dbm'] ?? null),
+                    'min' => LinnmsRepository::ONU_RX_PROBLEM_MIN_DBM,
+                    'max' => LinnmsRepository::ONU_RX_PROBLEM_MAX_DBM,
+                ],
+                'signal_threshold_dbm' => [
+                    'value' => LinnmsRepository::clampOnuRxDetection($result['user_settings']['signal_threshold_dbm'] ?? null),
+                    'min' => LinnmsRepository::ONU_RX_DETECTION_MIN_DBM,
+                    'max' => LinnmsRepository::ONU_RX_DETECTION_MAX_DBM,
+                ],
+            ];
         } elseif ($page === 'settings-admin') {
             $user = $this->db->getUser($userId);
             if (!is_array($user) || (string)($user['role'] ?? '') !== 'admin') {
@@ -53,6 +63,20 @@ final class PageShellReadService
             $result['writer_count'] = $this->db->getDaemonCount('writer');
             $result['fast_sync_onu_batch_size'] = $this->db->getFastSyncOnuBatchSize();
             $result['managed_device_users'] = $this->db->getManagedUsersForDeviceLimits();
+            $result['numeric_setting_limits'] = [
+                'sync_fast_interval_minutes' => ['min' => LinnmsRepository::MIN_SYNC_FAST_INTERVAL_MINUTES, 'max' => LinnmsRepository::MAX_SYNC_FAST_INTERVAL_MINUTES, 'default' => LinnmsRepository::DEFAULT_SYNC_FAST_INTERVAL_MINUTES],
+                'olt_graph_interval_minutes' => ['min' => LinnmsRepository::MIN_OLT_GRAPH_INTERVAL_MINUTES, 'max' => LinnmsRepository::MAX_OLT_GRAPH_INTERVAL_MINUTES, 'default' => LinnmsRepository::DEFAULT_OLT_GRAPH_INTERVAL_MINUTES],
+                'sync_discovery_interval_minutes' => ['min' => LinnmsRepository::MIN_SYNC_DISCOVERY_INTERVAL_MINUTES, 'max' => LinnmsRepository::MAX_SYNC_DISCOVERY_INTERVAL_MINUTES, 'default' => LinnmsRepository::DEFAULT_SYNC_DISCOVERY_INTERVAL_MINUTES],
+                'sync_middle_interval_minutes' => ['min' => LinnmsRepository::MIN_SYNC_MIDDLE_INTERVAL_MINUTES, 'max' => LinnmsRepository::MAX_SYNC_MIDDLE_INTERVAL_MINUTES, 'default' => LinnmsRepository::DEFAULT_SYNC_MIDDLE_INTERVAL_MINUTES],
+                'sync_fast_deadline_seconds' => ['min' => LinnmsRepository::MIN_SYNC_DEADLINE_SECONDS, 'max' => LinnmsRepository::MAX_SYNC_DEADLINE_SECONDS, 'default' => LinnmsRepository::DEFAULT_SYNC_FAST_DEADLINE_SECONDS],
+                'sync_discovery_deadline_seconds' => ['min' => LinnmsRepository::MIN_SYNC_DEADLINE_SECONDS, 'max' => LinnmsRepository::MAX_SYNC_DEADLINE_SECONDS, 'default' => LinnmsRepository::DEFAULT_SYNC_DISCOVERY_DEADLINE_SECONDS],
+                'sync_middle_deadline_seconds' => ['min' => LinnmsRepository::MIN_SYNC_DEADLINE_SECONDS, 'max' => LinnmsRepository::MAX_SYNC_DEADLINE_SECONDS, 'default' => LinnmsRepository::DEFAULT_SYNC_MIDDLE_DEADLINE_SECONDS],
+                'snmp_request_timeout_ms' => ['min' => 0, 'max' => LinnmsRepository::MAX_SNMP_REQUEST_TIMEOUT_MS, 'default' => LinnmsRepository::DEFAULT_SNMP_REQUEST_TIMEOUT_MS],
+                'onu_missing_scan_limit' => ['min' => LinnmsRepository::MIN_ONU_MISSING_SCAN_LIMIT, 'max' => LinnmsRepository::MAX_ONU_MISSING_SCAN_LIMIT, 'default' => LinnmsRepository::DEFAULT_ONU_MISSING_SCAN_LIMIT],
+                'reader_count' => ['min' => 1, 'max' => LinnmsRepository::MAX_READER_COUNT, 'default' => LinnmsRepository::DEFAULT_READER_COUNT],
+                'fast_sync_onu_batch_size' => ['min' => LinnmsRepository::MIN_FAST_SYNC_ONU_BATCH_SIZE, 'max' => LinnmsRepository::MAX_FAST_SYNC_ONU_BATCH_SIZE, 'default' => LinnmsRepository::DEFAULT_FAST_SYNC_ONU_BATCH_SIZE],
+                'writer_count' => ['min' => 1, 'max' => LinnmsRepository::MAX_WRITER_COUNT, 'default' => LinnmsRepository::DEFAULT_WRITER_COUNT],
+            ];
         }
 
         if ($page !== 'dashboard') {
@@ -143,6 +167,7 @@ final class PageShellReadService
             $pages = max(1, (int)ceil($total / $pageSize));
             $historyPage = max(1, min($pages, (int)($params['notif_page'] ?? 1)));
             $result['notification_history'] = [
+                'page_size' => $pageSize,
                 'total' => $total,
                 'page' => $historyPage,
                 'pages' => $pages,
@@ -158,6 +183,7 @@ final class PageShellReadService
             $pages = max(1, (int)ceil($total / $pageSize));
             $activityPage = max(1, min($pages, (int)($params['log_page'] ?? 1)));
             $result['application_logs'] = [
+                'page_size' => $pageSize,
                 'total' => $total,
                 'page' => $activityPage,
                 'pages' => $pages,

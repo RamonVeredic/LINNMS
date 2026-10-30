@@ -1,8 +1,7 @@
-<?php require_once __DIR__ . '/partials/dashboard/view.php'; ?>
 <div class="stats summary-stats dashboard-summary-stats">
     <!--KONSISTEN BUTTON-->
     <button class="stat-card accent-blue">
-        <span class="teal-text">Total Perangkat</span>
+        <span class="text-primary">Total Perangkat</span>
         <strong data-dashboard-stat="total_devices"><?= $dashboardRead['totalDevices'] ?></strong>
     </button>
     <button class="stat-card accent-teal">
@@ -41,33 +40,32 @@
             <span><i class="bi bi-search" aria-hidden="true"></i></span>
             <input data-table-search="devicesTable" type="search" aria-label="Cari perangkat" placeholder="Cari...">
         </div>
-        <a class="button primary dashboard-add-device-button" href="<?= h(public_page_url('add-device')) ?>"><i class="bi bi-plus-circle"></i>Add</a>
+        <button class="button primary dashboard-add-device-button" type="button" data-device-add-open aria-haspopup="dialog" aria-controls="deviceAddModal"><i class="bi bi-plus-circle" aria-hidden="true"></i>Add</button>
     </div>
-    <?php require project_path('pages', 'partials', 'dashboard', 'device-table.php'); ?>
+    <?php require project_path('view', 'partials', 'dashboard', 'device-table.php'); ?>
 </section>
 <section class="table-panel recent-activity-panel">
     <div class="recent-activity-head">
         <h2>Aktivitas Terbaru</h2>
-        <span class="page-info-top" data-activity-page-info><?= h($dashboardRead['recentActivityPageInfo']) ?></span>
-    </div>
-    <form class="table-toolbar table-filter-toolbar recent-activity-toolbar" method="get" data-recent-activity-filter-form>
-        <div class="left">
-            <div class="table-search">
-                <span><i class="bi bi-search" aria-hidden="true"></i></span>
-                <input type="search" name="activity_q" value="<?= h($recentActivitySearch) ?>" placeholder="Cari..." aria-label="Cari aktivitas terbaru" data-recent-activity-search>
+        <form class="table-toolbar table-filter-toolbar recent-activity-toolbar" method="get" data-recent-activity-filter-form>
+            <div class="left">
+                <div class="table-search">
+                    <span><i class="bi bi-search" aria-hidden="true"></i></span>
+                    <input type="search" name="activity_q" value="<?= h($recentActivitySearch) ?>" placeholder="Cari..." aria-label="Cari aktivitas terbaru" data-recent-activity-search>
+                </div>
             </div>
-        </div>
-        <div class="right">
-            <select name="activity_device" aria-label="Filter perangkat aktivitas terbaru" data-recent-activity-filter data-select-icon="bi bi-funnel" data-select-bullet="cyan" data-select-search="Cari ...">
-                <option value="" data-select-heading>Semua</option>
-                <?php foreach ($dashboardRead['recentActivityDevices'] as $activityDevice): ?>
-                    <option value="<?= h($activityDevice['name']) ?>" <?= $activityDevice['ip'] !== '' ? 'data-meta="' . h($activityDevice['ip']) . '"' : '' ?> <?= $recentActivityDevice === $activityDevice['name'] ? 'selected' : '' ?>><?= h($activityDevice['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <button type="submit" hidden>Filter</button>
-    </form>
-    <div class="recent-activity-results" data-recent-activity-results role="region" aria-label="Daftar aktivitas terbaru" tabindex="0">
+            <div class="right">
+                <select name="activity_device" aria-label="Filter perangkat aktivitas terbaru" data-recent-activity-filter data-select-icon="bi bi-funnel" data-select-bullet="cyan" data-select-search="Cari ...">
+                    <option value="" data-select-heading>Semua</option>
+                    <?php foreach ($dashboardRead['recentActivityDevices'] as $activityDevice): ?>
+                        <option value="<?= h($activityDevice['name']) ?>" <?= $activityDevice['ip'] !== '' ? 'data-meta="' . h($activityDevice['ip']) . '"' : '' ?> <?= $recentActivityDevice === $activityDevice['name'] ? 'selected' : '' ?>><?= h($activityDevice['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <button type="submit" hidden>Filter</button>
+        </form>
+    </div>
+    <div class="recent-activity-results list-scroll-viewport" data-recent-activity-results role="region" aria-label="Daftar aktivitas terbaru" tabindex="0">
         <div
             class="public-log-list"
             data-recent-activity-list
@@ -75,7 +73,7 @@
             data-activity-pages="<?= (int)$recentActivityPages ?>"
             aria-live="polite"
             aria-atomic="false">
-            <?php require project_path('pages', 'partials', 'dashboard', 'recent-activity.php'); ?>
+            <?php require project_path('view', 'partials', 'dashboard', 'recent-activity.php'); ?>
         </div>
     </div>
     <?php render_numbered_pagination([
@@ -93,4 +91,26 @@
 
 
 
-<?php require project_path('pages', 'partials', 'device-category-detail-modal.php'); ?>
+<?php require project_path('view', 'partials', 'device-category-detail-modal.php'); ?>
+<div id="deviceAddModal" class="modal device-add-modal" data-device-add-modal<?= $deviceAddModalOpen ? ' data-open-on-load="1"' : '' ?> hidden aria-hidden="true">
+    <div class="modal-card device-add-modal-card" role="dialog" aria-modal="true" aria-labelledby="deviceAddModalTitle">
+        <header class="device-add-modal-head modal-header">
+            <h2 id="deviceAddModalTitle">Tambah Perangkat</h2>
+            <button class="icon-button modal-close-button" type="button" data-device-add-close aria-label="Tutup modal tambah perangkat"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+        </header>
+        <div class="device-add-modal-body" data-device-add-body>
+            <p class="text-muted" role="status">Memuat formulir...</p>
+        </div>
+    </div>
+</div>
+<div id="deviceEditModal" class="modal device-add-modal device-edit-modal" data-device-edit-modal data-open-device-id="<?= (int)(valid_positive_id($_GET['edit_device'] ?? null) ?? 0) ?>" hidden aria-hidden="true">
+    <div class="modal-card device-add-modal-card" role="dialog" aria-modal="true" aria-labelledby="deviceEditModalTitle">
+        <header class="device-add-modal-head modal-header">
+            <h2 id="deviceEditModalTitle" data-device-edit-title>Edit Perangkat</h2>
+            <button class="icon-button modal-close-button" type="button" data-device-edit-close aria-label="Tutup modal edit perangkat"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+        </header>
+        <div class="device-add-modal-body" data-device-edit-body>
+            <p class="text-muted" role="status">Memuat perangkat...</p>
+        </div>
+    </div>
+</div>

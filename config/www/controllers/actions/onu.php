@@ -86,7 +86,7 @@ function handle_onu_action(string $action): bool
         $size = (int)($file['size'] ?? 0);
         $name = trim((string)($file['name'] ?? ''));
         $path = (string)($file['tmp_name'] ?? '');
-        if ($error !== UPLOAD_ERR_OK || $size < 1 || $size > OnuBackupService::MAX_FILE_BYTES
+        if ($error !== UPLOAD_ERR_OK || $size < 1 || $size > (int)($GLOBALS['linnms_onu_backup_limits']['max_file_bytes'] ?? 0)
             || strtolower((string)pathinfo($name, PATHINFO_EXTENSION)) !== 'csv'
             || $path === '' || !is_uploaded_file($path)) {
             unset($_SESSION['onu_backup_preview']);
@@ -124,7 +124,7 @@ function handle_onu_action(string $action): bool
         $preview = $_SESSION['onu_backup_preview'] ?? null;
         $token = is_array($preview) ? (string)($preview['token'] ?? '') : '';
         if (!is_array($preview) || (int)($preview['user_id'] ?? 0) !== $uid
-            || time() - (int)($preview['created_at'] ?? 0) > OnuBackupService::PREVIEW_TTL_SECONDS
+            || time() - (int)($preview['created_at'] ?? 0) > (int)($GLOBALS['linnms_onu_backup_limits']['preview_ttl_seconds'] ?? 0)
             || $token === '' || !hash_equals($token, (string)($_POST['preview_token'] ?? ''))) {
             flash('error', 'Gagal menjalankan tindakan.');
             redirect(public_settings_url() . '#onu-backup');

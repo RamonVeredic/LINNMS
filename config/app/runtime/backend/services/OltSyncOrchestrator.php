@@ -58,6 +58,23 @@ final class OltSyncOrchestrator
         foreach ($this->db->getDueSnmpOlts($userId) as $olt) {
             if ($driverName !== null && olt_monitoring_driver($olt) !== $driverName) continue;
             try {
+                if (in_array(strtoupper(trim((string)($olt['driver_status'] ?? ''))), ['DOWN', 'WARN'], true)) {
+                    $probe = $this->service->probeOfflineOlt($userId, (int)$olt['id']);
+                    if (empty($probe['reachable'])) {
+                        if (!empty($probe['configuration_error'])) {
+                            $failed++;
+                            $errors[] = [
+                                'olt_id' => (int)$olt['id'],
+                                'olt_name' => (string)($olt['name'] ?? ''),
+                                'driver_id' => (string)device_driver_type($olt),
+                            ] + $probe;
+                        } elseif (!empty($probe['device_down'])) {
+                            $down++;
+                        }
+                        if ($yieldAfterBatch !== null) $yieldAfterBatch();
+                        continue;
+                    }
+                }
                 $result = $this->service->sync($userId, (int)$olt['id'], true, false, null, $yieldAfterBatch);
             } catch (Throwable $error) {
                 error_log((string)$error);
@@ -74,6 +91,10 @@ final class OltSyncOrchestrator
                     'error' => (string)$error,
                     'new_failure' => false,
                 ];
+            }
+            if (!empty($result['snmp_unavailable'])) {
+                if ($yieldAfterBatch !== null) $yieldAfterBatch();
+                continue;
             }
             if (!empty($result['ok'])) {
                 $success++;
@@ -108,6 +129,7 @@ final class OltSyncOrchestrator
         $retryDriverId = '';
         $targetedRetry = false;
         $driverDisallowed = false;
+        $result = [];
 
         try {
             $olt = $this->db->getOltByRowId($userId, $rowId);
@@ -126,10 +148,16 @@ final class OltSyncOrchestrator
                 $retryPayload = json_decode((string)($request['retry_middle_json'] ?? ''), true);
                 $retryDriverId = (string)device_driver_type($olt);
                 $savedRows = is_array($retryPayload['rows'] ?? null) ? $retryPayload['rows'] : [];
-                $result = $savedRows !== []
-                    ? $this->service->retryMiddleOnus($userId, $rowId,
-                        (string)($retryPayload['driver_id'] ?? ''), $savedRows, $reportProgress)
-                    : ['retry_invalid' => true];
+                $probe = in_array(strtoupper(trim((string)($olt['driver_status'] ?? ''))), ['DOWN', 'WARN'], true)
+                    ? $this->service->probeOfflineOlt($userId, $rowId) : ['reachable' => true];
+                $result = empty($probe['reachable'])
+                    ? ['ok' => false, 'device_down' => !empty($probe['device_down']),
+                        'snmp_unavailable' => !empty($probe['snmp_unavailable']),
+                        'message' => 'Menunggu koneksi SNMP OLT.']
+                    : ($savedRows !== []
+                        ? $this->service->retryMiddleOnus($userId, $rowId,
+                            (string)($retryPayload['driver_id'] ?? ''), $savedRows, $reportProgress)
+                        : ['retry_invalid' => true]);
                 if (!empty($result['retry_invalid'])) {
                     $result = $this->service->sync($userId, $rowId,
                         (int)$request['record_changes'] === 1, true, $reportProgress);
@@ -188,7 +216,7 @@ final class OltSyncOrchestrator
 
         $this->db->finishOltScanRequest($requestId, $token, $ok, $ok ? '' : $error,
             $cancelled, $retryRows, $retryDriverId);
-        $this->db->logApplication($userId, 'OLT',
+        if (empty($result['device_down']) && empty($result['snmp_unavailable'])) $this->db->logApplication($userId, 'OLT',
             (int)$request['record_changes'] === 1 ? 'full_scan' : 'initial_sync',
             $cancelled ? 'warning' : ($ok ? 'success' : 'error'),
             $cancelled ? 'Permintaan sinkronisasi dibatalkan: ' . $error

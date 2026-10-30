@@ -29,17 +29,17 @@
         href="<?= h(asset_url('assets/icon.ico', (string)(@filemtime(LINNMS_UI_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'icon.ico') ?: 0))) ?>">
     <link
         rel="stylesheet"
-        href="<?= h(asset_url('assets/vendor/bootstrap-icons/bootstrap-icons.min.css', '1.13.1')) ?>">
+        href="<?= h(asset_url('assets/icon/bootstrap-icons/bootstrap-icons.min.css', '1.13.1')) ?>">
     <?php
     $pageAssets = page_asset_manifest($page);
     $oltTerminalEnabled = $page === 'view-olt' && (int)($oltDetail['hybrid_status'] ?? 0) === 1;
-    $styleAssets = ['assets/css/app.css'];
+    $styleAssets = ['assets/css/linnms-main.min.css'];
     if ($oltTerminalEnabled) {
-        $styleAssets[] = 'assets/vendor/xterm/xterm.css';
+        $styleAssets[] = 'assets/css/page/view-olt/xterm.css';
     }
     foreach ($pageAssets['styles'] as $pageStyle) $styleAssets[] = $pageStyle;
     $styleAssets[] = 'assets/css/responsif.css';
-    $styleAssets[] = 'assets/css/toast.css';
+    $styleAssets[] = 'assets/css/linnms-termplet.css';
     foreach (array_values(array_unique($styleAssets)) as $styleAsset):
         $stylePath = LINNMS_UI_ROOT . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $styleAsset);
 
@@ -63,7 +63,7 @@
             <div class="sidebar-scroll">
                 <div class="nav-label">DASHBOARD</div>
                 <nav>
-                    <a class="<?= in_array(     $page,     ['dashboard', 'view-olt', 'add-device', 'edit-device', 'view-mikrotik', 'view-mikrotik-interface', 'view-switch'],     true ) ? 'active' : '' ?>" href="<?= h(public_page_url('dashboard')) ?>">
+                    <a class="<?= in_array(     $page,     ['dashboard', 'view-olt', 'add-device', 'view-mikrotik', 'view-mikrotik-interface', 'view-switch'],     true ) ? 'active' : '' ?>" href="<?= h(public_page_url('dashboard')) ?>">
                         <i class="bi bi-speedometer2" aria-hidden="true"></i> Dashboard</a>
                 </nav>
 
@@ -130,6 +130,10 @@
                     </button>
                 </div>
                 <div class="topbar-right">
+                    <span class="status mono account-idle-badge" aria-label="Status: idle">
+                        <span class="status-dot success is-pulsing" aria-hidden="true"></span>
+                        idle
+                    </span>
                     <div class="account-menu" data-account-menu>
                         <button class="topbar-profile-link" type="button" data-account-menu-toggle aria-haspopup="menu" aria-expanded="false" aria-controls="accountDropdown" aria-label="Menu akun">
                             <span class="user-chip"><i class="bi bi-person-circle" aria-hidden="true"></i></span>
@@ -215,11 +219,11 @@
     }
     if (($page === 'view-onu' && !empty($onuViewCapabilities['onu_traffic']))
         || in_array($page, ['view-olt', 'view-mikrotik', 'view-switch'], true)) {
-        $scriptAssets[] = 'assets/vendor/chartjs/chart.umd.js';
+        $scriptAssets[] = 'assets/js/chart.umd.js';
     }
     $pageScriptCandidates = $pageAssets['scripts'];
     if ($oltTerminalEnabled) {
-        $pageScriptCandidates = array_merge(['assets/vendor/xterm/xterm.js', 'assets/vendor/xterm/addon-fit.js'], $pageScriptCandidates);
+        $pageScriptCandidates = array_merge(['assets/js/page/view-olt/xterm.js', 'assets/js/page/view-olt/addon-fit.js'], $pageScriptCandidates);
     }
     foreach (array_values(array_unique($pageScriptCandidates)) as $pageScript) {
         $pageScriptPath = LINNMS_UI_ROOT . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $pageScript);

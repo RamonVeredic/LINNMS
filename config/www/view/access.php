@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link rel="icon" type="image/x-icon" href="<?= h(asset_url('assets/icon.ico', 'a')) ?>">
-    <link rel="stylesheet" href="<?= h(asset_url('assets/vendor/bootstrap-icons/bootstrap-icons.min.css', '1.13.1')) ?>"><?php foreach (array_merge(['assets/css/app.css'], page_asset_manifest('access')['styles'], ['assets/css/responsif.css', 'assets/css/toast.css']) as $a): ?>
+    <link rel="stylesheet" href="<?= h(asset_url('assets/icon/bootstrap-icons/bootstrap-icons.min.css', '1.13.1')) ?>"><?php foreach (array_merge(['assets/css/linnms-main.min.css'], page_asset_manifest('access')['styles'], ['assets/css/responsif.css', 'assets/css/linnms-termplet.css']) as $a): ?>
         <link rel="stylesheet" href="<?= h(asset_url($a, 'v-' . (string)(@filemtime(LINNMS_UI_ROOT . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $a)) ?: 0))) ?>"><?php endforeach; ?><title>Aktivasi · <?= h($appName) ?></title>
 </head>
 

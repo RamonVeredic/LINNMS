@@ -65,8 +65,8 @@ $oltOnuTypePonGroups = $onuTypeManager['groups'];
 <?php endif; ?>
 <div id="<?= h($oltOnuTypeModalId) ?>" class="modal olt-onu-type-device-modal" hidden aria-hidden="true" data-olt-profile-modal>
     <div class="modal-card olt-onu-type-modal-card" role="dialog" aria-modal="true" aria-labelledby="<?= h($oltOnuTypeModalId) ?>Title">
-        <div class="olt-onu-type-modal-heading">
-            <h2 id="<?= h($oltOnuTypeModalId) ?>Title">Tambah ONU Type</h2><button type="button" class="icon-button" data-olt-profile-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+        <div class="olt-onu-type-modal-heading modal-header">
+            <h2 id="<?= h($oltOnuTypeModalId) ?>Title">Tambah ONU Type</h2><button type="button" class="icon-button modal-close-button" data-olt-profile-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         </div>
         <form method="post" data-onu-type-create class="olt-onu-type-device-create">
             <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">

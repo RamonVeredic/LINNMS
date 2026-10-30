@@ -34,6 +34,7 @@ final class SnmpDeviceService
         $ip = trim((string)($input['ip_address'] ?? ''));
         $snmpPortRaw = trim((string)($input['snmp_port'] ?? '161'));
         $community = trim((string)($input['community'] ?? ''));
+        if ($community === '') $community = trim((string)($device['snmp_community'] ?? ''));
 
         $expectedHandler = $type === 'mikrotik' ? 'mikrotik_snmp' : 'switch_snmp';
         if (!is_array($definition) || ($definition['handler'] ?? '') !== $expectedHandler || !isset($this->supportedDevices()[$type])) {

@@ -1,7 +1,7 @@
 <?php
-$oltServiceLimit = (int)($profileServiceLimits['olt'] ?? LinnmsRepository::DEFAULT_OLT_LIMIT);
-$mikrotikServiceLimit = (int)($profileServiceLimits['mikrotik'] ?? LinnmsRepository::DEFAULT_MIKROTIK_LIMIT);
-$switchServiceLimit = (int)($profileServiceLimits['switch'] ?? LinnmsRepository::DEFAULT_SWITCH_LIMIT);
+$oltServiceLimit = (int)($profileServiceLimits['olt'] ?? 0);
+$mikrotikServiceLimit = (int)($profileServiceLimits['mikrotik'] ?? 0);
+$switchServiceLimit = (int)($profileServiceLimits['switch'] ?? 0);
 $oltServiceLimitLabel = $oltServiceLimit === 0 ? 'Unlimited' : (string)$oltServiceLimit;
 $mikrotikServiceLimitLabel = $mikrotikServiceLimit === 0 ? 'Unlimited' : (string)$mikrotikServiceLimit;
 $switchServiceLimitLabel = $switchServiceLimit === 0 ? 'Unlimited' : (string)$switchServiceLimit;
@@ -53,9 +53,9 @@ if ($accountTier === '') $accountTier = '-';
 
         <div class="modal settings-edit-modal" id="profileEditPanel" data-settings-modal hidden>
             <div class="modal-card settings-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="profileEditTitle" tabindex="-1">
-                <div class="panel-heading tittle-subtitle settings-edit-heading">
+                <div class="panel-heading tittle-subtitle settings-edit-heading modal-header">
                     <h2 id="profileEditTitle">Edit Profil</h2>
-                    <button class="button secondary" type="button" data-settings-modal-close aria-label="Tutup edit profil"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+                    <button class="icon-button modal-close-button" type="button" data-settings-modal-close aria-label="Tutup edit profil"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
                 </div>
                 <form method="post" class="stack-form">
                     <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
@@ -74,5 +74,5 @@ if ($accountTier === '') $accountTier = '-';
             </div>
         </div>
 
-        <?php require project_path('pages', 'partials', 'settings-onu-backup.php'); ?>
+        <?php require project_path('view', 'partials', 'settings-onu-backup.php'); ?>
     </section>

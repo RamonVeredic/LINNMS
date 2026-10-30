@@ -2,10 +2,9 @@
     <div class="panel-heading">
         <div class="panel-title-stack">
             <h2>Riwayat Notifikasi</h2>
-            <p class="page-info-top"><?= h(page_info_top($channelHistoryPage, $channelHistoryPages)) ?></p>
         </div>
     </div>
-    <div class="channel-history-list">
+    <div class="channel-history-list list-scroll-viewport" role="region" aria-label="Riwayat notifikasi" tabindex="0">
         <?php if ($channelHistoryEvents === []): ?>
             <div class="channel-history-empty">Belum ada riwayat notifikasi</div>
         <?php else: foreach ($channelHistoryEvents as $event): ?>

@@ -11,15 +11,16 @@ $activityUrl = static function (int $targetPage): string {
 <section class="table-panel recent-activity-panel">
     <div class="table-toolbar table-filter-toolbar">
         <div class="left">
-            <p class="page-info-top"><?= h(page_info_top($activityPage, $activityPages)) ?></p>
             <div class="table-search">
                 <span><i class="bi bi-search" aria-hidden="true"></i></span>
                 <input data-log-search="activityFeed" placeholder="Cari...">
             </div>
         </div>
     </div>
-    <div class="public-log-list" id="activityFeed">
-        <?php require project_path('pages', 'partials', 'applogs', 'activity-feed.php'); ?>
+    <div class="list-scroll-viewport" role="region" aria-label="App Log" tabindex="0">
+        <div class="public-log-list" id="activityFeed">
+            <?php require project_path('view', 'partials', 'applogs', 'activity-feed.php'); ?>
+        </div>
     </div>
     <?php render_numbered_pagination([
         'page' => $activityPage,

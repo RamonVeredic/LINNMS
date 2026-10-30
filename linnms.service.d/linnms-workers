@@ -1,0 +1,107 @@
+#!/usr/bin/with-contenv sh
+set -u
+
+WORKERS=/opt/linnms/runtime/workers
+PHP_BIN="$(command -v php85 || command -v php || true)"
+[ -n "$PHP_BIN" ] || exit 127
+
+active_pid=''
+terminate_child() {
+  trap - TERM INT HUP
+  if [ -n "$active_pid" ]; then
+    kill "$active_pid" 2>/dev/null || true
+    wait "$active_pid" 2>/dev/null || true
+  fi
+  exit 0
+}
+invoke() {
+  "$@" &
+  active_pid=$!
+  wait "$active_pid"
+  result=$?
+  active_pid=''
+  return "$result"
+}
+pause() { invoke sleep "$1"; }
+
+ready() {
+  s6-setuidgid abc "$PHP_BIN" "$WORKERS/access-ready.php" "$@" >/dev/null
+}
+
+run_slot() {
+  role=$1
+  slot=$2
+  while [ -d /opt/linnms/runtime/vendor/driver ]; do
+    if ready "$role" "$slot"; then
+      if [ "$role" = reader ]; then
+        invoke s6-setuidgid abc env LINNMS_WORKER_DAEMON=1 LINNMS_WORKER_SLOT="$slot" LINNMS_SYNC_PIPELINE=1 "$PHP_BIN" "$WORKERS/sync.php" || true
+      else
+        invoke s6-setuidgid abc env LINNMS_WRITER_DAEMON=1 LINNMS_WRITER_SLOT="$slot" "$PHP_BIN" "$WORKERS/writer.php" || true
+      fi
+    fi
+    pause 15
+  done
+}
+
+run_role() {
+  role=$1
+  while [ -d /opt/linnms/runtime/vendor/driver ]; do
+    case "$role" in
+      access-refresh)
+        invoke s6-setuidgid abc "$PHP_BIN" "$WORKERS/access-refresh.php" --daemon >/dev/null || true
+        pause 5 ;;
+      cli-broker)
+        invoke s6-setuidgid abc "$PHP_BIN" "$WORKERS/cli-broker.php" || true
+        pause 5 ;;
+      courier)
+        if ready; then
+          invoke s6-setuidgid abc env LINNMS_COURIER_DAEMON=1 LINNMS_COURIER_SLOT=1 "$PHP_BIN" "$WORKERS/courier.php" || true
+          pause 60
+        else pause 5; fi ;;
+      initial-reader)
+        if ready; then
+          invoke s6-setuidgid abc env LINNMS_SYNC_PIPELINE=1 LINNMS_INITIAL_SLOT=1 "$PHP_BIN" "$WORKERS/initial-olt.php" || true
+        fi
+        pause 2 ;;
+      notifier)
+        if ready; then
+          invoke s6-setuidgid abc "$PHP_BIN" "$WORKERS/notify.php" >/dev/null || true
+          pause 180
+        else pause 60; fi ;;
+      sampler)
+        if ready; then
+          invoke s6-setuidgid abc env LINNMS_SAMPLER_DAEMON=1 LINNMS_SAMPLER_SLOT=1 "$PHP_BIN" "$WORKERS/sampler.php" || true
+          pause 60
+        else pause 5; fi ;;
+    esac
+  done
+}
+
+case "${1:-}" in
+  reader|writer)
+    case "${2:-}" in ''|*[!0-9]*) exit 2 ;; esac
+    trap terminate_child TERM INT HUP
+    run_slot "$1" "$2" ;;
+  access-refresh|cli-broker|courier|initial-reader|notifier|sampler)
+    trap terminate_child TERM INT HUP
+    run_role "$1" ;;
+  cleaner)
+    [ -d /opt/linnms/runtime/vendor/driver ] || exit 0
+    exec "$PHP_BIN" "$WORKERS/cleaner.php" ;;
+  '')
+    [ -d /opt/linnms/runtime/vendor/driver ] || exit 0
+    pids=''
+    start() { sh "$0" "$@" & pids="$pids $!"; }
+    stop() {
+      trap - TERM INT HUP
+      kill $pids 2>/dev/null || true
+      wait $pids 2>/dev/null || true
+      exit 0
+    }
+    trap stop TERM INT HUP
+    for role in access-refresh cleaner cli-broker courier initial-reader notifier sampler; do start "$role"; done
+    for slot in 1 2 3 4 5 6; do start reader "$slot"; done
+    for slot in 1 2 3; do start writer "$slot"; done
+    wait ;;
+  *) exit 2 ;;
+esac

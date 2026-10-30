@@ -88,8 +88,7 @@ final class DashboardReadService
     }
 
     private function olt(array $row): array
-    {
-        $source = (string)($row['source'] ?? '');
+    {        $source = (string)($row['source'] ?? '');
         $type = (string)($row['type'] ?? '');
         $driverId = $source === 'api' ? 'external_olt_api' : $type;
         $definition = is_array($this->driverCatalog[$driverId] ?? null) ? $this->driverCatalog[$driverId] : [];

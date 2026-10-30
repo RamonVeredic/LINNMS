@@ -1,5 +1,5 @@
 <?php if ($recent === []): ?>
-    <div class="public-log-empty"><?= h($recentActivityEmptyText) ?></div>
+    <div class="public-log-empty"><div class="empty-state"><i class="bi bi-clock-history" aria-hidden="true"></i><span><?= h($recentActivityEmptyText) ?></span></div></div>
     <?php else: foreach ($recent as $event): $view = $event['view']; ?>
         <div class="public-log-entry" data-log-row>
             <div class="public-log-message" data-log-expandable>

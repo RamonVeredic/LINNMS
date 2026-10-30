@@ -88,7 +88,7 @@ $deviceOverviewActions = trim((string)($deviceOverviewHero['actions'] ?? ''));
 
     <?php
     $deviceDetailPanelId = '';
-    require __DIR__ . '/device-detail-panel.php';
+    require __DIR__ . '/../../partials/device-detail-panel.php';
     ?>
 </div>
 <?php

@@ -601,16 +601,16 @@ trait LinnmsUserTrait
         return $map;
     }
 
-    private function mapUserActivityRows(array $rows, array $frontend, int $limit): array
+    private function mapUserActivityRows(array $rows, array $activityDefinitions, int $limit): array
     {
         $result = [];
         foreach ($rows as $row) {
             $action = trim((string)($row['action_name'] ?? ''));
-            if ($action === '' || !isset($frontend[$action])) continue;
+            if ($action === '' || !isset($activityDefinitions[$action])) continue;
 
             $level = strtolower(trim((string)($row['level'] ?? 'info')));
             $ok = !in_array($level, ['error', 'critical', 'warning'], true);
-            $definition = $frontend[$action];
+            $definition = $activityDefinitions[$action];
             $message = ($ok ? $definition['success'] : $definition['failed']);
             $rawMessage = trim((string)($row['message'] ?? ''));
             if (!empty($definition['use_message']) && $rawMessage !== '') {

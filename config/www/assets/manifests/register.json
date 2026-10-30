@@ -1,0 +1,9 @@
+{
+  "styles": [
+    "assets/css/page/login/login.css",
+    "assets/css/page/register/register.css"
+  ],
+  "scripts": [
+    "assets/js/page/register/registration.js"
+  ]
+}

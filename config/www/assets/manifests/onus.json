@@ -1,0 +1,11 @@
+{
+  "styles": [
+    "assets/css/page/onus/onus.css",
+    "assets/components/detail-modal/detail-modal.css"
+  ],
+  "scripts": [
+    "assets/js/page/onus/ajax.js",
+    "assets/js/page/onus/onu-list.js",
+    "assets/components/detail-modal/detail-modal.js"
+  ]
+}

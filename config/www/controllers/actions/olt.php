@@ -91,7 +91,7 @@ function handle_olt_action(string $action): bool
             default => linnms_action_code_message($result, 'OLT gagal ditambahkan.'),
         };
         flash('error', $message);
-        redirect('?page=add-device');
+        redirect('?page=dashboard&add_device=1');
     }
 
     if ($action === 'approve_api_olt_first_scan') {

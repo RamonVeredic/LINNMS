@@ -393,6 +393,7 @@ trait LinnmsOltTrait
         $stmt = $this->pdo->prepare(
             "SELECT
                 o.*,
+                st.driver_status,
                 (
                     SELECT COUNT(*)
                     FROM onus n
@@ -400,6 +401,7 @@ trait LinnmsOltTrait
                       AND n.is_present=1
                 ) AS database_total_onus
              FROM devices o
+             LEFT JOIN device_status st ON st.device_id=o.id AND st.user_id=o.user_id
              WHERE o.user_id=:uid
                AND o.device_type='olt'
                AND o.source=:source
@@ -426,6 +428,7 @@ trait LinnmsOltTrait
         $stmt = $this->pdo->prepare(
             "SELECT
                 o.*,
+                st.driver_status,
                 (
                     SELECT COUNT(*)
                     FROM onus n
@@ -433,6 +436,7 @@ trait LinnmsOltTrait
                       AND n.is_present=1
                 ) AS database_total_onus
              FROM devices o
+             LEFT JOIN device_status st ON st.device_id=o.id AND st.user_id=o.user_id
              WHERE o.user_id=:uid
                AND o.device_type='olt'
                AND o.id=:id
@@ -929,7 +933,7 @@ trait LinnmsOltTrait
         $intervalExpression = ':fast_interval';
         $params['fast_interval'] = $fastInterval;
         $markerClause = $this->deviceStatusHasConfigChangedColumn() ? ' OR st.config_changed_at IS NOT NULL' : '';
-        $sql = "SELECT d.* FROM devices d LEFT JOIN device_status st ON st.device_id=d.id WHERE d.user_id=:uid AND d.device_type='olt' AND d.source='snmp' AND COALESCE(st.is_present,1)=1 AND NOT EXISTS (SELECT 1 FROM olt_scan_requests initial_scan WHERE initial_scan.user_id=d.user_id AND initial_scan.olt_row_id=d.id AND initial_scan.initial_scan=1 AND initial_scan.status IN ('queued','running','writing')) AND (st.seen_at IS NULL OR TIMESTAMPDIFF(MINUTE,st.seen_at,NOW()) >= {$intervalExpression}{$markerClause}) ORDER BY d.id";
+        $sql = "SELECT d.*,st.driver_status FROM devices d LEFT JOIN device_status st ON st.device_id=d.id WHERE d.user_id=:uid AND d.device_type='olt' AND d.source='snmp' AND COALESCE(st.is_present,1)=1 AND NOT EXISTS (SELECT 1 FROM olt_scan_requests initial_scan WHERE initial_scan.user_id=d.user_id AND initial_scan.olt_row_id=d.id AND initial_scan.initial_scan=1 AND initial_scan.status IN ('queued','running','writing')) AND (st.seen_at IS NULL OR TIMESTAMPDIFF(MINUTE,st.seen_at,NOW()) >= {$intervalExpression}{$markerClause}) ORDER BY d.id";
         $stmt = $this->pdo->prepare($sql);
         $this->executeInventoryWrite($stmt, $params);
         return $this->hydrateDeviceRows($stmt->fetchAll() ?: []);

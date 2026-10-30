@@ -6,7 +6,7 @@ $operUp=strtolower((string)($interfaceDetail['oper_status']??''))==='up';
 $interfaceRate=is_array($interfaceRates[(string)(int)($interfaceDetail['if_index']??0)]??null)?$interfaceRates[(string)(int)($interfaceDetail['if_index']??0)]:[];
 $formatRate=static function(mixed $value):string{if(!is_numeric($value)||(float)$value<0)return 'N/A';$rate=(float)$value;$units=['bps','Kbps','Mbps','Gbps','Tbps'];$unit=0;while($rate>=1000&&$unit<count($units)-1){$rate/=1000;$unit++;}return ($rate>=100?number_format($rate,0):number_format($rate,2)).' '.$units[$unit];};
 ?>
-<section class="panel device-detail-hero" data-device-view data-device-id="<?= (int)$deviceDetail['id'] ?>" data-device-ref="<?= h(public_resource_token('mikrotik', (int)$deviceDetail['id'])) ?>" data-device-type="mikrotik" data-interface-name="<?= h($interfaceName) ?>">
+<section class="panel device-detail-hero" data-device-view data-device-id="<?= (int)$deviceDetail['id'] ?>" data-device-ref="<?= h(public_resource_token('mikrotik', (int)$deviceDetail['id'])) ?>" data-device-type="mikrotik" data-interface-name="<?= h($interfaceName) ?>" data-traffic-active="<?= $operUp ? 'true' : 'false' ?>">
     <div class="device-detail-hero-main">
         <div class="device-detail-icon"><i class="bi bi-ethernet" aria-hidden="true"></i></div>
         <div><h2><?= h($interfaceName) ?></h2><p><?= h(display_text($deviceDetail['name']??null)) ?> &middot; <?= h((string)$deviceDetail['ip_address']) ?></p></div>

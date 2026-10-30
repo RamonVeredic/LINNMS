@@ -1,10 +1,1 @@
-(() => {
-  'use strict';
-
-  const request = (url, options = {}) => window.fetch(url, {
-    credentials: 'same-origin',
-    ...options,
-  });
-
-  window.linnmsAjax = Object.freeze({ request });
-})();
+(()=>{"use strict";window.linnmsAjax=Object.freeze({request:(e,i={})=>window.fetch(e,{credentials:"same-origin",...i})})})();

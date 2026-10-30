@@ -358,6 +358,7 @@ trait LinnmsSyncTrait
                 "SELECT id, user_id, olt_row_id, record_changes, requested_at, retry_middle_json FROM olt_scan_requests
                  WHERE initial_scan=" . ($initialScan ? '1' : '0') . "
                    AND (status='queued' OR (status='failed' AND (initial_scan=1 OR retry_middle_json IS NOT NULL)
+                     AND (retry_middle_json IS NULL OR attempt < 4)
                      AND finished_at <= DATE_SUB(NOW(), INTERVAL LEAST(600, 60 * GREATEST(1, attempt)) SECOND)))
                  ORDER BY requested_at ASC, id ASC
                  LIMIT 1 {$lock}"

@@ -15,6 +15,17 @@ function linnms_auth_guest_request(string $action, array $data = []): array
     }
 }
 
+function linnms_registration_rule(string $key): int
+{
+    static $rules = null;
+    if ($rules === null) {
+        $guestPage = internal_api_request(0, 'guest.page.read');
+        $rules = is_array($guestPage['registration_rules'] ?? null) ? $guestPage['registration_rules'] : [];
+    }
+    if (!isset($rules[$key])) throw new RuntimeException('Aturan pendaftaran tidak tersedia: ' . $key);
+    return (int)$rules[$key];
+}
+
 function linnms_registration_async_request(): bool
 {
     return strcasecmp((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''), 'XMLHttpRequest') === 0;
@@ -47,7 +58,7 @@ function linnms_registration_result_message(string $code, int $waitSeconds = 0):
         'password_mismatch' => 'Konfirmasi password tidak sesuai.',
         'phone_invalid' => 'Nomor WhatsApp tidak valid.',
         'session_incomplete' => 'Sesi pendaftaran tidak lengkap.',
-        'code_invalid' => 'Masukkan ' . LinnmsRepository::WHATSAPP_OTP_LENGTH . ' angka kode OTP.',
+        'code_invalid' => 'Masukkan ' . linnms_registration_rule('otp_length') . ' angka kode OTP.',
         default => 'Pendaftaran gagal. Silakan coba lagi.',
     };
 }
@@ -92,7 +103,7 @@ function handle_auth_action(string $action): bool
 
     if ($action === 'register_otp_cancel') {
         unset($_SESSION['register_pending'], $_SESSION['old_register'], $_SESSION['register_validation']);
-        $_SESSION['register_form_started_at'] = time() - LinnmsRepository::REGISTRATION_MIN_FILL_SECONDS;
+        $_SESSION['register_form_started_at'] = time() - linnms_registration_rule('min_fill_seconds');
         if (linnms_registration_async_request()) linnms_registration_reply(['ok' => true, 'step' => 'form']);
         redirect('?page=register');
     }
@@ -129,7 +140,7 @@ function handle_auth_action(string $action): bool
             $username = (string)($account['username'] ?? $username);
             $displayName = (string)($account['display_name'] ?? $displayName);
             unset($_SESSION['old_register'], $_SESSION['register_validation']);
-            $_SESSION['register_form_started_at'] = time() - LinnmsRepository::REGISTRATION_MIN_FILL_SECONDS;
+            $_SESSION['register_form_started_at'] = time() - linnms_registration_rule('min_fill_seconds');
             $_SESSION['register_pending'] = [
                 'username' => $username,
                 'display_name' => $displayName,
@@ -249,7 +260,7 @@ function handle_auth_action(string $action): bool
         redirect('?page=register');
     }
     $codeInput = trim((string)($_POST['otp_code'] ?? ''));
-    if (preg_match('/^[0-9]{' . LinnmsRepository::WHATSAPP_OTP_LENGTH . '}$/', $codeInput) !== 1) {
+    if (preg_match('/^[0-9]{' . linnms_registration_rule('otp_length') . '}$/', $codeInput) !== 1) {
         $message = linnms_registration_result_message('code_invalid');
         $_SESSION['register_validation'] = ['field' => 'otp_code', 'message' => $message];
         if (linnms_registration_async_request()) linnms_registration_reply(['ok' => false, 'message' => $message, 'field' => 'otp_code'], 422);

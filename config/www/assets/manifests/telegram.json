@@ -1,0 +1,9 @@
+{
+  "styles": [
+    "assets/components/notification-channel/notification-channel.css"
+  ],
+  "scripts": [
+    "assets/components/notification-channel/credential-editor.js",
+    "assets/js/page/telegram/telegram-settings.js"
+  ]
+}

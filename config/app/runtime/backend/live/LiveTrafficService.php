@@ -49,6 +49,11 @@ final class LiveTrafficService
     {
         $rowId = (int)($input['onu_row_id'] ?? 0);
         if ($rowId < 1) throw new InvalidArgumentException('ONU tidak valid.');
+        if (!$this->onuReader()->isActive($userId, $rowId)) {
+            return ['ok' => true, 'code' => 'ok', 'data' => [
+                'onu_row_id' => $rowId, 'active' => false, 'series' => [], 'live' => null,
+            ]];
+        }
         if (!$this->onuReader()->supports($userId, $rowId)) {
             return ['ok' => false, 'code' => 'unsupported', 'data' => []];
         }
@@ -96,6 +101,7 @@ final class LiveTrafficService
         $last = $series !== [] ? end($series) : null;
         return ['ok' => true, 'code' => 'ok', 'data' => [
             'onu_row_id' => $rowId,
+            'active' => true,
             'series' => $series,
             'live' => is_array($last)
                 ? ['at' => $last['at'], 'rx_bps' => $last['rx'], 'tx_bps' => $last['tx']] : null,

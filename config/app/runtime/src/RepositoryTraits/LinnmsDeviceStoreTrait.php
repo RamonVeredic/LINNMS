@@ -426,7 +426,7 @@ trait LinnmsDeviceStoreTrait
             $newCount = 0;
             $newLogged = 0;
             $clearError = true;
-            if ($prev === 'DOWN' || $logged === 1) {
+            if ($kind !== 'snmp' && ($prev === 'DOWN' || $logged === 1)) {
                 $this->logApplication($userId, 'device', 'device_status', 'info',
                     sprintf('%s, %s, online.', $name, $label));
             }
@@ -436,8 +436,10 @@ trait LinnmsDeviceStoreTrait
                 $newStatus = 'DOWN';
                 if ($logged === 0) {
                     $newLogged = 1;
-                    $this->logApplication($userId, 'device', 'device_status', 'info',
-                        sprintf('%s, %s, offline.', $name, $label));
+                    if ($kind !== 'snmp') {
+                        $this->logApplication($userId, 'device', 'device_status', 'info',
+                            sprintf('%s, %s, offline.', $name, $label));
+                    }
                 } else {
                     $newLogged = 1;
                 }

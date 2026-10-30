@@ -1,9 +1,0 @@
-{
-  "styles": [
-    "assets/pages/login/login.css",
-    "assets/pages/register/register.css"
-  ],
-  "scripts": [
-    "assets/pages/register/registration.js"
-  ]
-}

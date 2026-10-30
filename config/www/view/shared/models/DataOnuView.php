@@ -41,38 +41,63 @@ final class DataOnuView
     public static function detailValues(array $definition, array $values): array
     {
         $support = self::fieldSupport($definition);
-        $formatters = [
-            'index' => static fn(mixed $value): string => (string)$value,
-            'temperature' => static fn(mixed $value): string => number_format((float)$value, 2) . ' °C',
-            'register_status' => static fn(mixed $value): string => (string)$value,
-            'rx_power' => static fn(mixed $value): string => number_format((float)$value, 2) . ' dBm',
-            'tx_power' => static fn(mixed $value): string => number_format((float)$value, 2) . ' dBm',
-            'olt_rx_power' => static fn(mixed $value): string => number_format((float)$value, 2) . ' dBm',
-            'register_time' => static fn(mixed $value): string => (string)$value,
-            'deregister_time' => static fn(mixed $value): string => (string)$value,
-            'deregister_count' => static fn(mixed $value): string => (string)$value,
-            'distance' => static fn(mixed $value): string => (string)(int)round((float)$value) . ' m',
-            'port_count' => static fn(mixed $value): string => (string)$value,
-            'running_time' => static fn(mixed $value): string => format_onu_uptime($value),
-        ];
-        $numericFields = ['temperature', 'rx_power', 'tx_power', 'olt_rx_power', 'distance'];
+        $fields = ['index', 'temperature', 'register_status', 'rx_power', 'tx_power', 'olt_rx_power',
+            'register_time', 'deregister_time', 'deregister_count', 'distance', 'port_count', 'running_time'];
         $result = [];
-        foreach ($formatters as $field => $format) {
+        foreach ($fields as $field) {
             $value = $values[$field] ?? null;
             if (empty($support['supported']) || empty($support[$field])) {
                 $result[$field] = ['value' => 'N/A', 'state' => 'unsupported'];
-            } elseif ($value === null || $value === '' || $value === '—' || $value === '_'
-                || (is_string($value) && in_array(strtolower(trim($value)), ['na', 'n/a'], true))) {
-                $result[$field] = ['value' => '—', 'state' => 'empty'];
-            } elseif ($field === 'rx_power') {
-                $display = onu_rx_power_display($value);
-                $result[$field] = ['value' => $display, 'state' => $display === '—' ? 'empty' : 'value'];
-            } elseif (in_array($field, $numericFields, true) && !is_numeric($value)) {
-                $result[$field] = ['value' => (string)$value, 'state' => 'value'];
             } else {
-                $result[$field] = ['value' => $format($value), 'state' => 'value'];
+                $display = self::formatDetailValue($field, $value);
+                $result[$field] = ['value' => $display, 'state' => $display === '—' ? 'empty' : 'value'];
             }
         }
         return $result;
+    }
+
+    private static function formatDetailValue(string $field, mixed $value): string
+    {
+        if (is_array($value)) $value = $value['value'] ?? $value['raw'] ?? null;
+        if (!is_scalar($value) || is_bool($value)) return '—';
+        $text = trim((string)$value);
+        if ($text === '' || in_array(strtolower($text), ['—', '-', '_', 'na', 'n/a', 'null'], true)) return '—';
+
+        if ($field === 'running_time') {
+            if (preg_match('/^Timeticks:\s*\((\d+)\)/i', $text, $match) === 1) {
+                $text = (string)intdiv((int)$match[1], 100);
+            }
+            return is_numeric($text) && (float)$text <= 0 ? '—' : format_onu_uptime($text);
+        }
+
+        $text = preg_replace('/^(?:STRING|INTEGER|Gauge32|Counter32|Counter64):\s*/i', '', $text) ?? $text;
+        $text = trim($text, " \t\n\r\0\x0B\"");
+        if ($text === '' || in_array(strtolower($text), ['—', '-', '_', 'na', 'n/a', 'null'], true)) return '—';
+
+        if (in_array($field, ['register_time', 'deregister_time'], true)) {
+            return str_starts_with($text, '0000-00-00') ? '—' : $text;
+        }
+        if ($field === 'register_status' || $field === 'index') return $text;
+
+        $numberText = preg_replace('/\s*(?:dBm|°C|m)$/i', '', $text) ?? $text;
+        if (preg_match('/^[+-]?\d{1,3}(?:,\d{3})+(?:\.\d+)?$/D', $numberText) === 1) {
+            $numberText = str_replace(',', '', $numberText);
+        }
+        if (!is_numeric($numberText)) return '—';
+        $number = (float)$numberText;
+        if (!is_finite($number)) return '—';
+
+        return match ($field) {
+            'rx_power', 'tx_power', 'olt_rx_power' => $number <= -40.0 || $number >= 20.0
+                ? '—' : number_format($number, 2) . ' dBm',
+            'temperature' => $number < -40.0 || $number > 125.0
+                ? '—' : number_format($number, 2) . ' °C',
+            'distance' => $number <= 0 || $number >= 2147483647
+                ? '—' : (string)(int)round($number) . ' m',
+            'port_count' => $number <= 0 || $number > 256
+                ? '—' : (string)(int)$number,
+            'deregister_count' => $number < 0 ? '—' : (string)(int)$number,
+            default => $text,
+        };
     }
 }

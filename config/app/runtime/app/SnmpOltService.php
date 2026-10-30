@@ -113,6 +113,7 @@ final class SnmpOltService
         $name = trim((string)($input['device_name'] ?? $input['olt_name'] ?? ''));
         $ip = trim((string)($input['ip_address'] ?? ''));
         $community = trim((string)($input['community'] ?? ''));
+        if ($community === '') $community = trim((string)($olt['snmp_community'] ?? ''));
         $snmpPortRaw = trim((string)($input['snmp_port'] ?? '161'));
         $driverId = olt_driver_id_from_input($input);
         $definition = $driverId !== '' ? olt_driver_definition($driverId) : null;
@@ -213,6 +214,41 @@ final class SnmpOltService
         if ($driverId === '') return false;
         if (!function_exists('olt_driver_support_enabled')) return false;
         return olt_driver_support_enabled($this->repository->getOltDriverSupportFlags(), $driverId);
+    }
+
+    public function probeOfflineOlt(int $userId, int $rowId): array
+    {
+        $olt = $this->repository->getOltByRowId($userId, $rowId);
+        if (!is_array($olt) || !monitoring_row_uses_handler($olt, 'snmp_olt')) {
+            return ['reachable' => false, 'configuration_error' => true, 'error' => 'OLT tidak ditemukan.'];
+        }
+        try {
+            $probe = $this->driverForOlt($olt)->test();
+        } catch (Throwable $error) {
+            return ['reachable' => false, 'configuration_error' => true, 'error' => $error->getMessage()];
+        }
+        $reachable = !empty($probe['ok']);
+        if (!$reachable && $this->hostRespondsToPing((string)($olt['ip_address'] ?? ''))) {
+            $message = (string)($probe['message'] ?? 'SNMP OLT tidak merespons.');
+            $this->snapshotWriter()->markSyncFailed($userId, (int)$olt['olt_id'], $message, false, false);
+            return ['reachable' => false, 'snmp_unavailable' => true];
+        }
+        $this->snapshotWriter()->recordConnectionProbe($rowId, $userId, 'snmp', $reachable,
+            $reachable ? '' : (string)($probe['message'] ?? 'OLT tidak merespons SNMP.'));
+        $confirmedDown = !$reachable && strtoupper(trim((string)(
+            $this->repository->getOltByRowId($userId, $rowId)['driver_status'] ?? ''))) === 'DOWN';
+        return ['reachable' => $reachable, 'device_down' => $confirmedDown,
+            'snmp_unavailable' => !$reachable && !$confirmedDown];
+    }
+
+    private function hostRespondsToPing(string $host): bool
+    {
+        $host = trim($host);
+        if (filter_var($host, FILTER_VALIDATE_IP) === false || !function_exists('exec')) return false;
+        $output = [];
+        $exitCode = 1;
+        @exec('/bin/ping -n -c 1 -W 1 ' . escapeshellarg($host) . ' 2>/dev/null', $output, $exitCode);
+        return $exitCode === 0;
     }
 
     public function sync(int $userId, int $rowId, bool $recordChanges = true, bool $forceFullInventory = false, ?callable $reportProgress = null, ?callable $yieldAfterBatch = null): array
@@ -491,6 +527,7 @@ final class SnmpOltService
                 $fastLanRows = [];
                 foreach ((array)($onus['rows'] ?? []) as $onuRow) {
                     if (!is_array($onuRow) || !empty($onuRow['missing'])) continue;
+                    if (state_key($onuRow['status'] ?? null) !== 'online') continue;
                     $ref = trim((string)($onuRow['pon'] ?? '')) . ':' . (int)($onuRow['onu_id'] ?? 0);
                     if ($ref !== ':' && (int)($onuRow['onu_id'] ?? 0) > 0) $fastLanRows[] = ['onu_index'=>$ref];
                 }
@@ -697,22 +734,28 @@ final class SnmpOltService
             if (!$lanStatusRead && !($completeInventory && $driver instanceof OltOnuEthernetFastStatusAware)) {
                 $this->invalidateOnuEthernetStatuses($userId, $olt);
             }
-            $deviceDown = $deviceReachable === false;
+            $deviceDown = $deviceReachable === false
+                && !$this->hostRespondsToPing((string)($olt['ip_address'] ?? ''));
             if (!$syncFailureLogged) {
-                error_log((string)$e);
-                $this->snapshotWriter()->recordReadFailure($userId, $rowId, 'OLT SNMP', (string)$e);
+                if ($deviceReachable !== false) {
+                    error_log((string)$e);
+                    $this->snapshotWriter()->recordReadFailure($userId, $rowId, 'OLT SNMP', (string)$e);
+                }
             }
             $newFailure = $this->snapshotWriter()->markSyncFailed(
                 $userId,
                 (int)$olt['olt_id'],
                 $e->getMessage(),
-                $recordChanges,
+                $recordChanges && !$deviceDown,
                 $deviceDown
             );
+            $confirmedDown = $deviceDown && strtoupper(trim((string)(
+                $this->repository->getOltByRowId($userId, $rowId)['driver_status'] ?? ''))) === 'DOWN';
             return [
                 'ok'=>false,
-                'device_down'=>$deviceDown,
-                'message'=>$deviceDown
+                'device_down'=>$confirmedDown,
+                'snmp_unavailable'=>$deviceReachable === false && !$confirmedDown,
+                'message'=>$confirmedDown
                     ? 'OLT tidak dapat dijangkau.'
                     : 'Pembaruan gagaal dilakukan',
                 'error'=>$e->getMessage(),
@@ -765,7 +808,7 @@ final class SnmpOltService
             $driver = $this->driverForOlt($olt);
             $timing = $this->repository->getSyncTimingSettings($userId);
             if ($reportProgress !== null) $reportProgress('Mengulang detail ' . count($retryRows) . ' ONU', 0);
-            $result = $driver->getMiddleOnus($retryRows, microtime(true) + $timing['middle_deadline_seconds']);
+            $result = $driver->getMiddleOnus($retryRows, microtime(true) + $timing['middle_deadline_seconds'], true);
             $rows = array_values(array_filter((array)($result['rows'] ?? []), 'is_array'));
             if ($rows !== []) $this->onuWriter()->writeMiddleDetails($userId, (int)$olt['olt_id'], $rows);
             $emptyRows = array_values(array_filter((array)($result['empty_rows'] ?? []), 'is_array'));
@@ -1404,6 +1447,7 @@ final class SnmpOltService
         $countsByIf = [];
         foreach ($onuRows as $row) {
             if (!is_array($row) || !empty($row['missing'])) continue;
+            if (state_key($row['status'] ?? $row['onu_state'] ?? null) !== 'online') continue;
             $ref = trim((string)($row['onu_index'] ?? ''));
             if ($ref === '' && isset($row['pon'], $row['onu_id'])) $ref = trim((string)$row['pon']) . ':' . (int)$row['onu_id'];
             if ($ref === '') continue;
@@ -2570,7 +2614,8 @@ final class SnmpOltService
             
             $module = [];
             $moduleProbed = false;
-            if ($driver instanceof OltPonModuleAware && $ponModuleSource !== 'cli') {
+            if ($driver instanceof OltPonModuleAware && $ponModuleSource !== 'cli'
+                && state_key($status['link_status']) === 'online') {
                 try {
                     $module = $targetRef !== ''
                         ? (array)$driver->getPonModuleInfoByRef($targetRef)
@@ -2593,7 +2638,8 @@ final class SnmpOltService
                     $module = [];
                 }
             }
-            if ($includeModuleDescription && $driver instanceof OltPonFlowAware) {
+            if ($includeModuleDescription && $driver instanceof OltPonFlowAware
+                && state_key($status['link_status']) === 'online') {
                 $flow = $driver->readPonFlowControl($pon);
                 if (!empty($flow['ok'])) $status['flow_control'] = $flow['flow_control'];
             }
@@ -2735,6 +2781,7 @@ final class SnmpOltService
             $ref = (string)$target['ref'];
             $stored = $ref !== '' ? ($storedByRef[$ref] ?? null) : ($storedByNumber[$number] ?? null);
             if (!is_array($stored)) continue;
+            if (state_key($stored['link_status'] ?? null) !== 'online') continue;
             $attempted++;
             try {
                 if ($ref !== '' && method_exists($driver, 'getMiddlePonPortStatusByRef')) {
@@ -4738,18 +4785,13 @@ final class SnmpOltService
         $serviceConfigs = array_filter((array)$result['configs'], static fn(mixed $config): bool => is_array($config)
             && ((array)($config['service_lines'] ?? []) !== [] || (array)($config['mgmt_lines'] ?? []) !== []));
         $onlineRefs = [];
-        $knownRefs = [];
-        foreach ($this->repository->getOnus($userId, (int)($olt['olt_id'] ?? 0), true, 'snmp') as $onu) {
-            $knownRefs[] = (string)($onu['onu_index'] ?? '');
-            if (strtolower((string)($onu['onu_state'] ?? '')) === 'online') $onlineRefs[(string)($onu['onu_index'] ?? '')] = true;
-        }
         foreach ($onuRows as $onu) {
             if (!is_array($onu) || !empty($onu['missing'])) continue;
             $ref = trim((string)($onu['onu_index'] ?? ''));
             if ($ref === '' && isset($onu['pon'], $onu['onu_id'])) $ref = trim((string)$onu['pon']) . ':' . (int)$onu['onu_id'];
             if ($ref === '') continue;
-            $knownRefs[] = $ref;
-            if (strtolower((string)($onu['status'] ?? $onu['onu_state'] ?? '')) === 'online') $onlineRefs[$ref] = true;
+            if (in_array(strtolower(trim((string)($onu['status'] ?? $onu['onu_state'] ?? ''))),
+                ['up', 'online'], true)) $onlineRefs[$ref] = true;
         }
         foreach ($serviceConfigs as $ref => &$config) {
             if (isset($onlineRefs[(string)$ref])) {
@@ -4767,9 +4809,11 @@ final class SnmpOltService
         $details = [];
         if ($driver instanceof OltOnuServiceAware) {
             try {
-                $detailRefs = array_values(array_unique(array_merge(array_keys((array)($result['configs'] ?? [])), $knownRefs)));
-                $detail = $driver->readAllOnuDetailInfo($detailRefs);
-                if (!empty($detail['ok']) && !empty($detail['details'])) $details = (array)$detail['details'];
+                $detailRefs = array_keys($onlineRefs);
+                if ($detailRefs !== []) {
+                    $detail = $driver->readAllOnuDetailInfo($detailRefs);
+                    if (!empty($detail['ok']) && !empty($detail['details'])) $details = (array)$detail['details'];
+                }
             } catch (\Throwable $e) {
                 $this->repository->logApplication($userId, 'OLT CLI', 'sync_onu_detail', 'warning', 'Detail ONU tidak terbaca: ' . $e->getMessage());
             }

@@ -1,9 +1,0 @@
-{
-  "styles": [
-    "assets/components/device/device.css"
-  ],
-  "scripts": [
-    "assets/components/device/device-details.js",
-    "assets/components/traffic/traffic-chart.js"
-  ]
-}

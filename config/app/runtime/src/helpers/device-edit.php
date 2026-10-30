@@ -33,7 +33,7 @@ function device_edit_driver_options(
     if (!is_array($currentDefinition)) return [];
     $handler = (string)($currentDefinition['handler'] ?? '');
     $deviceType = (string)($currentDefinition['device_type'] ?? '');
-    $isOlt = $kind === 'olt_snmp';
+    $isOlt = in_array($kind, ['olt_snmp', 'olt_api'], true);
 
     $options = [];
     foreach (($isOlt ? olt_driver_catalog() : snmp_driver_catalog()) as $driverId => $definition) {
@@ -74,8 +74,7 @@ function device_edit_view_url(array $deviceEdit): string
 {
     $rowId = (int)($deviceEdit['row_id'] ?? 0);
     return match ((string)($deviceEdit['kind'] ?? '')) {
-        'olt_snmp' => public_page_url('view-olt', ['id' => $rowId]),
-        'olt_api' => public_page_url('edit-api-olt', ['id' => $rowId]),
+        'olt_snmp', 'olt_api' => public_page_url('view-olt', ['id' => $rowId]),
         default => public_page_url(
             (string)($deviceEdit['device_type'] ?? '') === 'mikrotik' ? 'view-mikrotik' : 'view-switch',
             ['id' => $rowId]
@@ -95,7 +94,7 @@ function device_edit_view_model(
     $definition = is_array($definition) ? $definition : [];
     $options = device_edit_driver_options($device, $oltSupportFlags, $snmpSupportFlags);
 
-    $isOlt = $kind === 'olt_snmp';
+    $isOlt = in_array($kind, ['olt_snmp', 'olt_api'], true);
     $deviceType = (string)($device['device_type'] ?? ($isOlt ? 'olt' : ''));
     $label = $isOlt ? 'OLT' : ($deviceType === 'mikrotik' ? 'MikroTik' : 'Switch');
     $method = (string)($definition['method'] ?? 'snmp');

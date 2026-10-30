@@ -2,18 +2,12 @@
 
 $addOnuView = is_array($addOnuView ?? null) ? $addOnuView : [];
 extract($addOnuView);
-$addOnuModalDir = match ((string)$addOnuModalFamily) {
-    'hiosofamily' => 'hioso',
-    'ztefamily' => 'zte',
-    default => 'external',
-};
-$addOnuModalBody = __DIR__ . '/families/' . $addOnuModalDir . '/modal-body.php';
 $addOnuFieldPrefix = $addOnuModalId . '-field-';
 ?>
 <div id="<?= h($addOnuModalId) ?>" class="modal add-onu-register-modal" hidden aria-hidden="true"
      data-add-onu-modal data-family="<?= h($addOnuModalFamily) ?>">
     <div class="modal-card add-onu-register-modal-card" role="dialog" aria-modal="true" aria-labelledby="<?= h($addOnuModalId) ?>Title">
-        <div class="add-onu-modal-heading">
+        <div class="add-onu-modal-heading modal-header">
             <div>
                 <div class="add-onu-modal-title-row">
                     <h2 id="<?= h($addOnuModalId) ?>Title"><?= h($addOnuModalTitle) ?></h2>
@@ -21,7 +15,7 @@ $addOnuFieldPrefix = $addOnuModalId . '-field-';
 
             </div>
             <div class="add-onu-modal-heading-actions">
-                <button class="icon-button" type="button" data-add-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+                <button class="icon-button modal-close-button" type="button" data-add-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
             </div>
         </div>
 
@@ -229,7 +223,6 @@ $addOnuFieldPrefix = $addOnuModalId . '-field-';
                 </div>
             </section>
 
-            <?php if (is_file($addOnuModalBody)) require $addOnuModalBody; ?>
 
             <div class="add-onu-modal-actions">
                 <button class="button primary" type="submit"><i class="bi bi-floppy" aria-hidden="true"></i>Simpan</button>

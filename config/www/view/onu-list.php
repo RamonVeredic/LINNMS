@@ -116,8 +116,8 @@ $onuPonOptions = array_values(array_filter(is_array($onuList['pon_options'] ?? n
         </div>
     </div>
 
-    <div class="table-wrap">
-        <table data-onu-server-search id="onusTable" data-table-page-size="50" data-table-item-label="ONU">
+    <div class="onu-table-head" data-onu-table-head aria-hidden="true">
+        <table id="onusTableHeader">
             <colgroup>
                 <col class="onu-col-olt">
                 <col class="onu-col-index">
@@ -136,6 +136,21 @@ $onuPonOptions = array_values(array_filter(is_array($onuList['pon_options'] ?? n
                 <th>RX Power</th>
             </tr>
             </thead>
+        </table>
+    </div>
+    <div class="table-wrap list-scroll-viewport" role="region" aria-label="Daftar ONU" tabindex="0">
+        <table data-onu-server-search id="onusTable" data-table-page-size="50" data-table-item-label="ONU">
+            <colgroup>
+                <col class="onu-col-olt">
+                <col class="onu-col-index">
+                <col class="onu-col-name">
+                <col class="onu-col-location">
+                <col class="onu-col-serial">
+                <col class="onu-col-rx">
+            </colgroup>
+            <thead class="onu-table-accessible-head">
+                <tr><th scope="col">OLT</th><th scope="col">Indeks</th><th scope="col">Nama ONU</th><th scope="col">Lokasi</th><th scope="col">Serial ONU</th><th scope="col">RX Power</th></tr>
+            </thead>
             <tbody data-onu-table-body aria-live="polite">
                 <?php require __DIR__ . '/partials/onu-list/table-rows.php'; ?>
             </tbody>
@@ -152,7 +167,6 @@ $onuPonOptions = array_values(array_filter(is_array($onuList['pon_options'] ?? n
             'label' => 'Halaman ONU',
             'class' => 'onu-pagination',
         ]); ?>
-        <span class="page-info-top"><?= h(page_info_top($onuList['page'], $onuTablePages)) ?></span>
     </div>
 </section>
-<?php require project_path('pages', 'partials', 'device-category-detail-modal.php'); ?>
+<?php require project_path('view', 'partials', 'device-category-detail-modal.php'); ?>

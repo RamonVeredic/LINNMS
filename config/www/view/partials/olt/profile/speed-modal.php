@@ -3,9 +3,9 @@ $oltSpeedModalId = 'oltSpeedProfileModal';
 ?>
 <div id="<?= h($oltSpeedModalId) ?>" class="modal" data-olt-speed-modal hidden aria-hidden="true" data-olt-speed-row-id="<?= (int)($oltRowId ?? 0) ?>" data-olt-speed-modal-id="<?= h($oltSpeedModalId) ?>">
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="<?= h($oltSpeedModalId) ?>-title">
-        <div class="olt-pon-modal-heading">
+        <div class="olt-pon-modal-heading modal-header">
             <div class="olt-pon-modal-title"><h2 id="<?= h($oltSpeedModalId) ?>-title" data-speed-title>Tambah Profil</h2></div>
-            <button class="icon-button" type="button" data-olt-speed-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+            <button class="icon-button modal-close-button" type="button" data-olt-speed-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         </div>
         <form class="olt-uplink-form" data-olt-speed-form>
             <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">

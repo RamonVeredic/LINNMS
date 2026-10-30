@@ -20,7 +20,17 @@ function json_for_html_attribute(mixed $value): string
 function page_asset_manifest(string $page): array
 {
     if (preg_match('/^[a-z0-9-]+$/', $page) !== 1) throw new InvalidArgumentException('Nama halaman tidak valid.');
-    $path = LINNMS_UI_ROOT . '/assets/pages/' . $page . '/assets.json';
+    $sharedManifests = [
+        'settings-admin' => 'settings',
+        'notification' => 'settings',
+        'access' => 'login',
+        'setup' => 'login',
+        'view-mikrotik' => 'device',
+        'view-switch' => 'device',
+        'view-mikrotik-interface' => 'device-interface',
+    ];
+    $assetPage = $sharedManifests[$page] ?? $page;
+    $path = LINNMS_UI_ROOT . '/assets/manifests/' . $assetPage . '.json';
     $contents = file_get_contents($path);
     if ($contents === false) throw new RuntimeException('Aset halaman tidak tersedia.');
     $manifest = json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
@@ -92,10 +102,6 @@ function pagination_numbers(int $current, int $totalPages, int $edge = 1, int $a
         $previous = $page;
     }
     return $sequence;
-}
-function page_info_top(int $page, int $pages): string
-{
-    return '' . max(1, $page) . ' dari ' . max(1, $pages);
 }
 function render_numbered_pagination(array $config): void
 {

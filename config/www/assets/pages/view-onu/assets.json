@@ -1,9 +1,0 @@
-{
-  "styles": [
-    "assets/pages/view-onu/view-onu.css"
-  ],
-  "scripts": [
-    "assets/pages/view-onu/onu-details.js",
-    "assets/components/traffic/traffic-chart.js"
-  ]
-}

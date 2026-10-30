@@ -50,7 +50,9 @@ trait LinnmsOltCliTrafficTrait
                 . "c.ports, c.username, c.password_enc, c.hybrid_status "
                 . "FROM devices d "
                 . "JOIN device_credentials c ON c.device_id=d.id AND c.hybrid_status=1 "
+                . "LEFT JOIN device_status st ON st.device_id=d.id AND st.user_id=d.user_id "
                 . "WHERE d.device_type='olt' "
+                . "AND COALESCE(st.driver_status,'') <> 'DOWN' "
                 . "AND EXISTS (SELECT 1 FROM device_traffic_interfaces t WHERE t.device_id=d.id AND t.user_id=d.user_id)"
             );
             return $stmt->fetchAll() ?: [];
@@ -66,7 +68,8 @@ trait LinnmsOltCliTrafficTrait
             'SELECT p.port_ref, p.pon_number FROM pons p '
             . 'JOIN device_traffic_interfaces t ON t.user_id=p.user_id '
             . 'AND t.device_id=p.olt_device_id AND t.if_ref COLLATE utf8mb4_unicode_ci = p.port_ref '
-            . 'WHERE p.user_id=:uid AND p.olt_device_id=:dev AND p.is_present=1 AND p.pon_number>0 '
+            . "WHERE p.user_id=:uid AND p.olt_device_id=:dev AND p.is_present=1 AND p.pon_number>0 "
+            . "AND LOWER(COALESCE(p.link_status,'')) NOT IN ('linkdown','down','offline') "
             . 'ORDER BY p.pon_number, p.port_ref'
         );
         $stmt->execute(['uid' => $userId, 'dev' => $deviceId]);

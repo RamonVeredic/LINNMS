@@ -32,7 +32,27 @@ final class PonTrafficLiveReader
         $deviceId = (int)($olt['id'] ?? 0);
         $selected = $this->db->getDeviceTrafficInterfaces($userId, $deviceId);
         if ($selected === []) {
-            return ['live' => [], 'series' => [], 'average' => [], 'roles' => [], 'updated_at' => 0];
+            return ['active' => false, 'live' => [], 'series' => [], 'average' => [], 'roles' => [], 'updated_at' => 0];
+        }
+        $status = strtoupper(trim((string)($olt['driver_status'] ?? '')));
+        if ($status === 'DOWN') {
+            return ['active' => false, 'live' => [], 'series' => [], 'average' => [], 'roles' => [], 'updated_at' => 0];
+        }
+        $normalize = static fn(string $ref): string => str_replace('_', '/', (string)preg_replace(
+            '~^(?:gpon|epon)(?:-olt)?[_/]?~i', '', trim($ref)));
+        $downPorts = [];
+        foreach (array_merge($this->db->getOltPonSnapshot($userId, $deviceId),
+            $this->db->getOltPorts($userId, $deviceId, 'uplink')) as $port) {
+            if (!is_array($port)) continue;
+            $ref = trim((string)($port['port_ref'] ?? ''));
+            $portStatus = trim((string)($port['link_status'] ?? $port['oper_state'] ?? $port['status'] ?? ''));
+            if ($ref !== '' && $portStatus !== '' && state_key($portStatus) === 'offline') {
+                $downPorts[$normalize($ref)] = true;
+            }
+        }
+        $selected = array_filter($selected, static fn($index, $ref): bool => !isset($downPorts[$normalize((string)$ref)]), ARRAY_FILTER_USE_BOTH);
+        if ($selected === []) {
+            return ['active' => false, 'live' => [], 'series' => [], 'average' => [], 'roles' => [], 'updated_at' => 0];
         }
         $definition = monitoring_driver_definition((string)device_driver_type($olt));
         if (($definition['pon_traffic_source'] ?? '') === 'cli') {
@@ -41,7 +61,9 @@ final class PonTrafficLiveReader
             $live = $this->filterSelected($selected, $rates);
             $this->recordSamples($userId, $deviceId, $live);
             $history = $this->db->getOltPonTrafficSeries($userId, $deviceId, 86400);
+            $history['series'] = $this->filterSelected($selected, (array)($history['series'] ?? []));
             return [
+                'active' => true,
                 'live' => $live,
                 'series' => $history['series'] ?? [],
                 'average' => $history['average'] ?? [],
@@ -64,7 +86,9 @@ final class PonTrafficLiveReader
         }
         $this->recordSamples($userId, $deviceId, $live);
         $history = $this->db->getOltPonTrafficSeries($userId, $deviceId, 86400);
+        $history['series'] = $this->filterSelected($selected, (array)($history['series'] ?? []));
         return [
+            'active' => true,
             'live' => $live,
             'series' => $history['series'] ?? [],
             'average' => $history['average'] ?? [],

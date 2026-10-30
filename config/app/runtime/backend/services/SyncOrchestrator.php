@@ -81,9 +81,15 @@ final class SyncOrchestrator
                 $failedPipeline->execute(['uid'=>$uid, 'row'=>$scanRowId, 'requested'=>(string)$request['requested_at']]);
                 if ($failedPipeline->fetchColumn() !== false) $savedRows = [];
             }
-            $result = $savedRows !== []
-                ? $snmpOlts->retryMiddleOnus($uid, $scanRowId, (string)($retryPayload['driver_id'] ?? ''), $savedRows, $reportProgress)
-                : ['retry_invalid'=>true];
+            $probe = in_array(strtoupper(trim((string)($olt['driver_status'] ?? ''))), ['DOWN', 'WARN'], true)
+                ? $snmpOlts->probeOfflineOlt($uid, $scanRowId) : ['reachable' => true];
+            $result = empty($probe['reachable'])
+                ? ['ok' => false, 'device_down' => !empty($probe['device_down']),
+                    'snmp_unavailable' => !empty($probe['snmp_unavailable']),
+                    'message' => 'Menunggu koneksi SNMP OLT.']
+                : ($savedRows !== []
+                    ? $snmpOlts->retryMiddleOnus($uid, $scanRowId, (string)($retryPayload['driver_id'] ?? ''), $savedRows, $reportProgress)
+                    : ['retry_invalid'=>true]);
             if (!empty($result['retry_invalid'])) {
                 $result = $snmpOlts->sync($uid, (int)$olt['id'], true, true, $reportProgress);
             }
@@ -101,7 +107,7 @@ final class SyncOrchestrator
                 $retryRows,
                 (string)device_driver_type($olt)
             );
-            $db->logApplication(
+            if (empty($result['device_down']) && empty($result['snmp_unavailable'])) $db->logApplication(
                 $uid,
                 'OLT',
                 'scan_olt',

@@ -1,0 +1,11 @@
+{
+  "styles": [
+    "assets/css/page/settings/settings-layout.css",
+    "assets/css/page/settings/settings.css"
+  ],
+  "scripts": [
+    "assets/js/page/settings/columns.js",
+    "assets/js/page/settings/profile-settings.js",
+    "assets/js/page/settings/notification-settings.js"
+  ]
+}

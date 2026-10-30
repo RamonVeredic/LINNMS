@@ -1,5 +1,7 @@
 <?php
-if (!is_array($deviceDetail)) return;
+$deviceViewKind = $page === 'view-mikrotik' ? 'mikrotik' : 'switch';
+$expectedDeviceType = $deviceViewKind === 'mikrotik' ? 'mikrotik' : 'cisco_catalyst_2960s';
+if (!is_array($deviceDetail ?? null) || (string)($deviceDetail['device_type'] ?? '') !== $expectedDeviceType) return;
 if (!isset($deviceSystem) || !is_array($deviceSystem)) {
     $deviceSystem = [];
 }
@@ -13,6 +15,25 @@ if (!isset($deviceError) || !is_string($deviceError)) {
     $deviceError = '';
 }
 $isMikrotik = ($deviceViewKind ?? '') === 'mikrotik';
+
+$formatVlans = static function (mixed $value): string {
+    if (!is_array($value)) return 'N/A';
+    $vlans = array_values(array_unique(array_filter(array_map('intval', $value), static fn(int $vlan): bool => $vlan >= 1 && $vlan <= 4094)));
+    sort($vlans, SORT_NUMERIC);
+    if ($vlans === []) return 'N/A';
+    $ranges = [];
+    $start = $previous = $vlans[0];
+    foreach (array_slice($vlans, 1) as $vlan) {
+        if ($vlan === $previous + 1) {
+            $previous = $vlan;
+            continue;
+        }
+        $ranges[] = $start === $previous ? (string)$start : $start . '-' . $previous;
+        $start = $previous = $vlan;
+    }
+    $ranges[] = $start === $previous ? (string)$start : $start . '-' . $previous;
+    return implode(', ', $ranges);
+};
 
 if (!$isMikrotik) {
     $deviceInterfaces = array_values(array_filter(
@@ -120,7 +141,7 @@ $deviceOverviewHero = [
     'icon' => $isMikrotik ? 'bi-router' : 'bi-hdd-network',
     'name' => $deviceDetail['name'] ?? null,
     'subtitle' => (string)$deviceDetail['ip_address'] . ' · ' . $model,
-    'edit_url' => public_page_url('edit-device', ['id' => (int)$deviceDetail['id']]),
+    'edit_url' => '',
 
     'attributes' => [
         'data-device-view' => true,
@@ -221,7 +242,28 @@ require __DIR__ . '/device-overview.php';
                         <tr class="<?= $adminDisabled ? 'is-admin-disabled' : '' ?>" data-interface-list-row data-interface-rate-row data-if-index="<?= $ifIndex ?>" <?= $adminDisabled ? ' aria-disabled="true"' : '' ?>>
                             <td>
                                 <?php if (!$isMikrotik): ?>
-                                    <?php require __DIR__ . '/interface-name.php'; ?>
+                                    <?php
+                                    $switchportMode = strtolower(trim((string)($interface['switchport_mode'] ?? '')));
+                                    $switchportModeLabel = in_array($switchportMode, ['access', 'trunk'], true) ? strtoupper($switchportMode) : 'N/A';
+                                    $switchVlans = is_array($interface['active_vlans'] ?? null)
+                                        ? array_values(array_unique(array_filter(array_map('intval', $interface['active_vlans']), static fn(int $vlan): bool => $vlan > 1 && $vlan <= 4094)))
+                                        : [];
+                                    sort($switchVlans, SORT_NUMERIC);
+                                    $visibleSwitchVlans = array_slice($switchVlans, 0, 5);
+                                    $visibleSwitchVlansText = $visibleSwitchVlans !== [] ? implode(', ', $visibleSwitchVlans) : 'N/A';
+                                    $hasMoreSwitchVlans = count($switchVlans) > count($visibleSwitchVlans);
+                                    $nativeVlan = (int)($interface['native_vlan'] ?? 0);
+                                    ?>
+                                    <span class="switch-interface-name">
+                                        <?= h($interfaceName) ?>
+                                        <small class="switch-vlan-summary">
+                                            <span class="switch-vlan-values" data-vlan-preview>VLAN: <?= h($visibleSwitchVlansText) ?><?php if ($switchportMode === 'trunk' && $nativeVlan > 1): ?> &middot; Native <?= $nativeVlan ?><?php endif; ?></span>
+                                            <?php if ($hasMoreSwitchVlans): ?>
+                                                <span class="switch-vlan-values" data-vlan-all hidden>VLAN: <?= h($formatVlans($switchVlans)) ?><?php if ($switchportMode === 'trunk' && $nativeVlan > 1): ?> &middot; Native <?= $nativeVlan ?><?php endif; ?></span>
+                                                <button class="switch-vlan-toggle" type="button" data-vlan-toggle aria-expanded="false">Lihat semua VLAN</button>
+                                            <?php endif; ?>
+                                        </small>
+                                    </span>
                                 <?php else: ?>
                                     <span><?= h($interfaceName) ?></span>
                                 <?php endif; ?>
@@ -238,7 +280,14 @@ require __DIR__ . '/device-overview.php';
                             </td>
                             <td class="mono interface-rate-value is-rx" data-interface-rx><?= h($formatRate($interfaceRate['rx_bps']??null)) ?></td>
                             <td class="mono interface-rate-value is-tx" data-interface-tx><?= h($formatRate($interfaceRate['tx_bps']??null)) ?></td>
-                            <?php require __DIR__ . '/device-traffic-record-toggle.php'; ?>
+                            <td class="interface-record-cell">
+                                <label class="pon-catat-switch" title="Simpan riwayat trafik interface ini">
+                                    <input type="checkbox" role="switch" data-traffic-record
+                                           data-device-id="<?= (int)($deviceDetail['id'] ?? 0) ?>"
+                                           data-if-ref="<?= h($interfaceName) ?>"
+                                           data-csrf="<?= h(csrf_token()) ?>"<?= isset($deviceTrafficSelected[$interfaceName]) ? ' checked' : '' ?>>
+                                </label>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -251,5 +300,43 @@ require __DIR__ . '/device-overview.php';
 
     <?php if ($isMikrotik) require __DIR__ . '/pppoe-table.php'; ?>
 </div>
-<?php require __DIR__ . '/device-traffic-history.php'; ?>
-<?php if (!$isMikrotik) require __DIR__ . '/delete-action.php'; ?>
+<?php
+$deviceTrafficHistoryRefs = array_keys($deviceTrafficSelected);
+?>
+<section class="pon-traffic device-traffic-history" data-traffic data-traffic-mode="device"
+         data-traffic-device-id="<?= (int)$deviceDetail['id'] ?>">
+    <div class="panel-heading">
+        <div>
+            <h2><i class="bi bi-graph-up-arrow" aria-hidden="true"></i> Riwayat Trafik</h2>
+            <p>Data dari interface yang dicatat. Grafik menampilkan 12 titik terakhir saat halaman dibuka.</p>
+        </div>
+    </div>
+        <div class="notice" data-device-traffic-empty<?= $deviceTrafficHistoryRefs !== [] ? ' hidden' : '' ?>><i class="bi bi-info-circle" aria-hidden="true"></i> Belum ada interface yang dicatat. Aktifkan kolom <strong>Catat</strong> pada interface untuk mulai menyimpan riwayat trafik.</div>
+        <div class="pon-traffic-ranges" role="group" aria-label="Rentang trafik"<?= $deviceTrafficHistoryRefs === [] ? ' hidden' : '' ?>>
+            <?php foreach ([180 => '3m', 1800 => '30m', 3600 => '1H', 86400 => '1d'] as $deviceTrafficRange => $deviceTrafficRangeLabel): ?>
+                <button type="button" class="pon-traffic-range<?= $deviceTrafficRange === 180 ? ' is-active' : '' ?>" data-traffic-range="<?= (int)$deviceTrafficRange ?>"><?= h($deviceTrafficRangeLabel) ?></button>
+            <?php endforeach; ?>
+        </div>
+        <div class="pon-traffic-grid" data-traffic-grid<?= $deviceTrafficHistoryRefs === [] ? ' hidden' : '' ?>>
+            <?php foreach ($deviceTrafficHistoryRefs as $deviceTrafficHistoryRef): ?>
+                <?php
+                $trafficCardRef = (string)$deviceTrafficHistoryRef;
+                $trafficCardTitle = (string)$deviceTrafficHistoryRef;
+                $trafficCardIcon = 'bi-ethernet';
+                $trafficCardRole = 'device';
+                require project_path('view', 'partials', 'traffic-card.php');
+                ?>
+            <?php endforeach; ?>
+        </div>
+        <p class="text-muted" data-traffic-state aria-live="polite" hidden></p>
+</section>
+<?php if (!$isMikrotik): ?>
+    <section class="panel">
+        <form method="post" data-device-delete-form>
+            <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
+            <input type="hidden" name="action" value="delete_device">
+            <input type="hidden" name="device_id" value="<?= (int)$deviceDetail['id'] ?>">
+            <button class="button button-danger"><i class="bi bi-trash3"></i> Hapus</button>
+        </form>
+    </section>
+<?php endif; ?>

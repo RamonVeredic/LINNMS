@@ -18,14 +18,8 @@ if (!defined('LINNMS_DATA_ROOT')) {
 
 function project_path(string ...$segments): string
 {
-    $segments = array_values($segments);
     $first = isset($segments[0]) ? trim((string)$segments[0], '/\\') : '';
-    $path = match (true) {
-        in_array($first, ['pages', 'layouts'], true) => LINNMS_VIEW_ROOT,
-        $first === 'view' => LINNMS_UI_ROOT,
-        default => LINNMS_ROOT,
-    };
-    if ($first === 'pages') array_shift($segments);
+    $path = $first === 'view' ? LINNMS_UI_ROOT : LINNMS_ROOT;
     foreach ($segments as $segment) {
         $clean = trim($segment, '/\\');
         if ($clean !== '') $path .= DIRECTORY_SEPARATOR . $clean;

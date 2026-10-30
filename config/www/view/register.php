@@ -12,9 +12,9 @@ $registerValidationAttributes = static function (string $field) use ($registerVa
 $publicRegistrationEnabled = !empty($publicRegistrationEnabled);
 $otpRegistrationEnabled = !empty($otpRegistrationEnabled);
 $pendingRegister = is_array($_SESSION['register_pending'] ?? null) ? $_SESSION['register_pending'] : null;
-$otpLength = LinnmsRepository::WHATSAPP_OTP_LENGTH;
-$otpTtlMinutes = max(1, (int)(LinnmsRepository::WHATSAPP_OTP_TTL_SECONDS / 60));
-$minPasswordLength = LinnmsRepository::REGISTRATION_MIN_PASSWORD_LENGTH;
+$otpLength = (int)($registrationRules['otp_length'] ?? 0);
+$otpTtlMinutes = max(1, (int)ceil((int)($registrationRules['otp_ttl_seconds'] ?? 0) / 60));
+$minPasswordLength = (int)($registrationRules['min_password_length'] ?? 0);
 $pendingPhone = $pendingRegister !== null ? trim((string)($pendingRegister['phone'] ?? '')) : '';
 $otpPhoneMasked = $pendingPhone !== '' ? mask_phone_number($pendingPhone) : '';
 $otpCooldown = is_array($_SESSION['register_otp_cooldown'] ?? null) ? $_SESSION['register_otp_cooldown'] : [];
@@ -59,7 +59,7 @@ if (str_starts_with($serviceWhatsappDigits, '0')) {
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Daftar &middot; <?= h($appName) ?></title>
     <link rel="icon" type="image/x-icon" href="<?= h(asset_url('assets/icon.ico', (string)(@filemtime(LINNMS_UI_ROOT . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'icon.ico') ?: 0))) ?>">
-    <link rel="stylesheet" href="<?= h(asset_url('assets/vendor/bootstrap-icons/bootstrap-icons.min.css', '1.13.1')) ?>"><?php foreach (array_merge(['assets/css/app.css'], page_asset_manifest('register')['styles'], ['assets/css/responsif.css']) as $styleAsset): $stylePath = LINNMS_UI_ROOT . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $styleAsset); ?>
+    <link rel="stylesheet" href="<?= h(asset_url('assets/icon/bootstrap-icons/bootstrap-icons.min.css', '1.13.1')) ?>"><?php foreach (array_merge(['assets/css/linnms-main.min.css'], page_asset_manifest('register')['styles'], ['assets/css/responsif.css', 'assets/css/linnms-termplet.css']) as $styleAsset): $stylePath = LINNMS_UI_ROOT . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $styleAsset); ?>
         <link rel="stylesheet" href="<?= h(asset_url($styleAsset, $appVersion . '-' . (string)(@filemtime($stylePath) ?: 0))) ?>"><?php endforeach; ?>
 </head>
 
@@ -183,7 +183,7 @@ if (str_starts_with($serviceWhatsappDigits, '0')) {
                 </div>
             <?php endif; ?>
             <div class="default-login">
-                <p>Sudah memiliki akun? <a class="text-primary-bold" href="<?= h(public_page_url('login')) ?>">Masuk di sini</a></p>
+                <p>Sudah memiliki akun? <a class="text-primary fw-bold" href="<?= h(public_page_url('login')) ?>">Masuk di sini</a></p>
             </div>
         </section>
     </main>

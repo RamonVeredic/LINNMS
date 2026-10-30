@@ -23,6 +23,11 @@ final class OnuTrafficDriverReader
         }
     }
 
+    public function isActive(int $userId, int $onuRowId): bool
+    {
+        return $this->target($userId, $onuRowId) !== null;
+    }
+
     public function sample(int $userId, int $onuRowId): ?array
     {
         $target = $this->target($userId, $onuRowId);
@@ -47,11 +52,23 @@ final class OnuTrafficDriverReader
     private function target(int $userId, int $onuRowId): ?array
     {
         $onu = $this->db->getOnuByRowId($userId, $onuRowId);
-        if (!is_array($onu) || strtolower((string)($onu['onu_state'] ?? '')) !== 'online') return null;
+        if (!is_array($onu) || (int)($onu['is_present'] ?? 0) !== 1
+            || state_key($onu['onu_state'] ?? null) !== 'online'
+            || strtoupper(trim((string)($onu['driver_status'] ?? ''))) === 'DOWN') return null;
         $ref = (string)($onu['onu_index'] ?? '');
         if (preg_match('~^(\d+/\d+/\d+):(\d+)$~D', $ref, $parts) !== 1) return null;
         $olt = $this->db->getOltByRowId($userId, (int)($onu['olt_row_id'] ?? 0));
         if (!is_array($olt)) return null;
+        $ponActive = true;
+        foreach ($this->db->getOltPonSnapshot($userId, (int)$olt['id']) as $pon) {
+            if (!is_array($pon)) continue;
+            $ponRef = (string)preg_replace('~^(?:gpon|epon)(?:-olt)?[_/]?~i', '', trim((string)($pon['port_ref'] ?? '')));
+            if ($ponRef !== $parts[1]) continue;
+            $ponStatus = trim((string)($pon['link_status'] ?? $pon['status'] ?? ''));
+            $ponActive = $ponStatus === '' || state_key($ponStatus) !== 'offline';
+            break;
+        }
+        if (!$ponActive) return null;
         $driverId = trim((string)device_driver_type($olt));
         if ($driverId === '' || !olt_driver_support_enabled($this->db->getOltDriverSupportFlags(), $driverId)) return null;
         return ['olt' => $olt, 'pon' => $parts[1], 'onu_id' => (int)$parts[2]];

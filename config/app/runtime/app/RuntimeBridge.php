@@ -392,14 +392,10 @@ final class RuntimeBridge
 
         $raw=curl_exec($ch);
         $http=(int)curl_getinfo($ch,CURLINFO_RESPONSE_CODE);
-        $curlError=curl_error($ch);
         curl_close($ch);
 
         if(!is_string($raw)) {
-            $message='LINNMS: tidak dapat terhubung';
-            if($curlError!=='') $message.=': '.$curlError;
-            $this->trace('[transport] '.$message.' URL='.$url);
-            throw new RuntimeException($message.'.');
+            throw new RuntimeException('Layanan sedang tidak dapat dihubungi. Periksa koneksi internet dan DNS server.');
         }
 
         $decoded=json_decode($raw,true);
@@ -441,7 +437,7 @@ final class RuntimeBridge
 
     private function trace(string $message): void
     {
-        $line=gmdate('c').' '.$message.PHP_EOL;
+        $line=date('c').' '.$message.PHP_EOL;
         $dir=dirname(shared_log_path('service.log'));
         if(!is_dir($dir)) @mkdir($dir,0770,true);
         if(@file_put_contents($dir.'/service.log',$line,FILE_APPEND|LOCK_EX)===false) {

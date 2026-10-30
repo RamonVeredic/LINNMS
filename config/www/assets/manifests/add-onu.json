@@ -1,0 +1,8 @@
+{
+  "styles": [
+    "assets/css/page/add-onu/add-onu.css"
+  ],
+  "scripts": [
+    "assets/js/page/add-onu/onu-registration.js"
+  ]
+}

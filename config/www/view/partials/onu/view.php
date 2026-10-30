@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../shared/format.php';
+require_once __DIR__ . '/../../shared/models/DataOnuView.php';
 
 function onu_detail_view_model(
     array $readData,
@@ -129,7 +129,7 @@ $valueDetail = DataOnuView::detailValues(
         'deregister_count' => $deregisterCount,
         'distance' => $distance,
         'port_count' => $portNumber,
-        'running_time' => $runningTime,
+        'running_time' => $runningTimeValue,
     ]
 );
 foreach (['distance', 'port_count', 'running_time', 'register_time', 'deregister_time', 'deregister_count'] as $field) {
@@ -151,6 +151,11 @@ foreach (['distance', 'port_count', 'running_time', 'register_time', 'deregister
         $valueDetail[$field] = DataOnuView::detailValues($onuDetailDefinition, [$field => $value])[$field];
         break;
     }
+}
+$rxPairDisplay = $valueDetail['rx_power']['value'];
+if ($valueDetail['olt_rx_power']['state'] !== 'unsupported') {
+    $oltRxDisplay = $valueDetail['olt_rx_power']['value'];
+    if ($rxPairDisplay !== '—' || $oltRxDisplay !== '—') $rxPairDisplay .= ' / ' . $oltRxDisplay;
 }
 $optic = ['class' => 'neutral', 'label' => '—'];
 $rxValue = onu_rx_power_number($onu_rxPower);
@@ -266,6 +271,7 @@ $formatNumeric = static function (mixed $value, int $decimals = 2, string $suffi
         'warnings' => $warnings,
         'formatNumeric' => $formatNumeric,
         'valueDetail' => $valueDetail,
+        'rxPairDisplay' => $rxPairDisplay,
 
         'onuService' => $onuService,
         'onuServiceManual' => $onuServiceManual,
@@ -278,7 +284,7 @@ function onu_history_entries(array $onuDetail, array $readData): array
 {
 $onuHistory = is_array($readData['state_history'] ?? null) ? $readData['state_history'] : [];
 $onuSignalHistory = is_array($readData['signal_history'] ?? null) ? $readData['signal_history'] : [];
-$rxProblemThreshold = (float)($readData['rx_problem_threshold_dbm'] ?? LinnmsRepository::ONU_RX_PROBLEM_DEFAULT_DBM);
+$rxProblemThreshold = (float)($readData['rx_problem_threshold_dbm'] ?? 0);
 
 $lossWithoutRx = onu_loss_without_rx($onuDetail);
 $formatDuration = static function (int $seconds): string {

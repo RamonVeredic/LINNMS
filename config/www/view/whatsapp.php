@@ -38,8 +38,7 @@ $whatsappBaseUrlSaved = trim((string)($whatsappUserSettings['base_url'] ?? '')) 
 $whatsappTargetSaved = trim((string)($whatsappUserSettings['target'] ?? '')) !== '';
 $whatsappTargetType = (string)($whatsappUserSettings['target_type'] ?? 'phone') === 'group' ? 'group' : 'phone';
 $whatsappSupportsGroups = in_array('group', (array)($whatsappDefinition['target']['types'] ?? ['phone', 'group']), true);
-$whatsappGroupsDefinition = (array)($whatsappDefinition['groups'] ?? []);
-$whatsappSupportsGroupListing = trim((string)($whatsappGroupsDefinition['url'] ?? '')) !== '';
+$whatsappSupportsGroupListing = !empty($whatsappDefinition['groups_available']);
 $whatsappGroupHint = trim((string)($whatsappDefinition['target']['group_hint'] ?? ''));
 if ($whatsappGroupHint === '') {
     $whatsappGroupHint = 'Tempel Group ID dari dashboard gateway Anda (umumnya berakhiran @g.us).';
@@ -95,7 +94,7 @@ $whatsappConnected = ($whatsappTokenSaved || $whatsappBaseUrlSaved) && $whatsapp
             <small class="field-help" data-whatsapp-provider-info><?= h((string)($whatsappDefinition['info'] ?? '')) ?></small>
             <small class="field-help-link">
                 Situs <span data-whatsapp-provider-label><?= h($whatsappProviderLabel) ?></span>:
-                <a class="teal-text" data-whatsapp-provider-link href="<?= h($whatsappInfoUrl !== '' ? $whatsappInfoUrl : '#') ?>" target="_blank" rel="noopener noreferrer" <?= $whatsappInfoUrl === '' ? 'hidden style="display:none"' : '' ?>><?= h($whatsappInfoUrl) ?></a>
+                <a class="text-primary" data-whatsapp-provider-link href="<?= h($whatsappInfoUrl !== '' ? $whatsappInfoUrl : '#') ?>" target="_blank" rel="noopener noreferrer" <?= $whatsappInfoUrl === '' ? 'hidden style="display:none"' : '' ?>><?= h($whatsappInfoUrl) ?></a>
             </small>
         </div>
 
@@ -107,7 +106,7 @@ $whatsappConnected = ($whatsappTokenSaved || $whatsappBaseUrlSaved) && $whatsapp
         </div>
 
         <div data-whatsapp-credential-fields>
-            <?php require project_path('pages', 'partials', 'whatsapp', 'whatsapp-credential-fields.php'); ?>
+            <?php require project_path('view', 'partials', 'whatsapp', 'whatsapp-credential-fields.php'); ?>
         </div>
 
         <div class="field" data-whatsapp-phone-field <?= $whatsappTargetType === 'group' ? 'hidden' : '' ?>>
@@ -174,6 +173,6 @@ $channelHistoryPages = $whatsappHistoryPages;
 $channelHistoryTotal = $whatsappHistoryTotal;
 $channelHistoryEvents = $whatsappEvents;
 $channelHistoryUrl = $whatsappHistoryUrl;
-require project_path('pages', 'partials', 'channel-history.php');
+require project_path('view', 'partials', 'channel-history.php');
 ?>
 <?php endif; ?>

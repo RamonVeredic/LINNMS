@@ -97,6 +97,6 @@ $channelHistoryPages = $telegramHistoryPages;
 $channelHistoryTotal = $telegramHistoryTotal;
 $channelHistoryEvents = $events;
 $channelHistoryUrl = $telegramHistoryUrl;
-require project_path('pages', 'partials', 'channel-history.php');
+require project_path('view', 'partials', 'channel-history.php');
 ?>
 <?php endif; ?>

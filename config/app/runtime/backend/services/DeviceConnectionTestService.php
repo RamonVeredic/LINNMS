@@ -102,6 +102,9 @@ final class DeviceConnectionTestService
             }
             $snmpPort = $this->portValue($input, 'snmp_port', 161);
             $community = trim((string)($input['community'] ?? ''));
+            if ($community === '' && $storedCredentialsAllowed && is_array($editDeviceRow)) {
+                $community = trim((string)($editDeviceRow['snmp_community'] ?? ''));
+            }
             if ($community === '') {
                 throw new InvalidArgumentException(validation_required_message('Community'));
             }

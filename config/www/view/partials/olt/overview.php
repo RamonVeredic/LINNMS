@@ -22,8 +22,13 @@ $ovRenderActions = static function () use ($ovId, $ovActions, $ovData, $ovCapabi
             <input type="hidden" name="olt_row_id" value="<?= $ovId ?>">
             <button class="button secondary" type="submit" data-olt-refresh-button aria-label="Perbarui data OLT ini"<?= empty($ovCapabilities['refresh_detail']) ? ' disabled' : '' ?>><i class="bi bi-arrow-repeat" aria-hidden="true"></i></button>
         </form>
-        <span data-tip="Ubah pengaturan perangkat" data-tip-pos="bottom"><a class="button secondary" href="<?= h((string)($ovActions['edit_url'] ?? '#')) ?>" aria-label="Ubah pengaturan perangkat"><i class="bi bi-pencil-square" aria-hidden="true"></i></a></span>
-        <?php require __DIR__ . '/terminal/button.php'; ?>
+        <?php if (trim((string)($ovActions['edit_url'] ?? '')) !== ''): ?>
+        <span data-tip="Ubah pengaturan perangkat" data-tip-pos="bottom"><a class="button secondary" href="<?= h((string)$ovActions['edit_url']) ?>" aria-label="Ubah pengaturan perangkat"><i class="bi bi-pencil-square" aria-hidden="true"></i></a></span>
+        <?php endif; ?>
+        <?php $terminalSupported = !empty(($ovData['capabilities'] ?? [])['terminal']); ?>
+        <span data-tip="<?= $terminalSupported ? 'Buka terminal OLT' : 'Terminal belum tersedia untuk perangkat ini' ?>" data-tip-pos="bottom"><button class="button secondary olt-terminal-button" type="button" data-olt-terminal-open
+            aria-label="<?= $terminalSupported ? 'Buka terminal OLT' : 'Terminal belum tersedia untuk perangkat ini' ?>"
+            <?= $terminalSupported ? '' : 'disabled' ?>><i class="bi bi-terminal" aria-hidden="true"></i></button></span>
     </div>
     <?php
 };

@@ -1,17 +1,1 @@
-(() => {
-  'use strict';
-
-  const form = document.querySelector('[data-channel-credentials-form]');
-  const editButton = document.querySelector('[data-channel-credential-edit]');
-  if (!(form instanceof HTMLFormElement) || !(editButton instanceof HTMLButtonElement)) return;
-
-  editButton.addEventListener('click', () => {
-    form.hidden = false;
-    editButton.hidden = true;
-    editButton.setAttribute('aria-expanded', 'true');
-    const saveButton = form.querySelector('[data-channel-credential-save]');
-    if (saveButton instanceof HTMLButtonElement) saveButton.hidden = false;
-    const focusTarget = form.querySelector(form.dataset.channelEditFocus || 'input:not([type="hidden"]):not(:disabled)');
-    if (focusTarget instanceof HTMLElement) focusTarget.focus();
-  });
-})();
+(()=>{"use strict";const e=document.querySelector("[data-channel-credentials-form]"),t=document.querySelector("[data-channel-credential-edit]");e instanceof HTMLFormElement&&t instanceof HTMLButtonElement&&t.addEventListener("click",(()=>{e.hidden=!1,t.hidden=!0,t.setAttribute("aria-expanded","true");const n=e.querySelector("[data-channel-credential-save]");n instanceof HTMLButtonElement&&(n.hidden=!1);const a=e.querySelector(e.dataset.channelEditFocus||'input:not([type="hidden"]):not(:disabled)');a instanceof HTMLElement&&a.focus()}))})();

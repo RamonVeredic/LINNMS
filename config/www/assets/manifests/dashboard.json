@@ -1,0 +1,15 @@
+{
+  "styles": [
+    "assets/css/page/dashboard/dashboard.css",
+    "assets/components/detail-modal/detail-modal.css",
+    "assets/css/page/dashboard/add-device.css"
+  ],
+  "scripts": [
+    "assets/js/page/dashboard/ajax.js",
+    "assets/js/page/dashboard/dashboard.js",
+    "assets/components/detail-modal/detail-modal.js",
+    "assets/js/page/dashboard/device-form.js",
+    "assets/js/page/dashboard/device-add-modal.js",
+    "assets/js/page/dashboard/device-edit-modal.js"
+  ]
+}

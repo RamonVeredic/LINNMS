@@ -45,9 +45,7 @@ foreach ((array)($onuServiceConfig['mgmt_lines'] ?? []) as $line) {
 ?>
 <?php if (!empty($onuViewCapabilities['onu_service']) || $onuServiceByIndex !== []): ?>
 <section class="panel onu-service-preview" aria-labelledby="onuServiceTitle" data-onu-service="service">
-    <div class="panel-heading onu-preview-heading">
-        <div class="tittle-subtitle"><h2 id="onuServiceTitle" class="onu-sub-block-title">WAN</h2></div>
-    </div>
+    <header class="tittle-subtitle"><h3 id="onuServiceTitle">WAN</h3></header>
     <?php if ($onuServiceConfig === []): ?>
         <p class="text-muted">Data WAN belum tersedia pada snapshot.</p>
     <?php else: ?>

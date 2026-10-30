@@ -28,9 +28,7 @@ $oltView = [
     'actions' => [
         'refresh_action' => $oltRefreshAction,
         'refresh_async' => $oltRefreshAsync,
-        'edit_url' => $oltViewFamily === 'external'
-            ? public_page_url('edit-api-olt', ['id' => (int)($oltDetail['id'] ?? 0)])
-            : public_page_url('edit-device', ['id' => (int)($oltDetail['id'] ?? 0)]),
+        'edit_url' => '',
     ],
     'actions_placement' => $oltViewFamily === 'zte' ? 'before' : 'inside',
     'overview_extra' => $oltFanBlock,
@@ -42,7 +40,20 @@ $oltView = [
 <div class="olt-view" data-olt-view<?= $oltViewFamily === 'hioso' ? ' data-olt-implementation="' . h((string)($oltViewDefinition['implementation'] ?? '')) . '" data-olt-olt-ref="' . h(public_resource_token('olt', (int)($oltDetail['id'] ?? 0))) . '"' : '' ?>>
     <?php require __DIR__ . '/overview.php'; ?>
     <section class="panel olt-workspace">
-        <?php require __DIR__ . '/tabs.php'; ?>
+        <?php
+        $tabData = is_array($oltView ?? null) ? $oltView : [];
+        $tabList = is_array($tabData['tabs'] ?? null) ? $tabData['tabs'] : [];
+        $tabLines = [
+            'onu-types' => ['ONU', 'Type'],
+            'wan' => ['WAN-IP', 'Profil'],
+            'speed' => ['Speed', 'Profil'],
+        ];
+        ?>
+        <nav class="olt-tabs" role="tablist" aria-label="Informasi OLT">
+            <?php foreach ($tabList as $tabKey => [$tabLabel, $tabIcon]): ?>
+                <button type="button" role="tab" id="olt-tab-<?= h((string)$tabKey) ?>" aria-controls="olt-panel-<?= h((string)$tabKey) ?>" aria-label="<?= h((string)$tabLabel) ?>" aria-selected="<?= $tabKey === 'pon' ? 'true' : 'false' ?>" tabindex="<?= $tabKey === 'pon' ? '0' : '-1' ?>" data-olt-tab="<?= h((string)$tabKey) ?>"><i class="bi <?= h((string)$tabIcon) ?>" aria-hidden="true"></i><span class="olt-tab-label"><?php if (isset($tabLines[$tabKey])): ?><span><?= h($tabLines[$tabKey][0]) ?></span><span><?= h($tabLines[$tabKey][1]) ?></span><?php else: ?><?= h((string)$tabLabel) ?><?php endif; ?></span></button>
+            <?php endforeach; ?>
+        </nav>
         <?php require __DIR__ . '/pon/panel.php'; ?>
         <div id="olt-panel-traffic" role="tabpanel" aria-labelledby="olt-tab-traffic" data-olt-panel="traffic" hidden>
             <?php

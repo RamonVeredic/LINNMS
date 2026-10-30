@@ -11,7 +11,7 @@ function internal_api_signing_key(): string
 
 function internal_api_request(int $userId, string $resource, array $params = [], int $timeoutSeconds = 10): array
 {
-    if ($userId < 0 || ($userId === 0 && !in_array($resource, ['auth.guest', 'guest.page.read'], true))) {
+    if ($userId < 0 || ($userId === 0 && !in_array($resource, ['auth.guest', 'guest.page.read', 'app.log.write', 'app.entry.read', 'app.entry.action', 'app.bootstrap.read'], true))) {
         throw new InvalidArgumentException('User API internal tidak valid.');
     }
 

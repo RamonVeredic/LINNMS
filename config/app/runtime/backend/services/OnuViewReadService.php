@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/OltCapabilities.php';
+
 final class OnuViewReadService
 {
     public function __construct(private LinnmsRepository $db)
@@ -18,7 +20,7 @@ final class OnuViewReadService
         $olt = $this->db->getOltByRowId($userId, $oltId);
         $driverId = device_driver_type($onu);
         $definition = monitoring_driver_definition($driverId) ?? [];
-        $capabilities = OltDetailViewModel::capabilities(
+        $capabilities = OltCapabilities::compute(
             $definition,
             olt_driver_support_enabled($this->db->getOltDriverSupportFlags(), $driverId),
             is_array($olt) ? $olt : []

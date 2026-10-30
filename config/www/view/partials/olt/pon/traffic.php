@@ -64,10 +64,10 @@ $ponRenderCard = static function (string $label, string $ref, string $role = '')
     $trafficCardTitle = $label;
     $trafficCardRole = $role;
     $trafficCardIcon = $role === 'uplink' ? 'bi-arrow-up-right-circle' : 'bi-hdd-network';
-    require project_path('pages', 'partials', 'traffic-card.php');
+    require project_path('view', 'partials', 'traffic-card.php');
 };
 ?>
-<aside class="pon-traffic" data-traffic data-traffic-mode="pon" data-traffic-row-id="<?= (int)$oltDetail['id'] ?>"
+<aside class="pon-traffic" data-traffic data-traffic-mode="pon" data-traffic-row-id="<?= (int)$oltDetail['id'] ?>" data-traffic-active="<?= strtoupper(trim((string)($oltDetail['driver_status'] ?? ''))) === 'DOWN' ? 'false' : 'true' ?>"
 >
     <div class="panel-heading"><h3 class="onu-sub-block-title"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i> Trafik</h3></div>
     <article data-pon-traffic-panel="graph">

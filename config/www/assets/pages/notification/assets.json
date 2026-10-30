@@ -1,9 +1,0 @@
-{
-  "styles": [
-    "assets/components/settings-layout/settings-layout.css"
-  ],
-  "scripts": [
-    "assets/pages/notification/notification-settings.js",
-    "assets/components/settings-layout/columns.js"
-  ]
-}

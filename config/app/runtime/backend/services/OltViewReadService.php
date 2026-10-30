@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/OltCapabilities.php';
+
 final class OltViewReadService
 {
     public function __construct(private LinnmsRepository $db)
@@ -18,7 +20,7 @@ final class OltViewReadService
         $driverId = device_driver_type($olt);
         $definition = monitoring_driver_definition($driverId) ?? [];
         $driverAllowed = olt_driver_support_enabled($this->db->getOltDriverSupportFlags(), $driverId);
-        $capabilities = OltDetailViewModel::capabilities($definition, $driverAllowed, $olt);
+        $capabilities = OltCapabilities::compute($definition, $driverAllowed, $olt);
         if (($definition['handler'] ?? '') === 'external_api') {
             $capabilities['refresh_detail'] = true;
         }
@@ -27,7 +29,7 @@ final class OltViewReadService
             'definition' => [
                 'handler' => (string)($definition['handler'] ?? ''),
                 'implementation' => (string)($definition['implementation'] ?? ''),
-                'olt_view_template' => (string)($definition['olt_view_template'] ?? ''),
+                'olt_view_family' => (string)($definition['olt_view_family'] ?? ''),
             ],
             'capabilities' => $capabilities,
             'optic_source_supported' => !empty($definition['telnet_cli']),
@@ -35,6 +37,12 @@ final class OltViewReadService
             'uplink_ports' => $this->db->getOltPorts($userId, $rowId, 'uplink'),
             'traffic_interfaces' => $this->db->getDeviceTrafficInterfaces($userId, $rowId),
             'traffic_interval_seconds' => $this->db->getOltGraphIntervalMinutes() * 60,
+            'onu_type_fields' => array_map(static fn(array $field): array => [
+                'response' => $field[1],
+                'label' => $field[2],
+                'min' => $field[3],
+                'max' => $field[4],
+            ], OltOnuTypeAware::GPON_FIELDS),
         ];
     }
 }

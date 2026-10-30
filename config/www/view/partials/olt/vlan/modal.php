@@ -5,9 +5,9 @@ $oltVlanOltRowId = (int)($oltVlanOltRowId ?? $oltRowId ?? 0);
 ?>
 <div id="<?= h($oltVlanModalId) ?>" class="modal" hidden aria-hidden="true" data-olt-profile-modal>
     <div class="modal-card olt-vlan-modal-card" role="dialog" aria-modal="true" aria-labelledby="<?= h($oltVlanModalId) ?>Title">
-        <div class="olt-onu-type-modal-heading">
+        <div class="olt-onu-type-modal-heading modal-header">
             <h2 id="<?= h($oltVlanModalId) ?>Title">Tambah VLAN</h2>
-            <button class="icon-button" type="button" data-olt-profile-modal-close aria-label="Tutup modal"><i class="ri-close-line" aria-hidden="true"></i></button>
+            <button class="icon-button modal-close-button" type="button" data-olt-profile-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         </div>
         <form method="post" class="olt-onu-type-modal-form">
             <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">

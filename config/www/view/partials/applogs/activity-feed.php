@@ -2,7 +2,7 @@
 $feed = $feed ?? [];
 ?>
 <?php if ($feed === []): ?>
-    <div class="public-log-empty">Belum ada aktivitas terbaru</div>
+    <div class="public-log-empty"><div class="empty-state"><i class="bi bi-clock-history" aria-hidden="true"></i><span>Belum ada aktivitas terbaru</span></div></div>
 <?php else: foreach ($feed as $event):
     $entryTime = format_feed_time($event['created_at'] ?? null);
     $level = strtolower(trim((string)($event['level'] ?? 'info')));

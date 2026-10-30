@@ -35,11 +35,11 @@ ksort($onuPortsByNumber, SORT_NUMERIC);
 </div>
 <div id="onu-ethernet-modal" class="modal olt-pon-modal onu-ethernet-modal" data-onu-ethernet-modal hidden aria-hidden="true">
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="onu-ethernet-modal-title">
-        <div class="onu-eth-heading">
+        <div class="onu-eth-heading modal-header">
             <h2 id="onu-ethernet-modal-title">LAN <span data-onu-lan-number></span>
             -
             <span class="onu-eth-status is-unknown" data-onu-lan-status></span></h2>
-            <button class="icon-button" type="button" data-onu-lan-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+            <button class="icon-button modal-close-button" type="button" data-onu-lan-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         </div>
         <div class="onu-eth-body" data-onu-lan-detail></div>
     </div>

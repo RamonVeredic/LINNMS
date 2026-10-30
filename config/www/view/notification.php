@@ -1,22 +1,3 @@
-<?php
-$pageVariables = get_defined_vars();
-$settings = is_array($pageVariables['settings'] ?? null) ? $pageVariables['settings'] : [];
-$onuProblemSettings = is_array($pageVariables['onuProblemSettings'] ?? null) ? $pageVariables['onuProblemSettings'] : [];
-$telegramServiceSettings = is_array($pageVariables['telegramServiceSettings'] ?? null) ? $pageVariables['telegramServiceSettings'] : [];
-$whatsappServiceSettings = is_array($pageVariables['whatsappServiceSettings'] ?? null) ? $pageVariables['whatsappServiceSettings'] : [];
-$notifTelegramEnabled = (int)($settings['telegram_enabled'] ?? 0) === 1;
-$notifTelegramAccessAllowed = !empty($telegramFeatureAllowed);
-$notifTelegramAvailable = $notifTelegramAccessAllowed && (int)($telegramServiceSettings['enabled'] ?? 0) === 1;
-$whatsappUserSettings = is_array($pageVariables['whatsappUserSettings'] ?? null)
-    ? $pageVariables['whatsappUserSettings']
-    : [];
-unset($pageVariables);
-$notifWhatsAppEnabled = (int)($whatsappUserSettings['enabled'] ?? 0) === 1;
-$notifWhatsAppAccessAllowed = !empty($whatsappFeatureAllowed);
-$notifWhatsAppAvailable = $notifWhatsAppAccessAllowed && (int)($whatsappServiceSettings['enabled'] ?? 0) === 1;
-$notifTelegramAccessMessage = !$notifTelegramAccessAllowed ? 'Tidak diizinkan.' : (!$notifTelegramAvailable ? 'Belum tersedia.' : '');
-$notifWhatsAppAccessMessage = !$notifWhatsAppAccessAllowed ? 'Tidak diizinkan.' : (!$notifWhatsAppAvailable ? 'Belum tersedia.' : '');
-?>
 <main id="notification-settings" class="panel settings-layout">
     <header>
         <h2>Notifikasi</h2>
@@ -34,11 +15,11 @@ $notifWhatsAppAccessMessage = !$notifWhatsAppAccessAllowed ? 'Tidak diizinkan.' 
                         <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
                         <input type="hidden" name="action" value="telegram_toggle_notifications">
                         <input type="hidden" name="telegram_enabled" value="0">
-                        <label class="settings-row channel-master-switch<?= !$notifTelegramAccessAllowed ? ' is-access-locked' : '' ?>"<?= !$notifTelegramAccessAllowed ? ' aria-disabled="true"' : '' ?>>
-                            <span class="label"><span>Telegram</span><?php if ($notifTelegramAccessMessage !== ''): ?><small><?= h($notifTelegramAccessMessage) ?></small><?php endif; ?></span>
-                            <span class="control"><input type="checkbox" role="switch" name="telegram_enabled" value="1" <?= $notifTelegramEnabled ? 'checked' : '' ?> <?= !$notifTelegramAvailable ? 'disabled' : '' ?> data-instant-toggle-input aria-label="Aktifkan pengiriman notifikasi Telegram"><i class="toggle-switch" aria-hidden="true"></i></span>
-                        </label>
-                        <noscript><?php if ($notifTelegramAvailable): ?><button class="button primary" type="submit">Simpan</button><?php elseif ($notifTelegramAccessMessage !== ''): ?><small><?= h($notifTelegramAccessMessage) ?></small><?php endif; ?></noscript>
+                        <div class="settings-row channel-master-switch<?= !$notificationView['telegram_allowed'] ? ' is-access-locked' : '' ?>"<?= !$notificationView['telegram_allowed'] ? ' aria-disabled="true"' : '' ?>>
+                            <span class="label"><span>Telegram</span><?php if ($notificationView['telegram_message'] !== ''): ?><small><?= h($notificationView['telegram_message']) ?></small><?php endif; ?></span>
+                            <label class="control"><input type="checkbox" role="switch" name="telegram_enabled" value="1" <?= $notificationView['telegram_enabled'] ? 'checked' : '' ?> <?= !$notificationView['telegram_available'] ? 'disabled' : '' ?> data-instant-toggle-input aria-label="Aktifkan pengiriman notifikasi Telegram"><i class="toggle-switch" aria-hidden="true"></i></label>
+                        </div>
+                        <noscript><?php if ($notificationView['telegram_available']): ?><button class="button primary" type="submit">Simpan</button><?php elseif ($notificationView['telegram_message'] !== ''): ?><small><?= h($notificationView['telegram_message']) ?></small><?php endif; ?></noscript>
                     </form>
                     </li>
                     <li>
@@ -46,27 +27,21 @@ $notifWhatsAppAccessMessage = !$notifWhatsAppAccessAllowed ? 'Tidak diizinkan.' 
                         <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
                         <input type="hidden" name="action" value="whatsapp_toggle_notifications">
                         <input type="hidden" name="whatsapp_enabled" value="0">
-                        <label class="settings-row channel-master-switch<?= !$notifWhatsAppAccessAllowed ? ' is-access-locked' : '' ?>"<?= !$notifWhatsAppAccessAllowed ? ' aria-disabled="true"' : '' ?>>
-                            <span class="label"><span>WhatsApp</span><?php if ($notifWhatsAppAccessMessage !== ''): ?><small><?= h($notifWhatsAppAccessMessage) ?></small><?php endif; ?></span>
-                            <span class="control"><input type="checkbox" role="switch" name="whatsapp_enabled" value="1" <?= $notifWhatsAppEnabled ? 'checked' : '' ?> <?= !$notifWhatsAppAvailable ? 'disabled' : '' ?> data-instant-toggle-input aria-label="Aktifkan pengiriman notifikasi WhatsApp"><i class="toggle-switch" aria-hidden="true"></i></span>
-                        </label>
-                        <noscript><?php if ($notifWhatsAppAvailable): ?><button class="button primary" type="submit">Simpan</button><?php elseif ($notifWhatsAppAccessMessage !== ''): ?><small><?= h($notifWhatsAppAccessMessage) ?></small><?php endif; ?></noscript>
+                        <div class="settings-row channel-master-switch<?= !$notificationView['whatsapp_allowed'] ? ' is-access-locked' : '' ?>"<?= !$notificationView['whatsapp_allowed'] ? ' aria-disabled="true"' : '' ?>>
+                            <span class="label"><span>WhatsApp</span><?php if ($notificationView['whatsapp_message'] !== ''): ?><small><?= h($notificationView['whatsapp_message']) ?></small><?php endif; ?></span>
+                            <label class="control"><input type="checkbox" role="switch" name="whatsapp_enabled" value="1" <?= $notificationView['whatsapp_enabled'] ? 'checked' : '' ?> <?= !$notificationView['whatsapp_available'] ? 'disabled' : '' ?> data-instant-toggle-input aria-label="Aktifkan pengiriman notifikasi WhatsApp"><i class="toggle-switch" aria-hidden="true"></i></label>
+                        </div>
+                        <noscript><?php if ($notificationView['whatsapp_available']): ?><button class="button primary" type="submit">Simpan</button><?php elseif ($notificationView['whatsapp_message'] !== ''): ?><small><?= h($notificationView['whatsapp_message']) ?></small><?php endif; ?></noscript>
                     </form>
                     </li>
                     </ul>
                 </div>
             </section>
-            <?php
-            $notificationThresholds = [
-                ['key' => 'problem_threshold', 'id' => 'notificationProblemThreshold', 'label' => 'Batas RX Bermasalah', 'value' => LinnmsRepository::clampOnuRxProblemLimit($onuProblemSettings['rx_power_threshold_dbm'] ?? null), 'min' => LinnmsRepository::ONU_RX_PROBLEM_MIN_DBM, 'max' => LinnmsRepository::ONU_RX_PROBLEM_MAX_DBM, 'unit' => 'dBm'],
-                ['key' => 'signal_threshold_dbm', 'id' => 'notificationSignalThreshold', 'label' => 'Perubahan RX Power', 'value' => LinnmsRepository::clampOnuRxDetection($settings['signal_threshold_dbm'] ?? null), 'min' => LinnmsRepository::ONU_RX_DETECTION_MIN_DBM, 'max' => LinnmsRepository::ONU_RX_DETECTION_MAX_DBM, 'unit' => 'dBm'],
-            ];
-            ?>
             <section>
                 <header class="tittle-subtitle"><h3>Batas Deteksi</h3></header>
                 <div class="settings-body">
                     <ul class="settings-list">
-                    <?php foreach ($notificationThresholds as $threshold): ?>
+                    <?php foreach ($notificationView['thresholds'] as $threshold): ?>
                         <li>
                         <form method="post" class="settings-row" data-notification-edit-form>
                             <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
@@ -95,9 +70,6 @@ $notifWhatsAppAccessMessage = !$notifWhatsAppAccessAllowed ? 'Tidak diizinkan.' 
 
         </div>
         <div class="settings-column" data-settings-column>
-            <?php
-            $notificationSelectedMap = $notificationSelectedIds === null ? null : array_fill_keys($notificationSelectedIds, true);
-            ?>
             <section id="notification-devices">
                 <header class="tittle-subtitle"><h3>Device</h3></header>
                 <div class="settings-body">
@@ -111,10 +83,10 @@ $notifWhatsAppAccessMessage = !$notifWhatsAppAccessAllowed ? 'Tidak diizinkan.' 
                                     <form method="post" data-notification-device-form>
                                         <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
                                         <input type="hidden" name="action" value="save_notification_devices">
-                                        <label class="settings-row">
+                                        <div class="settings-row">
                                             <span class="label"><span><?= h(trim((string)($device['name'] ?? '')) ?: ('Perangkat #' . $deviceId)) ?></span></span>
-                                            <span class="control"><input type="checkbox" role="switch" name="notification_device_ids[]" value="<?= $deviceId ?>" data-notification-device-checkbox <?= $notificationSelectedMap === null || isset($notificationSelectedMap[$deviceId]) ? 'checked' : '' ?>><i class="toggle-switch" aria-hidden="true"></i></span>
-                                        </label>
+                                            <label class="control"><input type="checkbox" role="switch" name="notification_device_ids[]" value="<?= $deviceId ?>" data-notification-device-checkbox aria-label="Notifikasi <?= h(trim((string)($device['name'] ?? '')) ?: ('Perangkat #' . $deviceId)) ?>" <?= $notificationView['selected_map'] === null || isset($notificationView['selected_map'][$deviceId]) ? 'checked' : '' ?>><i class="toggle-switch" aria-hidden="true"></i></label>
+                                        </div>
                                     </form>
                                 </li>
                             <?php endforeach; ?>
@@ -125,27 +97,16 @@ $notifWhatsAppAccessMessage = !$notifWhatsAppAccessAllowed ? 'Tidak diizinkan.' 
 
             <section>
                 <header class="tittle-subtitle"><h3>Jenis Notifikasi</h3></header>
-                <?php
-                $notificationToggles = [
-                    ['key' => 'notify_onu_signal', 'label' => 'RX Power', 'enabled' => (int)($settings['notify_onu_signal'] ?? 1) === 1],
-                    ['key' => 'notify_onu_state', 'label' => 'Status ONU', 'enabled' => (int)($settings['notify_onu_state'] ?? 1) === 1],
-                    ['key' => 'notify_device_status', 'label' => 'Device', 'enabled' => (int)($settings['notify_device_status'] ?? 1) === 1],
-                    ['key' => 'notify_interface_changes', 'label' => 'Interface', 'enabled' => (int)($settings['notify_interface_changes'] ?? $settings['notify_device_status'] ?? 1) === 1],
-                    ['key' => 'notify_pppoe_status', 'label' => 'PPPoE', 'enabled' => (int)($settings['notify_pppoe_status'] ?? $settings['notify_interface_changes'] ?? $settings['notify_device_status'] ?? 1) === 1],
-                    ['key' => 'notify_onu_problem', 'label' => 'Bermasalah', 'enabled' => (int)($settings['notify_onu_problem'] ?? 1) === 1],
-                    ['key' => 'notify_onu_details', 'label' => 'Aktivitas ONU', 'enabled' => (int)($settings['notify_onu_details'] ?? 1) === 1],
-                ];
-                ?>
                 <div class="settings-body">
                     <ul class="settings-list">
-                    <?php foreach ($notificationToggles as $toggle): ?>
+                    <?php foreach ($notificationView['toggles'] as $toggle): ?>
                         <li>
                         <form method="post" data-instant-toggle>
                             <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
                             <input type="hidden" name="action" value="save_notification_setting">
                             <input type="hidden" name="setting_key" value="<?= h($toggle['key']) ?>">
                             <input type="hidden" name="setting_value" value="0">
-                            <label class="settings-row"><span class="label"><span><?= h($toggle['label']) ?></span></span><span class="control"><input type="checkbox" role="switch" name="setting_value" value="1" <?= $toggle['enabled'] ? 'checked' : '' ?> data-instant-toggle-input><i class="toggle-switch" aria-hidden="true"></i></span></label>
+                            <div class="settings-row"><span class="label"><span><?= h($toggle['label']) ?></span></span><label class="control"><input type="checkbox" role="switch" name="setting_value" value="1" <?= $toggle['enabled'] ? 'checked' : '' ?> data-instant-toggle-input aria-label="Notifikasi <?= h($toggle['label']) ?>"><i class="toggle-switch" aria-hidden="true"></i></label></div>
                         </form>
                         </li>
                     <?php endforeach; ?>

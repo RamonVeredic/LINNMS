@@ -46,7 +46,7 @@ $oltUplinkVlanModeLabels = ['hybrid' => 'Hybrid', 'access' => 'Access', 'trunk' 
 ?>
 <div id="<?= h($oltUplinkModalId) ?>" class="modal olt-detail-modal" hidden aria-hidden="true" data-olt-uplink-modal data-olt-uplink-row-id="<?= $oltUplinkRowId ?>">
   <div class="modal-card olt-uplink-modal-card" role="dialog" aria-modal="true" aria-labelledby="<?= h($oltUplinkModalId) ?>-title">
-    <div class="olt-uplink-modal-head"><h2 id="<?= h($oltUplinkModalId) ?>-title" data-uplink-modal-title>Uplink</h2><button class="icon-button" type="button" data-olt-uplink-close aria-label="Tutup modal"><i class="ri-close-line" aria-hidden="true"></i></button></div>
+    <div class="olt-uplink-modal-head modal-header"><h2 id="<?= h($oltUplinkModalId) ?>-title" data-uplink-modal-title>Uplink</h2><button class="icon-button modal-close-button" type="button" data-olt-uplink-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
     <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>" data-uplink-csrf>
     <div class="olt-uplink-modal-body">
       <nav class="olt-uplink-tabs" role="tablist" aria-label="Detail uplink">

@@ -4,12 +4,12 @@ $onuView = is_array($onuView ?? null) ? $onuView : [];
 if (empty($onuView['ok'])) {
     ?>
     <section class="panel">
-        <div class="panel-heading">
-            <div class="tittle-subtitle">
+        <header class="tittle-subtitle">
+            <div>
                 <h2>ONU tidak ditemukan</h2>
                 <p>Data ONU tidak tersedia.</p>
             </div>
-        </div>
+        </header>
     </section>
     <?php
     return;
@@ -24,13 +24,13 @@ $onuTemperatureClass = !is_numeric($temp ?? null) || (float)$temp === 0.0
 
 <?php if ($rebootPending): ?>
     <section class="panel reboot-panel">
-        <div class="panel-heading">
-            <div class="tittle-subtitle">
-                <h2><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Reboot</h2>
+        <header class="tittle-subtitle">
+            <div>
+                <h3><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Reboot</h3>
                 <p>Menunggu ONU kembali aktif.</p>
             </div>
             <span class="status warning"><?= (int)$rebootElapsed ?> detik</span>
-        </div>
+        </header>
     </section>
 <?php endif; ?>
 
@@ -68,9 +68,7 @@ $onuTemperatureClass = !is_numeric($temp ?? null) || (float)$temp === 0.0
 
 <div class="onu-detail-layout">
         <section class="panel onu-info-panel">
-            <div class="panel-heading">
-                <div class="tittle-subtitle"><h2 class="onu-sub-block-title">Informasi</h2></div>
-            </div>
+            <header class="tittle-subtitle"><h3>Informasi</h3></header>
             <form method="post" data-onu-edit-form>
                 <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
                 <input type="hidden" name="action" value="save_onu_control">
@@ -133,9 +131,7 @@ $onuTemperatureClass = !is_numeric($temp ?? null) || (float)$temp === 0.0
 
         <div class="onu-port-traffic-group">
             <section class="panel onu-port-panel">
-            <div class="panel-heading">
-                <div class="tittle-subtitle"><h2 class="onu-sub-block-title">Port</h2></div>
-            </div>
+            <header class="tittle-subtitle"><h3>Port</h3></header>
             <div class="onu-port-layout" data-onu-ethernet data-onu-row-id="<?= (int)($onuView['id'] ?? 0) ?>">
                 <div class="optical-card optic-<?= h($optic['class']) ?>">
 
@@ -160,9 +156,7 @@ $onuTemperatureClass = !is_numeric($temp ?? null) || (float)$temp === 0.0
         <?php if (!empty($onuViewCapabilities['onu_services_preview'])) require __DIR__ . '/preview-services.php'; ?>
 
         <section class="panel onu-detail-panel">
-            <div class="panel-heading">
-                <div class="tittle-subtitle"><h2 class="onu-sub-block-title">Detail Onu</h2></div>
-            </div>
+            <header class="tittle-subtitle"><h3>Detail Onu</h3></header>
             <div class="detail-list onu-detail-list">
                 <div>
                     <span class="label">Index ONU</span>
@@ -172,7 +166,7 @@ $onuTemperatureClass = !is_numeric($temp ?? null) || (float)$temp === 0.0
                     <span class="value <?= h($onuTemperatureClass) ?>"><i class="bi bi-thermometer-half" aria-hidden="true"></i>  <?= h($valueDetail['temperature']['value']) ?></span></div>
                 <div>
                     <span class="label"><?= $valueDetail['olt_rx_power']['state'] !== 'unsupported' ? 'RxPwr / RxOlt' : 'RxPwr' ?></span>
-                    <span class="value"><?= h($valueDetail['rx_power']['value']) ?><?php if ($valueDetail['olt_rx_power']['state'] !== 'unsupported'): ?> / <?= h($valueDetail['olt_rx_power']['value']) ?><?php endif; ?></span>
+                    <span class="value"><?= h($rxPairDisplay) ?></span>
                 </div>
                 <div>
                     <span class="label">TxPwr</span>
@@ -215,11 +209,11 @@ $onuTemperatureClass = !is_numeric($temp ?? null) || (float)$temp === 0.0
 <?php if ($authMode !== 'Undef'): ?>
 <div id="onuSerialModal" class="modal onu-control-modal" hidden aria-hidden="true">
     <div class="modal-card onu-control-modal-card" role="dialog" aria-modal="true" aria-labelledby="onuSerialModalTitle">
-        <div class="onu-control-modal-heading">
+        <div class="onu-control-modal-heading modal-header">
             <div>
                 <h2 id="onuSerialModalTitle">Serial ONU</h2>
              </div>
-            <button class="icon-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+            <button class="icon-button modal-close-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         </div>
 
         <form method="post" class="onu-control-modal-form" onsubmit="return confirm('Ganti Serial ONU ini? Serial lama akan kembali menjadi belum terdaftar.');">
@@ -264,11 +258,11 @@ $onuTemperatureClass = !is_numeric($temp ?? null) || (float)$temp === 0.0
 
 <div id="onuConfirmModal" class="modal onu-control-modal" hidden aria-hidden="true">
     <div class="modal-card onu-control-modal-card" role="dialog" aria-modal="true" aria-labelledby="onuConfirmModalTitle">
-        <div class="onu-control-modal-heading">
+        <div class="onu-control-modal-heading modal-header">
             <div>
                 <h2 id="onuConfirmModalTitle">Konfirmasi ONU</h2>
             </div>
-            <button class="icon-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+            <button class="icon-button modal-close-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         </div>
         <form method="post" class="onu-control-modal-form">
             <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
@@ -286,9 +280,9 @@ $onuTemperatureClass = !is_numeric($temp ?? null) || (float)$temp === 0.0
 
 <div id="onuActionModal" class="modal onu-control-modal" hidden aria-hidden="true">
     <div class="modal-card onu-control-modal-card" role="dialog" aria-modal="true" aria-labelledby="onuActionModalTitle">
-        <div class="onu-control-modal-heading">
+        <div class="onu-control-modal-heading modal-header">
             <div><h2 id="onuActionModalTitle">Tindakan</h2></div>
-            <button class="icon-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+            <button class="icon-button modal-close-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         </div>
         <form method="post" class="onu-control-modal-form" data-onu-action-form onsubmit="const operation=event.submitter?.value;if(!operation)return false;this.elements.action.value=operation==='deleteOp'?'delete_onu':'onu_operation';return operation==='deleteOp'||confirm('Jalankan '+event.submitter.textContent.trim()+' pada ONU ini?');">
             <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
@@ -311,9 +305,7 @@ $onuTemperatureClass = !is_numeric($temp ?? null) || (float)$temp === 0.0
 
 <?php if ($warnings !== []): ?>
 <section class="panel">
-    <div class="panel-heading">
-        <div class="tittle-subtitle"><h2>Informasi ONU</h2></div>
-    </div>
+    <header class="tittle-subtitle"><h3>Informasi ONU</h3></header>
     <div class="notice"><i class="bi bi-info-circle" aria-hidden="true"></i> Sebagian informasi ONU tidak dapat ditampilkan.</div>
 </section>
 <?php endif; ?>

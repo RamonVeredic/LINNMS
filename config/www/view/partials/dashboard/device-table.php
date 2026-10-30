@@ -2,7 +2,7 @@
     <table id="devicesTable">
         <thead><tr><th>No.</th><th>Jenis</th><th>Nama</th><th>Model</th><th>Sync</th><th></th></tr></thead>
         <tbody>
-        <?php if ($dashboardDeviceRowCount === 0): ?><tr><td colspan="6" class="empty-cell">Belum ada perangkat terdaftar.</td></tr><?php endif; ?>
+        <?php if ($dashboardDeviceRowCount === 0): ?><tr><td colspan="6" class="empty-cell"><div class="empty-state"><i class="bi bi-inbox" aria-hidden="true"></i><span>Belum ada perangkat terdaftar.</span></div></td></tr><?php endif; ?>
 
         <?php foreach ($dashboardDeviceRows as $deviceRow): ?>
             <tr data-href="<?= h((string)($deviceRow['row_url'] ?? '')) ?>" data-device-row-id="<?= (int)($deviceRow['id'] ?? 0) ?>" tabindex="0" role="link" onclick="if(!event.target.closest('a,button,input,form,[data-device-action-menu]'))location.href=this.dataset.href">
@@ -25,7 +25,7 @@
                             <button class="icon-button device-action-trigger" type="button" aria-label="Aksi untuk <?= h((string)($deviceRow['name'] ?? 'perangkat')) ?>" aria-haspopup="menu" aria-expanded="false" aria-controls="device-action-menu-<?= (int)($deviceRow['id'] ?? 0) ?>" data-device-action-trigger><i class="bi bi-three-dots-vertical" aria-hidden="true"></i></button>
                             <div class="device-action-menu" id="device-action-menu-<?= (int)($deviceRow['id'] ?? 0) ?>" role="menu" aria-label="Aksi perangkat" data-device-action-list hidden>
                                 <?php if (trim((string)($deviceRow['edit_url'] ?? '')) !== ''): ?>
-                                    <a href="<?= h((string)$deviceRow['edit_url']) ?>" role="menuitem"><i class="bi bi-pencil-square" aria-hidden="true"></i><?= h((string)($deviceRow['edit_title'] ?? 'Edit perangkat')) ?></a>
+                                    <a href="<?= h((string)$deviceRow['edit_url']) ?>" role="menuitem"<?= !empty($deviceRow['edit_modal']) ? ' data-device-edit-open data-device-id="' . (int)$deviceRow['id'] . '"' : '' ?>><i class="bi bi-pencil-square" aria-hidden="true"></i><?= h((string)($deviceRow['edit_title'] ?? 'Edit perangkat')) ?></a>
                                 <?php endif; ?>
                                 <?php if ($deviceRow['delete'] !== []): ?>
                                     <form method="post" data-device-delete-form>

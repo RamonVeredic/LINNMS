@@ -51,6 +51,9 @@ final class DriverExternalActionService
         if (!$this->validOltPayload($payload)) {
             return ['ok' => false, 'code' => 'validation'];
         }
+        if (!api_olt_type_support_enabled($this->db->getApiOltTypeSupportFlags(), $payload['olt_type'])) {
+            return ['ok' => false, 'code' => 'driver_disabled'];
+        }
         if ($this->restoreHiddenOltByConnection($userId, $adapter, $payload)) {
             return ['ok' => true, 'code' => 'ok'];
         }
@@ -100,6 +103,13 @@ final class DriverExternalActionService
             'community' => trim((string)($params['community'] ?? '')),
             'olt_type' => (string)($olt['type'] ?? ''),
         ];
+        if ($payload['community'] === '') {
+            $stored = json_decode((string)($olt['raw_json'] ?? ''), true);
+            $payload['community'] = is_array($stored) ? trim((string)($stored['community'] ?? '')) : '';
+            if ($payload['community'] === '') {
+                $payload['community'] = trim((string)($olt['snmp_community'] ?? ''));
+            }
+        }
         if (!$this->validOltPayload($payload)) {
             return ['ok' => false, 'code' => 'validation'];
         }
@@ -118,10 +128,6 @@ final class DriverExternalActionService
         $olt = $id !== null ? $this->db->getOlt($userId, $id) : null;
         if (!is_array($olt) || (string)($olt['source'] ?? 'api') !== 'api') {
             return ['ok' => false, 'code' => 'not_found'];
-        }
-        $type = strtolower(trim((string)($olt['type'] ?? '')));
-        if (str_contains($type, 'hioso') || str_contains($type, 'hisfocus')) {
-            return ['ok' => false, 'code' => 'unsupported'];
         }
         $scan = $adapter->requestScan($id);
         if (($scan['state'] ?? '') === 'error') {

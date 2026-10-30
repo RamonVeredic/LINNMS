@@ -96,15 +96,15 @@ $onuRowCapabilities = ['remote' => 'onu_remote_access', 'veip' => 'onu_veip', 't
 <section class="panel onu-service-stack" aria-label="Layanan ONU">
     <?php foreach ($onuPreviewSections as $previewSection): ?>
         <div class="onu-service-panel" role="group" aria-labelledby="onuPreview-<?= h($previewSection['id']) ?>" data-onu-service="<?= h($previewSection['id']) ?>" data-onu-row-id="<?= (int)($onuView['id'] ?? 0) ?>">
-            <div class="panel-heading onu-preview-heading">
-                <div class="tittle-subtitle"><h2 id="onuPreview-<?= h($previewSection['id']) ?>"><i class="bi <?= h($previewSection['icon']) ?>" aria-hidden="true"></i> <?= h($previewSection['title']) ?></h2></div>
+            <header class="tittle-subtitle">
+                <h3 id="onuPreview-<?= h($previewSection['id']) ?>"><i class="bi <?= h($previewSection['icon']) ?>" aria-hidden="true"></i> <?= h($previewSection['title']) ?></h3>
                 <?php if ($previewSection['id'] === 'remote' && !empty($onuViewCapabilities['onu_remote_access'])): ?>
                     <button class="button secondary small" type="button" data-onu-modal-open="onuRemoteAccessModal" data-onu-remote-add><i class="bi bi-plus-lg" aria-hidden="true"></i> Tambah</button>
                 <?php endif; ?>
                 <?php if ($previewSection['id'] === 'tr069' && $previewSection['rows'] === [] && !empty($onuViewCapabilities['onu_tr069'])): ?>
                     <button class="button secondary small" type="button" data-onu-modal-open="onuTr069Modal" data-onu-tr069-configure><i class="bi bi-pencil" aria-hidden="true"></i> Atur</button>
                 <?php endif; ?>
-            </div>
+            </header>
             <?php $canEditRows = !empty($onuViewCapabilities[$onuRowCapabilities[$previewSection['id']] ?? '']); ?>
             <div class="table-wrap onu-service-table-wrap">
                 <table class="onu-service-table" aria-labelledby="onuPreview-<?= h($previewSection['id']) ?>">
@@ -151,9 +151,9 @@ $onuRowCapabilities = ['remote' => 'onu_remote_access', 'veip' => 'onu_veip', 't
 </section>
 <div id="onuServiceActionModal" class="modal onu-control-modal" hidden aria-hidden="true">
     <div class="modal-card onu-control-modal-card" role="dialog" aria-modal="true" aria-labelledby="onuServiceActionModalTitle">
-        <div class="onu-control-modal-heading">
+        <div class="onu-control-modal-heading modal-header">
             <h2 id="onuServiceActionModalTitle">Konfirmasi tindakan</h2>
-            <button class="icon-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+            <button class="icon-button modal-close-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         </div>
         <p data-onu-service-action-message></p>
         <div class="onu-control-modal-actions">
@@ -165,7 +165,7 @@ $onuRowCapabilities = ['remote' => 'onu_remote_access', 'veip' => 'onu_veip', 't
 <?php if (!empty($onuViewCapabilities['onu_service'])): ?>
 <div id="onuDataServiceModal" class="modal onu-control-modal" hidden aria-hidden="true">
     <div class="modal-card onu-control-modal-card" role="dialog" aria-modal="true" aria-labelledby="onuDataServiceModalTitle">
-        <div class="onu-control-modal-heading"><h2 id="onuDataServiceModalTitle">Konfigurasi awal Service</h2><button class="icon-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
+        <div class="onu-control-modal-heading modal-header"><h2 id="onuDataServiceModalTitle">Konfigurasi awal Service</h2><button class="icon-button modal-close-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
         <form class="onu-control-modal-form" data-onu-data-service-form data-onu-row-id="<?= (int)($onuView['id'] ?? 0) ?>">
             <input name="config_action" type="hidden" value="create">
             <input name="index" type="hidden">
@@ -183,7 +183,7 @@ $onuRowCapabilities = ['remote' => 'onu_remote_access', 'veip' => 'onu_veip', 't
 <?php if (!empty($onuViewCapabilities['onu_tr069'])): ?>
 <div id="onuTr069Modal" class="modal onu-control-modal onu-ethernet-modal" hidden aria-hidden="true">
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="onuTr069ModalTitle">
-        <div class="onu-eth-heading"><h2 id="onuTr069ModalTitle">TR069</h2><button class="icon-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
+        <div class="onu-eth-heading modal-header"><h2 id="onuTr069ModalTitle">TR069</h2><button class="icon-button modal-close-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
         <form class="onu-eth-config-form" data-onu-service-form="tr069" data-onu-row-id="<?= (int)($onuView['id'] ?? 0) ?>">
             <input id="onuTr069State" name="state" type="hidden" value="lock">
             <div class="onu-eth-body">
@@ -205,7 +205,7 @@ $onuRowCapabilities = ['remote' => 'onu_remote_access', 'veip' => 'onu_veip', 't
 <?php if (!empty($onuViewCapabilities['onu_remote_access'])): ?>
 <div id="onuRemoteAccessModal" class="modal onu-control-modal onu-ethernet-modal" hidden aria-hidden="true">
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="onuRemoteAccessModalTitle">
-        <div class="onu-eth-heading"><h2 id="onuRemoteAccessModalTitle">Remote Access</h2><button class="icon-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
+        <div class="onu-eth-heading modal-header"><h2 id="onuRemoteAccessModalTitle">Remote Access</h2><button class="icon-button modal-close-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
         <form class="onu-eth-config-form" data-onu-service-form="remote" data-onu-row-id="<?= (int)($onuView['id'] ?? 0) ?>">
             <input name="config_action" type="hidden" value="create"><input name="state" type="hidden" value="enable">
             <div class="onu-eth-body">
@@ -227,7 +227,7 @@ $onuRowCapabilities = ['remote' => 'onu_remote_access', 'veip' => 'onu_veip', 't
 <?php if (!empty($onuViewCapabilities['onu_veip'])): ?>
 <div id="onuVeipModal" class="modal onu-control-modal onu-ethernet-modal" hidden aria-hidden="true">
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="onuVeipModalTitle">
-        <div class="onu-eth-heading"><h2 id="onuVeipModalTitle">VEIP</h2><button class="icon-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
+        <div class="onu-eth-heading modal-header"><h2 id="onuVeipModalTitle">VEIP</h2><button class="icon-button modal-close-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
         <form class="onu-eth-config-form" data-onu-service-form="veip" data-onu-row-id="<?= (int)($onuView['id'] ?? 0) ?>">
             <input id="onuVeipState" name="state" type="hidden" value="lock">
             <div class="onu-eth-body">
@@ -246,7 +246,7 @@ $onuRowCapabilities = ['remote' => 'onu_remote_access', 'veip' => 'onu_veip', 't
 <?php if (!empty($onuViewCapabilities['onu_wifi'])): ?>
 <div id="onuWifiModal" class="modal onu-control-modal onu-ethernet-modal" hidden aria-hidden="true">
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="onuWifiModalTitle">
-        <div class="onu-eth-heading"><h2 id="onuWifiModalTitle">WiFi</h2><button class="icon-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
+        <div class="onu-eth-heading modal-header"><h2 id="onuWifiModalTitle">WiFi</h2><button class="icon-button modal-close-button" type="button" data-onu-modal-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
         <form class="onu-eth-config-form" data-onu-service-form="wifi" data-onu-row-id="<?= (int)($onuView['id'] ?? 0) ?>">
             <input id="onuWifiState" name="state" type="hidden" value="lock">
             <div class="onu-eth-body">

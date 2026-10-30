@@ -44,19 +44,22 @@ function handle_api_action(string $action): bool
         $community = trim((string)($_POST['community'] ?? ''));
         $type = trim((string)($_POST['olt_type'] ?? ''));
         $rowId = valid_positive_id($_POST['olt_row_id'] ?? null);
-        $returnPage = $action === 'add_olt' ? '?page=add-device'
-            : ($rowId !== null ? public_page_url('edit-api-olt', ['id' => $rowId]) : '?page=dashboard');
+        $returnPage = $action === 'add_olt' ? '?page=dashboard&add_device=1'
+            : ($rowId !== null ? public_page_url('dashboard', ['edit_device' => $rowId]) : '?page=dashboard');
         $errors = [];
         if ($name === '') $errors[] = validation_required_message('Nama perangkat');
         if ($ip === '') $errors[] = validation_required_message('IP / Host');
         if (!ctype_digit($port) || (int)$port < 1 || (int)$port > 65535) $errors[] = validation_port_message();
-        if ($community === '') $errors[] = validation_required_message('Community');
+        if ($community === '' && $action === 'add_olt') $errors[] = validation_required_message('Community');
         if ($action === 'add_olt' && ($type === '' || !array_key_exists($type, olt_type_options()))) {
             $errors[] = 'Jenis perangkat harus dipilih dari daftar.';
         }
         if ($errors !== []) {
             foreach ($errors as $error) flash('error', $error);
-            if ($action === 'add_olt') $_SESSION['old_olt'] = $_POST;
+            if ($action === 'add_olt') {
+                $_SESSION['old_olt'] = $_POST;
+                unset($_SESSION['old_olt']['community'], $_SESSION['old_olt']['password'], $_SESSION['old_olt']['csrf']);
+            }
             redirect($returnPage);
         }
         $result = linnms_external_olt_action_request($uid, $action, [
@@ -72,7 +75,10 @@ function handle_api_action(string $action): bool
             flash('success', $action === 'add_olt' ? 'OLT berhasil ditambahkan.' : 'Koneksi OLT berhasil diperbarui.');
             redirect('?page=dashboard');
         }
-        if ($action === 'add_olt') $_SESSION['old_olt'] = $_POST;
+        if ($action === 'add_olt') {
+            $_SESSION['old_olt'] = $_POST;
+            unset($_SESSION['old_olt']['community'], $_SESSION['old_olt']['password'], $_SESSION['old_olt']['csrf']);
+        }
         $code = (string)linnms_action_reason($result, 'internal');
         if ($code === 'quota') {
             $quota = is_array($result['data'] ?? null) ? $result['data'] : [];
@@ -88,6 +94,8 @@ function handle_api_action(string $action): bool
             redirect('?page=dashboard');
         } elseif ($code === 'validation') {
             flash('error', 'Data koneksi OLT tidak valid.');
+        } elseif ($code === 'driver_disabled') {
+            flash('error', 'Jenis OLT ini tidak diizinkan atau sedang dinonaktifkan.');
         } else {
             flash('error', $action === 'add_olt' ? 'OLT gagal ditambahkan.' : 'Perubahan koneksi OLT gagal dikirim ke Zetset.');
         }
@@ -111,8 +119,6 @@ function handle_api_action(string $action): bool
             flash('success', "Pemindaian selesai. {$count} ONU berhasil diperbarui.");
         } elseif ($code === 'scanning') {
             flash('scanning', 'Pemindaian pertama kali mungkin membutuhkan waktu sedikit lebih lama. Silakan tunggu beberapa saat.');
-        } elseif ($code === 'unsupported') {
-            flash('error', 'Hioso dan Hisfocus memakai driver HIOSO/HISFOCUS 2P SNMP, bukan layanan Zetset.');
         } elseif ($code === 'not_found') {
             flash('error', 'OLT tidak valid.');
         } else {

@@ -134,7 +134,7 @@ function whatsapp_fields_read_result(int $userId, string $provider): array
     $whatsappDefinition = is_array($data['definition'] ?? null) ? $data['definition'] : [];
     $whatsappUserSettings = is_array($data['saved_fields'] ?? null) ? $data['saved_fields'] : [];
     ob_start();
-    require project_path('pages', 'partials', 'whatsapp', 'whatsapp-credential-fields.php');
+    require project_path('view', 'partials', 'whatsapp', 'whatsapp-credential-fields.php');
     $fieldsHtml = (string)ob_get_clean();
     return ['status' => 200, 'payload' => [
         'ok' => true,
@@ -391,7 +391,7 @@ function recent_activity_result(int $userId, array $query): array
             || trim((string)($activityRead['category'] ?? '')) !== ''
             ? 'Tidak ditemukan.' : 'Belum ada aktivitas terbaru';
         ob_start();
-        require project_path('pages', 'partials', 'dashboard', 'recent-activity.php');
+        require project_path('view', 'partials', 'dashboard', 'recent-activity.php');
         $html = (string)ob_get_clean();
         $activityUrl = static function (int $targetPage) use ($activitySearch, $activityDevice): string {
             $params = ['activity_page' => max(1, $targetPage)];
@@ -414,7 +414,6 @@ function recent_activity_result(int $userId, array $query): array
             'ok' => true,
             'html' => $html,
             'pagination_html' => $paginationHtml,
-            'page_info' => 'Halaman ' . $activityPage . ' dari ' . $activityPages,
             'count' => count($recent),
             'activity_page' => $activityPage,
             'activity_pages' => $activityPages,
@@ -436,7 +435,7 @@ function recent_activity_result(int $userId, array $query): array
             $dashboardDeviceRowCount = count($dashboardDeviceRows);
 
             ob_start();
-            require project_path('pages', 'partials', 'dashboard', 'device-table.php');
+            require project_path('view', 'partials', 'dashboard', 'device-table.php');
             $devicesHtml = (string)ob_get_clean();
 
             $payload['devices_html'] = $devicesHtml;

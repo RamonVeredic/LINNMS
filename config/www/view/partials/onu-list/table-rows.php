@@ -27,7 +27,11 @@ $onus = $onus ?? [];
             $onuRxDisplay = $onuDetailFields['device_response']['rx_power'];
         }
         $onuRxSupported = !empty($onu['rx_power_supported']);
-        $onuRxText = $onuRxSupported ? onu_rx_power_display($onuRxDisplay) : 'N/A';
+        $onuRxText = $onuRxSupported ? onu_rx_power_display($onuRxDisplay) : '—';
+        $onuRxAvailable = $onuRxSupported && onu_rx_power_number($onuRxDisplay) !== null;
+        $onuSerial = display_onu_serial($onu['onu_serial'] ?? null);
+        $onuSerialCopyable = trim((string)($onu['onu_serial'] ?? '')) !== ''
+            && !in_array($onuSerial, ['—', 'NotSuporte'], true);
         $onuLocation = display_onu_location($onu['onu_location'] ?? null, $onu['onu_name'] ?? null);
         $onuLocationSearch = onu_location_value($onuLocation);
         $ponLabel = onu_pon_label($onu['physical'] ?? null, $onu['onu_index'] ?? null);
@@ -40,13 +44,8 @@ $onus = $onus ?? [];
             'loss' => 'neutral',
             default => 'neutral',
         };
-        $rowStateClass = match ($state) {
-            'loss' => ' onu-table-row-lost',
-            'problem' => ' onu-table-row-problem',
-            default => '',
-        };
     ?>
-        <tr class="onu-table-row<?= $isOnline ? '' : ' onu-table-row-faint' ?><?= $rowStateClass ?>"
+        <tr class="onu-table-row<?= $isOnline ? '' : ' onu-table-row-faint' ?>"
             data-onu-source="<?= h((string)($onu['source'] ?? 'api')) ?>"
             data-onu-olt-id="<?= (int)($onu['olt_id'] ?? 0) ?>"
             data-onu-index="<?= h((string)($onu['onu_index'] ?? '')) ?>"
@@ -68,7 +67,7 @@ $onus = $onus ?? [];
             onclick="if (!event.target.closest('a,button,input,select,textarea,label')) window.location.href=this.dataset.href"
             onkeydown="if ((event.key==='Enter'||event.key===' ') && !event.target.closest('a,button,input,select,textarea,label')) { event.preventDefault(); window.location.href=this.dataset.href; }">
             <td>
-                <span class="text-primary-bold"><?= h(display_text($onu['olt_name'] ?? null)) ?></span>
+                <span class="text-primary fw-bold"><?= h(display_text($onu['olt_name'] ?? null)) ?></span>
             </td>
             <td class="mono"> <span> <?= h((string)($onu['onu_index'] ?? '')) ?></span></td>
             <td class="onu-table-truncate onu-table-name-cell">
@@ -84,11 +83,18 @@ $onus = $onus ?? [];
                 </div>
             </td>
             <td class="onu-table-truncate"><span><?= h($onuLocation) ?></span></td>
-            <td class="mono uppercase ">  <?= h(display_onu_serial($onu['onu_serial'] ?? null)) ?></td>
+            <td class="mono uppercase onu-table-serial">
+                <span class="serial-copy">
+                    <span data-serial-value><?= h($onuSerial) ?></span>
+                    <?php if ($onuSerialCopyable): ?>
+                    <span class="serial-copy-action"><button class="icon-button" type="button" data-copy-serial="<?= h((string)$onu['onu_serial']) ?>" aria-label="Salin serial <?= h($onuSerial) ?>"><i class="bi bi-clipboard" aria-hidden="true"></i></button></span>
+                    <?php endif; ?>
+                </span>
+            </td>
             <td>
-                <span class="signal <?= h(power_class($onuRxDisplay)) ?>">
+                <span class="signal <?= h(power_class($onuRxDisplay)) ?>"<?= $onuRxAvailable ? '' : ' role="img" aria-label="RX Power tidak terbaca" title="RX Power tidak terbaca"' ?>>
                     <i class="bi <?= h(power_icon_class($onuRxDisplay)) ?>" aria-hidden="true"></i>
-                    <span><?= h($onuRxText) ?></span>
+                    <?php if ($onuRxAvailable): ?><span><?= h($onuRxText) ?></span><?php endif; ?>
                 </span>
             </td>
         </tr>

@@ -67,7 +67,6 @@ find "$APP_ROOT/config" -mindepth 1 -maxdepth 1 ! -name database.php -exec rm -r
 
 for config_file in \
   monitoring-drivers.php \
-  public-entry.php \
   service.php \
   session.php \
   whatsapp-gateways.php
@@ -98,7 +97,6 @@ fi
 
 for required_file in \
   /config/www/index.php \
-  /config/app/config/public-entry.php \
   /config/nginx/nginx.conf \
   /config/nginx/site-confs/default.conf \
   /config/php/php-local.ini
@@ -117,7 +115,6 @@ if [ ! -d "$RUNTIME_ROOT" ] || {
 else
   for required_file in \
     "$RUNTIME_ROOT/app/paths.php" \
-    "$RUNTIME_ROOT/app/runtime.php" \
     "$RUNTIME_ROOT/backend/api.php"
   do
     if [ ! -f "$required_file" ]; then

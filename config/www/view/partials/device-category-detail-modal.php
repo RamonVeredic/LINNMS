@@ -1,6 +1,6 @@
 <div id="dashboardDetailModal" class="modal dashboard-detail-modal" hidden aria-hidden="true">
     <div class="dashboard-detail-modal-shell" role="dialog" aria-modal="true" aria-labelledby="dashboardDetailModalTitle">
-        <div class="modal-head dashboard-detail-head">
+        <div class="modal-head dashboard-detail-head modal-header">
             <div class="dashboard-detail-title">
                 <span class="dashboard-detail-icon" data-detail-icon aria-hidden="true"><i class="bi bi-exclamation-triangle"></i></span>
                 <div class="dashboard-detail-title-text">
@@ -8,7 +8,7 @@
                     <p class="dashboard-detail-subtitle" data-detail-subtitle></p>
                 </div>
             </div>
-            <button class="icon-button" type="button" data-detail-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+            <button class="icon-button modal-close-button" type="button" data-detail-close aria-label="Tutup modal"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         </div>
         <div class="modal-card dashboard-detail-modal-card">
             <div class="modal-body dashboard-detail-body">

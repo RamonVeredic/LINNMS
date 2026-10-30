@@ -64,7 +64,7 @@ final class OnuListReadService
             $definition = monitoring_driver_definition(device_driver_type($onu)) ?? [];
             $onu['rx_power_supported'] = array_key_exists('rx_power_raw', $detailFields)
                 || array_key_exists('rx_power', (array)($detailFields['device_response'] ?? []))
-                || !empty(DataOnuView::fieldSupport($definition)['rx_power']);
+                || in_array('rx_power', (array)($definition['onu_detail_fields'] ?? []), true);
         }
         unset($onu);
 

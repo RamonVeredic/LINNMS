@@ -21,11 +21,25 @@ final class DeviceRealtimeReadService
         if (!is_array($device) || (int)($context['user_id'] ?? 0) !== $userId
             || (int)($context['expires_at'] ?? 0) < time()
             || (string)($context['device_type'] ?? '') !== (string)($device['device_type'] ?? '')
-            || (string)($context['ip_address'] ?? '') !== (string)($device['ip_address'] ?? '')
-            || (int)($context['snmp_port'] ?? 161) !== (int)($device['snmp_port'] ?? 161)
-            || (string)($context['snmp_community'] ?? '') !== (string)($device['snmp_community'] ?? '')
             || !in_array($type, ['device-traffic', 'device-interface-rates'], true)) {
             return ['ok' => false, 'code' => 'conflict', 'data' => []];
+        }
+
+        $statuses = $this->db->getDeviceConnectionStatuses($userId, [$rowId]);
+        if (strtoupper(trim((string)($statuses[0]['driver_status'] ?? ''))) === 'DOWN') {
+            return ['ok' => true, 'code' => 'ok', 'data' => ['active' => false, 'rates' => []]];
+        }
+        $downIndexes = [];
+        $downNames = [];
+        foreach ($this->db->getDeviceInterfaces($userId, $rowId) as $interface) {
+            if (!is_array($interface)) continue;
+            $status = strtolower(trim((string)($interface['if_status'] ?? '')));
+            if (!in_array($status, ['down', 'offline', 'linkdown'], true)) continue;
+            $downIndexes[(int)($interface['if_index'] ?? 0)] = true;
+            $downNames[(string)($interface['if_ref'] ?? '')] = true;
+        }
+        if ($type === 'device-traffic' && isset($downNames[trim((string)($params['interface'] ?? ''))])) {
+            return ['ok' => true, 'code' => 'ok', 'data' => ['active' => false]];
         }
 
         $direct = new DeviceRealtimeService($this->config, $this->cipher);
@@ -39,6 +53,10 @@ final class DeviceRealtimeReadService
 
             $indexes = array_slice(array_values(array_unique(array_filter(array_map('intval',
                 (array)($params['indexes'] ?? [])), static fn(int $value): bool => $value > 0))), 0, 256);
+            $indexes = array_values(array_filter($indexes, static fn(int $index): bool => !isset($downIndexes[$index])));
+            if ($indexes === []) {
+                return ['ok' => true, 'code' => 'ok', 'data' => ['active' => false, 'rates' => []]];
+            }
             $result = $direct->snmpInterfaceRates($context, $indexes);
             if (empty($result['ok'])) return $this->failed($userId, $rowId, $type, $result);
             if (in_array((string)($context['device_type'] ?? ''), ['mikrotik', 'cisco_catalyst_2960s'], true)) {

@@ -48,8 +48,8 @@ function handle_settings_action(string $action): bool
     if ($action === 'save_notification_setting') {
         $key = trim((string)($_POST['setting_key'] ?? ''));
         $definitions = [
-            'problem_threshold' => ['Batas Rx Power', 'number', LinnmsRepository::ONU_RX_PROBLEM_MIN_DBM, LinnmsRepository::ONU_RX_PROBLEM_MAX_DBM],
-            'signal_threshold_dbm' => ['RX Power', 'number', LinnmsRepository::ONU_RX_DETECTION_MIN_DBM, LinnmsRepository::ONU_RX_DETECTION_MAX_DBM],
+            'problem_threshold' => ['Batas Rx Power', 'number'],
+            'signal_threshold_dbm' => ['RX Power', 'number'],
             'notify_onu_signal' => ['RX Power', 'toggle'],
             'notify_onu_state' => ['Status ONU', 'toggle'],
             'notify_device_status' => ['Device', 'toggle'],
@@ -64,8 +64,8 @@ function handle_settings_action(string $action): bool
         if (!is_array($definition)) $error = 'Pengaturan notifikasi tidak valid.';
         elseif ($definition[1] === 'number') {
             if ($raw === '' || !is_numeric($raw)) $error = $definition[0] . ' wajib berupa angka.';
-            elseif (!is_finite((float)$raw) || (float)$raw < $definition[2] || (float)$raw > $definition[3]) {
-                $error = $definition[0] . ' harus antara ' . $definition[2] . ' dan ' . $definition[3] . '.';
+            elseif (!is_finite((float)$raw)) {
+                $error = $definition[0] . ' harus berupa angka yang valid.';
             }
         }
         if ($error !== null) linnms_action_result(false, $error, public_page_url('notification') . '#notification-settings');
@@ -115,16 +115,6 @@ function handle_settings_action(string $action): bool
         if (preg_match('/^-?\d+$/', $raw) !== 1) {
             flash('error', $label . ' harus berupa angka bulat.');
             redirect(public_settings_url() . '#' . $anchor);
-        }
-        if (in_array($key, ['sync_discovery_interval_minutes', 'sync_middle_interval_minutes'], true)) {
-            $min = $key === 'sync_discovery_interval_minutes'
-                ? LinnmsRepository::MIN_SYNC_DISCOVERY_INTERVAL_MINUTES : LinnmsRepository::MIN_SYNC_MIDDLE_INTERVAL_MINUTES;
-            $max = $key === 'sync_discovery_interval_minutes'
-                ? LinnmsRepository::MAX_SYNC_DISCOVERY_INTERVAL_MINUTES : LinnmsRepository::MAX_SYNC_MIDDLE_INTERVAL_MINUTES;
-            if ((int)$raw < (int)ceil($min / 60) || (int)$raw > intdiv($max, 60)) {
-                flash('error', $label . ' harus antara ' . (int)ceil($min / 60) . ' sampai ' . intdiv($max, 60) . ' jam.');
-                redirect(public_settings_url() . '#' . $anchor);
-            }
         }
         $result = linnms_settings_action_request($uid, $action, ['setting_key' => $key, 'setting_value' => $raw]);
         $code = (string)linnms_action_reason($result, 'internal');
