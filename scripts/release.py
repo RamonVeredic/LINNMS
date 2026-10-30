@@ -29,23 +29,19 @@ RUNTIME_SUFFIXES = {".php", ".json"}
 FORBIDDEN_COMPONENTS = {".git", ".github", "docker", "doc", "tests", "test", "tools", "source-seed", "__pycache__"}
 FORBIDDEN_SUFFIXES = {".sample", ".bak", ".orig", ".log", ".tmp", ".temp"}
 def permitted(rel: pathlib.PurePosixPath) -> bool:
-    name = rel.name
-    s = rel.as_posix()
-    if any(part.startswith(".") or part.lower() in FORBIDDEN_COMPONENTS for part in rel.parts):
+    # Mirror every application file in these four trees, including new extensions
+    # and names, while excluding vendors and local/private runtime credentials.
+    if not rel.parts or rel.parts[0] not in {
+        "config", "nginx", "linnms.init.d", "linnms.service.d"
+    }:
         return False
-    if any(name.lower().endswith(x) for x in FORBIDDEN_SUFFIXES):
+    if any(part in {".git", ".github", "__pycache__", "vendor"} for part in rel.parts):
         return False
-    if s in NGINX_FILES or s in CONFIG_FILES:
-        return True
-    if len(rel.parts) == 2 and rel.parts[0] == "linnms.service.d" and name in SERVICES:
-        return True
-    if s == "linnms.init.d/50-linnms-public-init":
-        return True
-    if s.startswith(RUNTIME_DIRECTORY + "/") and rel.suffix.lower() in RUNTIME_SUFFIXES:
-        return True
-    if s.startswith(FRONTEND_DIRECTORY + "/") and rel.suffix.lower() in WEB_SUFFIXES:
-        return True
-    return False
+    if any(part.startswith(".") for part in rel.parts):
+        return False
+    if rel.as_posix() == "config/app/config/database.php":
+        return False
+    return True
 
 def init(text: str) -> str:
     """Remove"""
@@ -103,7 +99,7 @@ def main() -> None:
             if rel.parts[0] in {"linnms.init.d", "linnms.service.d"}:
                 target.chmod(0o755)
             file_count += 1
-    print(f"Filtered {file_count}")
+    print(f"Mirrored {file_count} files (excluding vendor and private database config)")
 
 if __name__ == "__main__":
     main()
