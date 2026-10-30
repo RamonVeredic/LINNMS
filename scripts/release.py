@@ -23,7 +23,7 @@ SERVICES = {
     "linnms-access-refresh", "linnms-cleaner", "linnms-cli-broker",
     "linnms-courier-1", "linnms-initial-reader", "linnms-notifier",
     "linnms-reader-1", "linnms-reader-2", "linnms-reader-3",
-    "linnms-sampler-1", "linnms-writer-1",
+    "linnms-sampler-1", "linnms-writer-1", "linnms-workers",
 }
 WEB_SUFFIXES = {".php", ".html", ".css", ".js", ".ico", ".png", ".jpg", ".jpeg", ".svg", ".woff", ".woff2", ".webp", ".gif", ".json"}
 RUNTIME_SUFFIXES = {".php", ".json"}
