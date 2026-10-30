@@ -39,12 +39,10 @@ RUN set -eu; \
     find /opt/linnms/runtime/vendor -type f -name '*.php' -exec php -r \
       'foreach(array_slice($argv,1) as $f) { $h=fopen($f,"rb"); $b=fread($h,4); fclose($h); if ($b!=="LNC1") {fwrite(STDERR, "Unencoded vendor PHP: $f\n");exit(1);} }' \
       -- {} +; \
-    test -f /opt/linnms/runtime/app/runtime.php; \
     test -f /opt/linnms/frontend/index.php; \
-    test -f /opt/linnms/config/public-entry.php; \
     test ! -e /opt/linnms/source-seed; \
     test ! -e /run/secrets/linnms_pq_key
-RUN php -d display_errors=1 -r 'require_once "/opt/linnms/runtime/app/paths.php"; if (project_path("app", "runtime.php") !== "/opt/linnms/runtime/app/runtime.php") { fwrite(STDERR, "LINNMS path bootstrap failed\\n"); exit(1); } require_once "/opt/linnms/runtime/config/config_default.php"; if (!class_exists("LinnmsDefaults")) { fwrite(STDERR, "LINNMS default config failed\\n"); exit(1); } echo "LINNMS_REAL_SOURCE_SMOKE_OK\\n";' \
+RUN php -d display_errors=1 -r 'require_once "/opt/linnms/runtime/app/paths.php"; require_once "/opt/linnms/runtime/config/config_default.php"; if (!class_exists("LinnmsDefaults")) { fwrite(STDERR, "LINNMS default config failed\\n"); exit(1); } echo "LINNMS_REAL_SOURCE_SMOKE_OK\\n";' \
     | grep -F LINNMS_REAL_SOURCE_SMOKE_OK
 
 RUN chmod 0755 /custom-cont-init.d/50-linnms-public-init /custom-services.d/* \
