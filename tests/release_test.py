@@ -41,9 +41,7 @@ class ReleaseFilterTest(unittest.TestCase):
         self.stage.mkdir()
         self.output = self.root / "plain"
         self._write("linnms.init.d/50-linnms-public-init", INIT)
-        self._write("config/app/config/public-entry.php", "<?php echo 1;")
         self._write("config/app/runtime/app/paths.php", "<?php echo 1;")
-        self._write("config/app/runtime/app/runtime.php", "<?php echo 1;")
         self._write("config/app/runtime/backend/api.php", "<?php echo 1;")
         self._write("config/www/index.php", "<?php echo 1;")
         self._write("nginx/nginx.conf", "user abc;")
