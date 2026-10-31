@@ -16,7 +16,7 @@ $errorTip = static fn(string $field): string => $fieldError($field) !== ''
         <select id="addDeviceDriver" name="driver_id" data-device-type data-select-search="Cari ..." data-select-label="Pilih perangkat" required<?= $errorAttributes('driver_id') ?>>
             <option value="" disabled data-select-placeholder <?= $deviceAddSelectedDriverId === '' ? 'selected' : '' ?>>Pilih perangkat</option>
             <?php foreach ($deviceAddGroups as $group): ?>
-            <optgroup label="<?= h((string)$group['label']) ?>" class="text-cyan" data-device-type-group>
+            <optgroup label="<?= h((string)$group['label']) ?>" class="text-cyan fw-bold" data-device-type-group>
                 <?php foreach ($group['rows'] as $row): $d = $row['definition']; ?>
                 <option value="<?= h($row['key']) ?>"
                     data-method="<?= h((string)$d['method']) ?>"
@@ -28,7 +28,7 @@ $errorTip = static fn(string $field): string => $fieldError($field) !== ''
                 <?php endforeach; ?>
             </optgroup>
             <?php endforeach; ?>
-            <optgroup label="TIDAK TERSEDIA" class="danger" data-device-type-group>
+            <optgroup label="TIDAK TERSEDIA" class="danger fw-bold" data-device-type-group>
                 <?php foreach ($deviceAddUnavailable as $row): $d = $row['definition']; ?>
                     <option value="<?= h($row['key']) ?>"
                         data-method="<?= h((string)$d['method']) ?>"
