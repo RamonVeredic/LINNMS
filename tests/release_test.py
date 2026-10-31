@@ -77,6 +77,16 @@ class ReleaseFilterTest(unittest.TestCase):
         self.assertTrue((self.output / "config/www/assets/pages/dashboard/assets.json").exists())
         self.assertTrue((self.output / "linnms.service.d/linnms-sampler-1").exists())
 
+    def test_staging_init_without_shebang(self):
+        init_path = self.stage / 'linnms.init.d/50-linnms-public-init'
+        init_path.write_text(INIT.removeprefix('#!/usr/bin/with-contenv sh\n'))
+        subprocess.run([sys.executable, str(FILTER), str(self.stage), str(self.output)], check=True)
+        converted = (self.output / 'linnms.init.d/50-linnms-public-init').read_text()
+        self.assertTrue(converted.startswith('#!/usr/bin/with-contenv sh\nset -eu\n'))
+        self.assertEqual(converted.count('#!/usr/bin/with-contenv sh'), 1)
+        self.assertNotIn('SOURCE_MOUNTS', converted)
+        self.assertNotIn('staging', converted.lower())
+
     def test_auditor_rejects_plaintext(self):
         subprocess.run([sys.executable, str(FILTER), str(self.stage), str(self.output)],
                        check=True)
