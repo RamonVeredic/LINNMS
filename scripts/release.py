@@ -82,7 +82,11 @@ def init(text: str) -> str:
                 "staging", "/workspace/linnms-source")
     if any(term.lower() in text.lower() for term in rejected):
         raise ValueError("Staging-only init logic remains")
-    if not text.startswith('#!/usr/bin/with-contenv sh'):
+    header = '#!/usr/bin/with-contenv sh\n'
+    if text.startswith('set -eu\n'):
+        # Staging init uses a shell wrapper; release image needs an executable shebang.
+        text = header + text
+    if not text.startswith(header):
         raise ValueError("Invalid init script")
     return text
 
