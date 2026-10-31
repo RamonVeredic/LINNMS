@@ -20,7 +20,7 @@ trait LinnmsChangeEventTrait
              LEFT JOIN user_settings wk ON wk.user_id=u.id AND wk.setting_key='whatsapp_token'
              LEFT JOIN user_settings wb ON wb.user_id=u.id AND wb.setting_key='whatsapp_base_url'
              LEFT JOIN app_settings ws ON ws.setting_key='whatsapp_notification_service_enabled'
-             WHERE u.id=:uid AND u.is_active=1 AND u.role<>'admin'
+             WHERE u.id=:uid AND u.is_active=1
                AND (
                    (te.setting_value='1' AND ts.setting_value='1'
                     AND TRIM(tt.setting_value)<>'' AND TRIM(tc.setting_value)<>'')
@@ -101,6 +101,31 @@ trait LinnmsChangeEventTrait
         }
     }
 
+    public function ensureNotificationDeviceTarget(int $userId, int $deviceId): void
+    {
+        if ($userId < 1 || $deviceId < 1) return;
+        $this->pdo->prepare(
+            'INSERT IGNORE INTO notification_device_targets(user_id,device_id)
+             SELECT :uid,id FROM devices WHERE id=:device_id AND user_id=:owner_id'
+        )->execute(['uid' => $userId, 'device_id' => $deviceId, 'owner_id' => $userId]);
+    }
+
+    public function acquireNotificationLock(int $userId, int $timeout = 0): bool
+    {
+        if ($userId < 1) return false;
+        $timeout = max(0, min(30, $timeout));
+        $stmt = $this->pdo->prepare("SELECT GET_LOCK(:name, {$timeout})");
+        $stmt->execute(['name' => 'linnms_notify_' . $userId]);
+        return (int)$stmt->fetchColumn() === 1;
+    }
+
+    public function releaseNotificationLock(int $userId): void
+    {
+        if ($userId < 1) return;
+        $stmt = $this->pdo->prepare('SELECT RELEASE_LOCK(:name)');
+        $stmt->execute(['name' => 'linnms_notify_' . $userId]);
+    }
+
     public function getOnuStateHistory(int $userId, string $entityKey, int $limit = 12): array
     {
         $entityKey = trim($entityKey);
@@ -134,7 +159,7 @@ trait LinnmsChangeEventTrait
 
     public function saveNotificationPreferences(int $userId, array $data): void
     {
-        $this->saveUserSettings($userId, [
+        $settings = [
             'notify_onu_state' => !empty($data['notify_onu_state']) ? 1 : 0,
             'notify_onu_signal' => !empty($data['notify_onu_signal']) ? 1 : 0,
             'notify_onu_problem' => !empty($data['notify_onu_problem']) ? 1 : 0,
@@ -143,8 +168,12 @@ trait LinnmsChangeEventTrait
             'notify_interface_changes' => !empty($data['notify_interface_changes']) ? 1 : 0,
             'notify_pppoe_status' => !empty($data['notify_pppoe_status']) ? 1 : 0,
             'signal_threshold_dbm' => number_format(self::clampOnuRxDetection($data['signal_threshold_dbm'] ?? null), 2, '.', ''),
-            'onu_rx_problem_threshold_dbm' => number_format(self::clampOnuRxProblemLimit($data['problem_threshold'] ?? null), 2, '.', ''),
-        ]);
+        ];
+        if (array_key_exists('problem_threshold', $data)) {
+            $settings['onu_rx_problem_threshold_dbm'] = number_format(
+                self::validateOnuRxProblemLimit($data['problem_threshold']), 2, '.', '');
+        }
+        $this->saveUserSettings($userId, $settings);
     }
 
     public function saveNotificationPreference(int $userId, string $settingKey, mixed $value): void
@@ -154,7 +183,7 @@ trait LinnmsChangeEventTrait
         if ($settingKey === 'signal_threshold_dbm') {
             $storedValue = number_format(self::clampOnuRxDetection($value), 2, '.', '');
         } elseif ($settingKey === 'onu_rx_problem_threshold_dbm') {
-            $storedValue = number_format(self::clampOnuRxProblemLimit($value), 2, '.', '');
+            $storedValue = number_format(self::validateOnuRxProblemLimit($value), 2, '.', '');
         } else {
             $storedValue = !empty($value) ? 1 : 0;
         }

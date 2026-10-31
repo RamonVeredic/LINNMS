@@ -119,6 +119,7 @@ trait LinnmsDeviceTrait
                 'uid'=>$userId,'device_type'=>$deviceType,'driver_id'=>$driverId,'name'=>$name,'ip_address'=>$ipAddress,'snmp_port'=>$snmpPort,
             ]);
             $id = (int)$this->pdo->lastInsertId();
+            $this->ensureNotificationDeviceTarget($userId, $id);
             
             $this->saveDeviceCommunity($id, $userId, $community);
             $this->markDeviceOnline($id, $userId, 'online');
@@ -374,6 +375,7 @@ trait LinnmsDeviceTrait
             $this->pdo->prepare('DELETE FROM change_events WHERE user_id=:uid AND (entity_key=:key OR LEFT(entity_key,:prefix_length)=:prefix)')->execute($params);
             $this->pdo->prepare('DELETE FROM sync_entitas WHERE user_id=:uid AND (entity_key=:key OR LEFT(entity_key,:prefix_length)=:prefix)')->execute($params);
             $this->pdo->prepare('DELETE FROM sync_pipeline WHERE user_id=:uid AND olt_row_id=:id')->execute(['uid' => $userId, 'id' => $rowId]);
+            $this->pdo->prepare('DELETE FROM olt_scan_requests WHERE user_id=:uid AND olt_row_id=:id')->execute(['uid' => $userId, 'id' => $rowId]);
             $stmt = $this->pdo->prepare("DELETE FROM devices WHERE user_id=:uid AND id=:id AND device_type<>'olt' AND source='snmp'");
             $stmt->execute(['uid' => $userId, 'id' => $rowId]);
             $deleted = $stmt->rowCount() === 1;

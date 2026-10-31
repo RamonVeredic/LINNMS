@@ -70,7 +70,7 @@ trait LinnmsUserTrait
 
     public function getUser(int $id): ?array
     {
-        $stmt = $this->pdo->prepare('SELECT id,username,display_name,email,company,phone_number,role,is_active,olt_limit,mikrotik_limit,switch_limit,last_login_at,created_at,updated_at FROM users WHERE id=:id LIMIT 1');
+        $stmt = $this->pdo->prepare('SELECT id,username,display_name,phone_number,role,is_active,olt_limit,mikrotik_limit,switch_limit,last_login_at,created_at FROM users WHERE id=:id LIMIT 1');
         $stmt->execute(['id' => $id]);
         $row = $stmt->fetch();
         return is_array($row) ? $row : null;
@@ -644,6 +644,6 @@ trait LinnmsUserTrait
     {
         $threshold = (float)($this->getOnuProblemSettings($userId)['rx_power_threshold_dbm'] ?? $fallbackDbm);
 
-        return self::clampOnuRxProblemLimit(is_finite($threshold) && $threshold > 0.0 ? $threshold : $fallbackDbm);
+        return self::clampOnuRxProblemLimit(is_finite($threshold) ? $threshold : $fallbackDbm);
     }
 }

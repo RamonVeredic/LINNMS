@@ -221,22 +221,20 @@ function onu_loss_without_rx(array $onu): bool
 
 function onu_rx_problem_recovery_dbm(float $limitDbm, float $detectionDbm): float
 {
-    $limit = abs($limitDbm);
-    $recovery = $limit - abs($detectionDbm);
+    $recovery = $limitDbm + abs($detectionDbm);
 
-    return $recovery > 0.0 ? $recovery : $limit;
+    return $recovery < 0.0 ? $recovery : $limitDbm;
 }
 
 function onu_rx_problem_next_state(string $state, float $rxPowerDbm, float $limitDbm, float $detectionDbm): string
 {
-    $limit = abs($limitDbm);
     if (strtolower(trim($state)) === 'problem') {
-        $recoveryLimit = onu_rx_problem_recovery_dbm($limit, $detectionDbm);
+        $recoveryLimit = onu_rx_problem_recovery_dbm($limitDbm, $detectionDbm);
 
-        return abs($rxPowerDbm) <= $recoveryLimit ? 'normal' : 'problem';
+        return $rxPowerDbm >= $recoveryLimit ? 'normal' : 'problem';
     }
 
-    return $rxPowerDbm <= -$limit ? 'problem' : 'normal';
+    return $rxPowerDbm <= $limitDbm ? 'problem' : 'normal';
 }
 
 function state_label(mixed $state): string

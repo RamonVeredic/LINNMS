@@ -1,13 +1,12 @@
 <main id="notification-settings" class="panel settings-layout">
     <header>
         <h2>Notifikasi</h2>
-        <p>Atur saluran, batas deteksi, perangkat, dan jenis pesan yang dikirim.</p>
     </header>
 
     <div class="settings-columns" data-settings-columns>
         <div class="settings-column" data-settings-column>
             <section>
-                <header class="tittle-subtitle"><h3>Saluran Pengiriman</h3></header>
+                <header class="tittle-subtitle"><h3>Service</h3></header>
                 <div class="settings-body">
                     <ul class="settings-list">
                     <li>
@@ -74,7 +73,7 @@
                 <header class="tittle-subtitle"><h3>Device</h3></header>
                 <div class="settings-body">
                     <?php if ($notificationDevices === []): ?>
-                        <p class="empty">Perangkaat belum tersedia</p>
+                        <div class="empty empty-state"><i class="bi bi-inbox" aria-hidden="true"></i><span>Belum ada perangkat</span></div>
                     <?php else: ?>
                         <ul class="settings-list">
                             <?php foreach ($notificationDevices as $device): ?>

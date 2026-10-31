@@ -112,26 +112,15 @@ function handle_olt_action(string $action): bool
 
     if ($action === 'save_olt_card_label') {
         $label = trim((string)($_POST['card_label'] ?? ''));
-        flash($ok ? 'success' : ($code === 'card_not_found' ? 'warning' : 'error'), $ok
-            ? ($label === '' ? 'Nama kustom card dihapus.' : 'Nama card disimpan.')
-            : ($code === 'card_invalid' ? 'Data card tidak valid.'
-                : 'Card belum ada di basis data. Jalankan Sync OLT lalu ulangi.'));
+        $message = $ok ? ($label === '' ? 'Nama kartu dihapus.' : 'Nama kartu disimpan.')
+            : 'Nama kartu gagal disimpan.';
+        flash($ok ? 'success' : 'error', $message);
         redirect($destination);
     }
 
     if ($action === 'save_olt_cli_connection') {
-        $port = (int)($payload['port'] ?? 0);
-        $message = $ok ? ($code === 'enabled'
-            ? 'Koneksi Telnet disimpan: aktif pada port ' . $port . '.'
-            : 'Koneksi Telnet dimatikan. Kredensial lama tetap tersimpan.')
-            : match ($code) {
-                'cli_unsupported' => 'Driver OLT ini tidak mendukung koneksi Telnet.',
-                'driver_disabled' => 'Driver OLT ini tidak diizinkan atau sedang dinonaktifkan.',
-                'port_invalid' => validation_port_message(),
-                'username_required' => validation_required_message('Username'),
-                'password_required' => validation_required_message('Password'),
-                default => linnms_action_code_message($result, 'Pengaturan Telnet gagal disimpan.'),
-            };
+        $message = $ok ? ($code === 'enabled' ? 'Telnet diaktifkan.' : 'Telnet dimatikan.')
+            : 'Pengaturan Telnet gagal disimpan.';
         flash($ok ? 'success' : 'error', $message);
         redirect($destination);
     }

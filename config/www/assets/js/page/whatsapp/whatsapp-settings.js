@@ -43,7 +43,7 @@
   const resetGroupOptions = () => {
     if (!(groupSelect instanceof HTMLSelectElement)) return;
     groupSelect.replaceChildren(
-      new Option('Minta daftar grup terlebih dahulu', ''),
+      new Option('Minta daftar grup', ''),
       new Option('Masukkan Group ID manual', '__manual__')
     );
     groupSelect.value = '';
@@ -156,8 +156,10 @@
       }
       const token = credentialFields.querySelector('[data-whatsapp-token-input]');
       if (token instanceof HTMLInputElement) token.value = result.token;
-      const secret = credentialFields.querySelector('[data-whatsapp-generator-secret]');
-      if (secret instanceof HTMLInputElement) secret.value = '';
+      // Token sudah dibuat: simpan nilai session/secret dan jangan wajibkan lagi.
+      credentialFields.querySelectorAll('[data-whatsapp-generator-session], [data-whatsapp-generator-secret]').forEach((input) => {
+        if (input instanceof HTMLInputElement) input.required = false;
+      });
       notify(true, String(result.message || 'Token session berhasil dibuat.'));
     } catch (error) {
       notify(false, error instanceof Error ? error.message : 'Token belum berhasil dibuat.');

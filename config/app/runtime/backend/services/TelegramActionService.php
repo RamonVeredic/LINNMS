@@ -135,12 +135,14 @@ final class TelegramActionService
         if ($token === '') return ['ok' => false, 'code' => 'token_required'];
         if ($chat === '') return ['ok' => false, 'code' => 'chat_required'];
         if (preg_match('/^-?\d{1,24}$/', $chat) !== 1) return ['ok' => false, 'code' => 'chat_invalid'];
-        $result = $this->telegram->send($token, $chat, 'Tes koneksi dari ' . $this->db->getAppName());
+        $message = 'Tes koneksi dari ' . $this->db->getAppName();
+        $result = $this->telegram->send($token, $chat, $message);
+        $historyStatus = !empty($result['ok']) ? 'sent' : (!empty($result['transport']) ? 'pending' : 'failed');
+        $this->db->recordNotificationHistory($userId, 'telegram', $message, '', '', '', $historyStatus, null, 1);
         if (empty($result['ok'])) {
             $this->logDriver($userId, 'connection_test_telegram', (string)($result['error'] ?? 'Telegram gagal mengirim.'));
             return ['ok' => false, 'code' => 'device_rejected'];
         }
-        $this->db->recordNotificationHistory($userId, 'telegram');
         return ['ok' => true, 'code' => 'ok'];
     }
 

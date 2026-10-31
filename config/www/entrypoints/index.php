@@ -541,12 +541,9 @@ if ($dashboardRead !== null) {
     $mikrotikQuota = (array)($pageShell['mikrotik_quota'] ?? []);
     $switchQuota = (array)($pageShell['switch_quota'] ?? []);
 }
-$accountTier = 'Default';
 $accountQuotaClaims = [];
 if (in_array($page, ['settings', 'settings-admin'], true)) {
     $accountAccessState = $serviceAccessState;
-    $accountTierClaim = trim((string)($accountAccessState['claims']['tier'] ?? ''));
-    if ($accountTierClaim !== '') $accountTier = $accountTierClaim;
     $accountQuotaClaims = (array)($accountAccessState['claims']['quota'] ?? []);
 }
 $profileServiceLimits = in_array($page, ['settings', 'settings-admin'], true) ? [

@@ -282,7 +282,7 @@ require __DIR__ . '/device-overview.php';
                             <td class="mono interface-rate-value is-tx" data-interface-tx><?= h($formatRate($interfaceRate['tx_bps']??null)) ?></td>
                             <td class="interface-record-cell">
                                 <label class="pon-catat-switch" title="Simpan riwayat trafik interface ini">
-                                    <input type="checkbox" role="switch" data-traffic-record
+                                    <input type="checkbox" role="switch" class="toggle-switch" data-traffic-record
                                            data-device-id="<?= (int)($deviceDetail['id'] ?? 0) ?>"
                                            data-if-ref="<?= h($interfaceName) ?>"
                                            data-csrf="<?= h(csrf_token()) ?>"<?= isset($deviceTrafficSelected[$interfaceName]) ? ' checked' : '' ?>>
@@ -330,13 +330,4 @@ $deviceTrafficHistoryRefs = array_keys($deviceTrafficSelected);
         </div>
         <p class="text-muted" data-traffic-state aria-live="polite" hidden></p>
 </section>
-<?php if (!$isMikrotik): ?>
-    <section class="panel">
-        <form method="post" data-device-delete-form>
-            <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
-            <input type="hidden" name="action" value="delete_device">
-            <input type="hidden" name="device_id" value="<?= (int)$deviceDetail['id'] ?>">
-            <button class="button button-danger"><i class="bi bi-trash3"></i> Hapus</button>
-        </form>
-    </section>
-<?php endif; ?>
+

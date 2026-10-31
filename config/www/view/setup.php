@@ -1,6 +1,8 @@
 <?php
 $presetUser = trim((string)($presetUser ?? ''));
 $presetDisplayName = trim((string)($presetDisplayName ?? ''));
+$presetEmail = trim((string)($presetEmail ?? ''));
+$presetCompany = trim((string)($presetCompany ?? ''));
 ?>
 <!doctype html>
 <html lang="id">
@@ -22,8 +24,10 @@ $presetDisplayName = trim((string)($presetDisplayName ?? ''));
             <form method="post" action="<?= h(public_app_url('setup')) ?>" class="login-form">
                 <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>"><input type="hidden" name="action" value="setup_submit">
                 <div class="field"><label for="setupUsername">Username</label><input id="setupUsername" class="text-muted" value="<?= h($presetUser) ?>" readonly autocomplete="username"></div>
-                <div class="field"><label for="setupDisplayName">Nama pengguna</label><input id="setupDisplayName" name="display_name" required autofocus autocomplete="name" placeholder="Nama pengguna" value="<?= h($presetDisplayName) ?>"></div>
-                <div class="field"><label for="setupPassword">Password baru</label><input id="setupPassword" type="password" name="password" minlength="8" required autocomplete="new-password" placeholder="Password baru"></div><div class="field"><label for="setupPasswordConfirm">Ulangi password</label><input id="setupPasswordConfirm" type="password" name="password_confirm" minlength="8" required autocomplete="new-password" placeholder="Ulangi password"></div><button class="button primary login-button" type="submit">Simpan</button></form>
+                <div class="field"><label for="setupDisplayName">Nama pengguna</label><input id="setupDisplayName" name="display_name" required autofocus autocomplete="name" placeholder="Masukkan Nama Pengguna" value="<?= h($presetDisplayName) ?>"></div>
+                <div class="field"><label for="setupEmail">Email</label><input id="setupEmail" name="email" type="email" maxlength="190" autocomplete="email" placeholder="Masukkan Email" value="<?= h($presetEmail) ?>"></div>
+                <div class="field"><label for="setupCompany">Perusahaan</label><input id="setupCompany" name="company" maxlength="190" autocomplete="organization" placeholder="Masukkan Nama Perusahaan" value="<?= h($presetCompany) ?>"></div>
+                <div class="field"><label for="setupPassword">Password baru</label><input id="setupPassword" type="password" name="password" minlength="8" required autocomplete="new-password" placeholder="Masukkan Password Baru"></div><div class="field"><label for="setupPasswordConfirm">Ulangi password</label><input id="setupPasswordConfirm" type="password" name="password_confirm" minlength="8" required autocomplete="new-password" placeholder="Ulangi password"></div><button class="button primary login-button" type="submit">Simpan</button></form>
         </section>
     </main><?php render_flash_toast($flashes ?? []); ?><script src="<?= h(asset_url('assets/js/toast.js', 'p')) ?>"></script>
     <script src="<?= h(asset_url('assets/js/app.js', 'p')) ?>"></script>

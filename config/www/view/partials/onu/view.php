@@ -333,7 +333,7 @@ foreach ($onuSignalHistory as $entry) {
     $value = trim((string)($entry['new_value'] ?? ''));
     $rxHistoryValue = onu_rx_power_number($value);
     if ($signalAt === false || $rxHistoryValue === null) continue;
-    $problem = $rxHistoryValue <= -abs($rxProblemThreshold);
+    $problem = $rxHistoryValue <= $rxProblemThreshold;
     $historyEntries[] = [
         'at' => $signalAt,
         'label' => $value . ' dBm',

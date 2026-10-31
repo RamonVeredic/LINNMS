@@ -41,28 +41,50 @@ $telegramCredentialsSaved = $botConfigured && $telegramConnected;
             <strong>Bot Telegram terhubung</strong>
         </div>
         <div class="channel-credential-actions">
-            <button class="button secondary channel-credential-edit" type="button" data-channel-credential-edit aria-expanded="false" <?= $telegramLocked ? 'disabled' : '' ?>>
-                <i class="bi bi-pencil-square" aria-hidden="true"></i>
-                <span>Edit koneksi</span>
-            </button>
+            <div class="channel-credential-menu" data-channel-credential-menu>
+                <button class="icon-button channel-credential-menu-toggle" type="button" data-channel-credential-menu-toggle aria-label="Aksi koneksi Telegram" aria-haspopup="menu" aria-expanded="false" <?= $telegramLocked ? 'disabled' : '' ?>>
+                    <i class="bi bi-three-dots-vertical" aria-hidden="true"></i>
+                </button>
+                <div class="channel-credential-menu-list" data-channel-credential-menu-list role="menu" hidden>
+                    <button type="button" role="menuitem" data-channel-credential-edit <?= $telegramLocked ? 'disabled' : '' ?>>
+                        <i class="bi bi-pencil-square" aria-hidden="true"></i> Edit
+                    </button>
+                    <form method="post" class="channel-credential-menu-form">
+                        <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
+                        <input type="hidden" name="action" value="telegram_disable">
+                        <button type="submit" role="menuitem" class="channel-credential-menu-danger" <?= $telegramLocked ? 'disabled' : '' ?>>
+                            <i class="bi bi-plug" aria-hidden="true"></i> Putuskan
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
     <?php endif; ?>
 
+    <div id="telegramCredentialsModal" class="<?= $telegramCredentialsSaved ? 'modal channel-credential-modal' : 'channel-credential-inline' ?>"<?= $telegramCredentialsSaved ? ' data-channel-credential-modal hidden aria-hidden="true"' : '' ?>>
+        <div class="<?= $telegramCredentialsSaved ? 'modal-card channel-credential-modal-card' : '' ?>"<?= $telegramCredentialsSaved ? ' role="dialog" aria-modal="true" aria-labelledby="telegramCredentialsModalTitle"' : '' ?>>
+            <?php if ($telegramCredentialsSaved): ?>
+            <div class="channel-credential-modal-head modal-header">
+                <h2 id="telegramCredentialsModalTitle">Edit Koneksi Telegram</h2>
+                <button class="icon-button modal-close-button" type="button" data-channel-credential-modal-close aria-label="Tutup"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+            </div>
+            <?php endif; ?>
     <form
         id="telegramCredentialsForm"
         method="post"
         class="stack-form settings-form-narrow channel-credentials-form required-fields"
         data-channel-credentials-form
         data-credentials-saved="<?= $telegramCredentialsSaved ? '1' : '0' ?>"
-        <?= $telegramCredentialsSaved ? 'hidden' : '' ?>
     >
         <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
         <input type="hidden" name="action" value="save_telegram_user_bot">
 
-        <div class="field"><label for="telegramBotToken">Token Bot</label><input id="telegramBotToken" type="password" name="telegram_bot_token" autocomplete="new-password" <?= $botConfigured ? '' : 'required' ?> <?= $telegramLocked ? 'disabled' : '' ?> value="" placeholder="<?= $botConfigured ? 'Kosongkan jika tidak diubah' : 'Token Bot' ?>"></div>
+        <div class="field"><label for="telegramBotToken">Token Bot</label>
+        <input id="telegramBotToken" type="password" name="telegram_bot_token" autocomplete="new-password" <?= $botConfigured ? '' : 'required' ?> <?= $telegramLocked ? 'disabled' : '' ?> value="" placeholder="<?= $botConfigured ? 'Kosongkan jika tidak diubah' : 'Masukkan Token Bot' ?>">
+    </div>
 
-        <div class="field"><label for="telegramChatId">Chat ID</label><input id="telegramChatId" type="text" name="telegram_chat_id" inputmode="numeric" autocomplete="off" <?= $telegramConnected ? '' : 'required' ?> <?= $telegramLocked ? 'disabled' : '' ?> value="" placeholder="<?= $telegramConnected ? 'Kosongkan jika tidak diubah' : '-1001234567890' ?>" pattern="-?[0-9]{1,24}"></div>
+        <div class="field"><label for="telegramChatId">Chat ID</label><input id="telegramChatId" type="text" name="telegram_chat_id" inputmode="numeric" autocomplete="off" <?= $telegramConnected ? '' : 'required' ?> <?= $telegramLocked ? 'disabled' : '' ?> value="" placeholder="<?= $telegramConnected ? 'Kosongkan jika tidak diubah' : 'Masukkan Chat ID' ?>" pattern="-?[0-9]{1,24}"></div>
 
         <div class="form-actions">
             <button class="button primary" type="submit" data-channel-credential-save <?= $telegramCredentialsSaved ? 'hidden' : '' ?> <?= $telegramLocked ? 'disabled' : '' ?>>
@@ -73,14 +95,8 @@ $telegramCredentialsSaved = $botConfigured && $telegramConnected;
             </button>
         </div>
     </form>
-
-    <?php if ($telegramCredentialsSaved): ?>
-    <form method="post" class="form-actions channel-save-actions">
-        <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
-        <input type="hidden" name="action" value="telegram_disable">
-        <button class="button button-danger" type="submit" <?= $telegramLocked ? 'disabled' : '' ?>><i class="bi bi-plug" aria-hidden="true"></i> Putuskan Telegram</button>
-   </form>
-    <?php endif; ?>
+        </div>
+    </div>
 </section>
 
 <?php if ($telegramCredentialsSaved): ?>

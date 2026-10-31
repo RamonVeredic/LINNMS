@@ -5,7 +5,7 @@ $onuTypeFields = (array)($onuTypeValues['gpon_values'] ?? []);
 ?>
 <div class="olt-onu-type-fields olt-onu-type-device-fields">
     <?php if ($onuTypeIsCreate): ?>
-        <label class="olt-onu-type-name-field"><span>ONU Type</span><input type="text" name="name" maxlength="64" required autocomplete="off" placeholder="ONU-1GE" data-olt-onu-type-name></label>
+        <label class="olt-onu-type-name-field"><span>ONU Type</span><input type="text" name="name" maxlength="64" required autocomplete="off" placeholder="Masukkan Tipe ONU" data-olt-onu-type-name></label>
     <?php endif; ?>
     <label class="olt-onu-type-pon-field"><span>Jenis PON</span>
         <?php if ($onuTypeIsCreate || $onuTypeLocal): ?>
@@ -34,9 +34,9 @@ $onuTypeFields = (array)($onuTypeValues['gpon_values'] ?? []);
     </div>
     <?php if ($onuTypeIsCreate || !empty($onuTypeValues['editable'])): ?>
         <?php foreach (['eth' => 'Ethernet', 'wifi' => 'Wi-Fi', 'pots' => 'VoIP'] as $onuTypeInterfaceKind => $onuTypeLabel): ?>
-            <label class="olt-onu-type-interface-field olt-onu-type-interface-<?= h($onuTypeInterfaceKind) ?>"><span><?= h($onuTypeLabel) ?></span><input type="text" name="<?= h($onuTypeInterfaceKind) ?>_interfaces" value="<?= h((string)($onuTypeValues['interface_values'][$onuTypeInterfaceKind] ?? '')) ?>" placeholder=". 0/1-4" maxlength="4096" aria-label="Interface <?= h($onuTypeLabel) ?>"></label>
+            <label class="olt-onu-type-interface-field olt-onu-type-interface-<?= h($onuTypeInterfaceKind) ?>"><span><?= h($onuTypeLabel) ?></span><input type="text" name="<?= h($onuTypeInterfaceKind) ?>_interfaces" value="<?= h((string)($onuTypeValues['interface_values'][$onuTypeInterfaceKind] ?? '')) ?>" placeholder="Masukkan Interface" maxlength="4096" aria-label="Interface <?= h($onuTypeLabel) ?>"></label>
         <?php endforeach; ?>
     <?php endif; ?>
     <?php endif; ?>
-    <label class="olt-onu-type-description-field"><span>Deskripsi</span><textarea name="description" maxlength="<?= $onuTypeLocal ? 255 : 64 ?>" rows="2" placeholder="<?= $onuTypeIsCreate ? 'ONU-1GE' : '-' ?>" <?= !$onuTypeLocal && !$onuTypeIsCreate && (string)($onuTypeValues['description'] ?? '') !== '' ? 'required' : '' ?>><?= h((string)($onuTypeValues['description'] ?? '')) ?></textarea></label>
+    <label class="olt-onu-type-description-field"><span>Deskripsi</span><textarea name="description" maxlength="<?= $onuTypeLocal ? 255 : 64 ?>" rows="2" placeholder="<?= $onuTypeIsCreate ? 'Masukkan Deskripsi' : '-' ?>" <?= !$onuTypeLocal && !$onuTypeIsCreate && (string)($onuTypeValues['description'] ?? '') !== '' ? 'required' : '' ?>><?= h((string)($onuTypeValues['description'] ?? '')) ?></textarea></label>
 </div>

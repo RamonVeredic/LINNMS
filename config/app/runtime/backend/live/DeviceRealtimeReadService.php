@@ -25,6 +25,11 @@ final class DeviceRealtimeReadService
             return ['ok' => false, 'code' => 'conflict', 'data' => []];
         }
 
+        // Konteks sesi hanya menyimpan identitas perangkat; lengkapi kredensial SNMP dari baris perangkat.
+        $context['ip_address'] = (string)($device['ip_address'] ?? '');
+        $context['snmp_port'] = (int)($device['snmp_port'] ?? 161);
+        $context['snmp_community'] = (string)($device['snmp_community'] ?? '');
+
         $statuses = $this->db->getDeviceConnectionStatuses($userId, [$rowId]);
         if (strtoupper(trim((string)($statuses[0]['driver_status'] ?? ''))) === 'DOWN') {
             return ['ok' => true, 'code' => 'ok', 'data' => ['active' => false, 'rates' => []]];

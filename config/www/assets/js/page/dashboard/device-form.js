@@ -1,1 +1,289 @@
-(()=>{"use strict";const deviceTipMessages={hioso:{feature:'membutuhkan koneksi <b>Telnet</b> untuk detail modul optik PON (suhu, tegangan, dan arus), TX Power, dan trafik PON.',extra:'<p>Default akun : username <b class="mono">root</b>, password <b class="mono">admin</b>.</p><p>Fitur ini memerlukan privilege user pada perangkat.</p>'},zte:{feature:'membutuhkan koneksi <b>Telnet</b> untuk daya optik ONU (RX/TX), modul optik, riwayat koneksi, konfigurasi layanan ONU, serta status dan VLAN port LAN ONU.',extra:'<p>Fitur ini memerlukan privilege root pada perangkat.</p>'}};window.linnmsDeviceFormInit=(root=document)=>{(()=>{"use strict";root.querySelectorAll("[data-device-create-form], [data-device-edit-form]").forEach((e=>{const t=e.querySelector("[data-device-type], [data-edit-device-type]"),a=e.querySelector("[data-cli-toggle]"),d=e.querySelector("[data-cli-details]"),i=Array.from(e.querySelectorAll("[data-cli-details] [data-cli-field]")),n=e.querySelector('[data-connection-test="device"]'),s=e.querySelector("[data-connection-test-result]"),r=()=>e.classList.add("was-validated");e.matches("[data-device-edit-form]")&&(e.addEventListener("invalid",r,!0),e.addEventListener("submit",r));const l=e.querySelector('input[name="ip_address"]'),o=/^(?:(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$/,c=()=>{if(!(l instanceof HTMLInputElement))return;const e=l.value.trim();l.setCustomValidity(""===e||o.test(e)?"":"Periksa IP Anda.")},u=()=>t instanceof HTMLSelectElement?t.options[t.selectedIndex]||null:t instanceof HTMLInputElement?{value:t.value,dataset:t.dataset}:null,m=e=>"username"===e.name?"Username harus diisi.":"password"===e.name?"Password harus diisi.":"Port Telnet harus diisi.",f=()=>{if(!a||!d)return;const e="1"===u()?.dataset.telnetCli&&a.checked;d.hidden=!e,a.setAttribute("aria-expanded",e?"true":"false"),i.forEach((t=>{const a="1"===t.dataset.secretStored;t.required=e&&!a,t.setCustomValidity(t.required&&""===t.value.trim()?m(t):"")}))},v=()=>{if(!n)return;const t=u(),a="0"!==t?.dataset.enabled,d=Boolean(t?.value&&a);e.matches("[data-device-create-form]")?(n.hidden=!d,n.disabled=!1):n.disabled=!d},h=(e,t="")=>{s&&(s.textContent=e,s.hidden=""===e,s.classList.toggle("text-muted",""===t),s.classList.toggle("success","success"===t),s.classList.toggle("danger","error"===t))},y=e=>{n instanceof HTMLButtonElement&&(e?(n.dataset.idleLabel||(n.dataset.idleLabel=n.innerHTML),n.disabled=!0,n.classList.add("is-loading"),n.innerHTML='<i class="bi bi-arrow-repeat" aria-hidden="true"></i> Menguji&hellip;'):(n.classList.remove("is-loading"),n.dataset.idleLabel&&(n.innerHTML=n.dataset.idleLabel),v()))};i.forEach((e=>{e.addEventListener("input",(()=>{e.setCustomValidity(e.required&&""===e.value.trim()?m(e):"")}))})),l?.addEventListener("input",c),c(),t?.addEventListener("change",(()=>{f(),v(),h("")})),a?.addEventListener("change",(()=>{f(),h("")})),n?.addEventListener("click",(async()=>{const t=n.dataset.connectionTestUrl||"";if(!t||n.disabled)return;if(e.matches("[data-device-edit-form]")&&r(),!e.reportValidity())return;if(!u()?.value)return void h("Pilih jenis perangkat terlebih dahulu.","error");const a=new FormData(e);a.delete("action"),a.set("type","device");const d=Date.now();let i="error",s="Tes koneksi tidak dapat dijalankan. Periksa koneksi aplikasi lalu coba lagi.";y(!0);try{const e=await window.linnmsAjax.request(t,{method:"POST",body:a,credentials:"same-origin",headers:{"X-Requested-With":"XMLHttpRequest"}}),n=await e.json().catch((()=>({})));s=String(n.message||(e.ok?"Koneksi berhasil.":"Koneksi belum berhasil.")),i=e.ok&&n.ok?"success":"error"}catch(e){i="error"}finally{const e=Date.now()-d;e<1e3&&await new Promise((t=>window.setTimeout(t,1e3-e))),y(!1),((e,t)=>{const a=String(t||"").trim();""!==a&&("function"!=typeof window.linnmsToast?"function"!=typeof window.linnmsNotify?h(a,"success"===e?"success":"error"===e?"error":""):window.linnmsNotify(e||"info",a):window.linnmsToast(e||"info",a))})(i,s)}})),f(),v()}))})(),(()=>{"use strict";root.querySelectorAll("[data-device-create-form]").forEach((e=>{const t=e.querySelector("[data-device-type]"),a=e.querySelector("[data-device-submit]");if(!t||!a)return;const d=e.querySelector("[data-snmp-community]"),i=e.querySelector("[data-cli-toggle]"),n=Array.from(e.querySelectorAll("[data-cli-field]")),s=e.querySelector("[data-device-add-tip]");let r=t.value;const l=(e,t)=>{e.hidden=!t,e.querySelectorAll("input,select,textarea").forEach((e=>e.disabled=!t))},o=()=>{const o=t.options[t.selectedIndex],c=o?.dataset.method||"",u="1"===o?.dataset.telnetCli,m=Boolean(o?.value&&"1"===o.dataset.enabled&&"1"===o.dataset.quotaAllowed);if(s){const label=o?.textContent.trim()||"",tip=deviceTipMessages[/ZTE|GPON/i.test(label)?"zte":"hioso"],name=s.querySelector("[data-device-tip-name]"),message=s.querySelector("[data-device-tip-message]"),extra=s.querySelector("[data-device-tip-extra]");name&&(name.textContent=label),message&&(message.innerHTML=tip.feature),extra&&(extra.innerHTML=tip.extra),s.hidden=!(o?.value&&u)}if(d){const e=o?.dataset.communityDefault||"public";r!==t.value&&(d.value=e),d.dataset.driverDefault=e}r=t.value;const f=m&&("snmp"===c||"api"===c);e.querySelectorAll('[data-device-method-fields="snmp"]').forEach((e=>l(e,f)));const v=m&&u;e.querySelectorAll('[data-device-method-fields="telnet"]').forEach((e=>l(e,v))),(e=>{const t=Boolean(e&&i?.checked);n.forEach((e=>e.disabled=!t))})(v),a.disabled=Boolean(o?.value&&!m)};t.addEventListener("change",o),i?.addEventListener("change",o),o()}))})(),(()=>{"use strict";root.querySelectorAll("[data-device-edit-form]").forEach((e=>{const t=e.querySelector("[data-edit-device-type]");if(!t)return;const a=e.querySelector("[data-snmp-community]"),d=e.querySelector("[data-cli-toggle]"),i=Array.from(e.querySelectorAll("[data-cli-field]"));let n=t.value;const s=(e,t)=>{e.hidden=!t,e.querySelectorAll("input,select,textarea").forEach((e=>{e.disabled=!t}))},r=()=>{const r=t instanceof HTMLSelectElement?t.options[t.selectedIndex]:{value:t.value,dataset:t.dataset},l=r?.dataset.method||"",o="1"===r?.dataset.telnetCli;if(a){const e=r?.dataset.communityDefault||"public";n!==t.value&&(a.value=e),a.dataset.driverDefault=e}n=t.value;const c="snmp"===l;e.querySelectorAll('[data-device-method-fields="snmp"]').forEach((e=>s(e,c))),e.querySelectorAll('[data-device-method-fields="telnet"]').forEach((e=>s(e,o))),(e=>{const t=Boolean(e&&d?.checked);i.forEach((e=>{e.disabled=!t}))})(o)};t.addEventListener("change",r),d?.addEventListener("change",r),r()}))})();};window.linnmsDeviceFormInit();})();
+(() => {
+  "use strict";
+  const deviceTipMessages = {
+    hioso: {
+      feature:
+        'Membutuhkan koneksi <b>Telnet</b> untuk detail modul optik PON dan trafik PON',
+      extra:
+        '<p><span class="text-cyan">✧</span> Fitur ini memerlukan privilege <b>user</b> pada perangkat.</p><p><strong class="text-cyan">Tips</strong>: Telnet perangkat umumnya menggunakan username <b class="mono">root</b>, password <b class="mono">admin</b>.</p>',
+    },
+    zte: {
+      feature:
+        "membutuhkan koneksi <b>Telnet</b> untuk daya optik ONU (RX/TX), modul optik, riwayat koneksi, konfigurasi layanan ONU, serta status dan VLAN port LAN ONU.",
+      extra: '<p><span class="text-cyan">✧</span> Fitur ini memerlukan privilege root pada perangkat.</p>',
+    },
+  };
+  window.linnmsDeviceFormInit = (root = document) => {
+    ((() => {
+      "use strict";
+      root
+        .querySelectorAll("[data-device-create-form], [data-device-edit-form]")
+        .forEach((e) => {
+          const t = e.querySelector(
+              "[data-device-type], [data-edit-device-type]",
+            ),
+            a = e.querySelector("[data-cli-toggle]"),
+            d = e.querySelector("[data-cli-details]"),
+            i = Array.from(
+              e.querySelectorAll("[data-cli-details] [data-cli-field]"),
+            ),
+            n = e.querySelector('[data-connection-test="device"]'),
+            s = e.querySelector("[data-connection-test-result]"),
+            r = () => e.classList.add("was-validated");
+          e.matches("[data-device-edit-form]") &&
+            (e.addEventListener("invalid", r, !0),
+            e.addEventListener("submit", r));
+          const l = e.querySelector('input[name="ip_address"]'),
+            o =
+              /^(?:(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$/,
+            c = () => {
+              if (!(l instanceof HTMLInputElement)) return;
+              const e = l.value.trim();
+              l.setCustomValidity(
+                "" === e || o.test(e) ? "" : "Periksa IP Anda.",
+              );
+            },
+            u = () =>
+              t instanceof HTMLSelectElement
+                ? t.options[t.selectedIndex] || null
+                : t instanceof HTMLInputElement
+                  ? { value: t.value, dataset: t.dataset }
+                  : null,
+            m = (e) =>
+              "username" === e.name
+                ? "Username harus diisi."
+                : "password" === e.name
+                  ? "Password harus diisi."
+                  : "Port Telnet harus diisi.",
+            f = () => {
+              if (!a || !d) return;
+              const e = "1" === u()?.dataset.telnetCli && a.checked;
+              ((d.hidden = !e),
+                a.setAttribute("aria-expanded", e ? "true" : "false"),
+                i.forEach((t) => {
+                  const a = "1" === t.dataset.secretStored;
+                  ((t.required = e && !a),
+                    t.setCustomValidity(
+                      t.required && "" === t.value.trim() ? m(t) : "",
+                    ));
+                }));
+            },
+            v = () => {
+              if (!n) return;
+              const t = u(),
+                a = "0" !== t?.dataset.enabled,
+                d = Boolean(t?.value && a);
+              e.matches("[data-device-create-form]")
+                ? ((n.hidden = !d), (n.disabled = !1))
+                : (n.disabled = !d);
+            },
+            h = (e, t = "") => {
+              s &&
+                ((s.textContent = e),
+                (s.hidden = "" === e),
+                s.classList.toggle("text-muted", "" === t),
+                s.classList.toggle("success", "success" === t),
+                s.classList.toggle("danger", "error" === t));
+            },
+            y = (e) => {
+              n instanceof HTMLButtonElement &&
+                (e
+                  ? (n.dataset.idleLabel || (n.dataset.idleLabel = n.innerHTML),
+                    (n.disabled = !0),
+                    n.classList.add("is-loading"),
+                    (n.innerHTML =
+                      '<i class="bi bi-arrow-repeat" aria-hidden="true"></i> Menguji&hellip;'))
+                  : (n.classList.remove("is-loading"),
+                    n.dataset.idleLabel && (n.innerHTML = n.dataset.idleLabel),
+                    v()));
+            };
+          (i.forEach((e) => {
+            e.addEventListener("input", () => {
+              e.setCustomValidity(
+                e.required && "" === e.value.trim() ? m(e) : "",
+              );
+            });
+          }),
+            l?.addEventListener("input", c),
+            c(),
+            t?.addEventListener("change", () => {
+              (f(), v(), h(""));
+            }),
+            a?.addEventListener("change", () => {
+              (f(), h(""));
+            }),
+            n?.addEventListener("click", async () => {
+              const t = n.dataset.connectionTestUrl || "";
+              if (!t || n.disabled) return;
+              if (
+                (e.matches("[data-device-edit-form]") && r(),
+                !e.reportValidity())
+              )
+                return;
+              if (!u()?.value)
+                return void h(
+                  "Pilih jenis perangkat terlebih dahulu.",
+                  "error",
+                );
+              const a = new FormData(e);
+              (a.delete("action"), a.set("type", "device"));
+              const d = Date.now();
+              let i = "error",
+                s =
+                  "Tes koneksi tidak dapat dijalankan. Periksa koneksi aplikasi lalu coba lagi.";
+              y(!0);
+              try {
+                const e = await window.linnmsAjax.request(t, {
+                    method: "POST",
+                    body: a,
+                    credentials: "same-origin",
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                  }),
+                  n = await e.json().catch(() => ({}));
+                ((s = String(
+                  n.message ||
+                    (e.ok ? "Koneksi berhasil." : "Koneksi belum berhasil."),
+                )),
+                  (i = e.ok && n.ok ? "success" : "error"));
+              } catch (e) {
+                i = "error";
+              } finally {
+                const e = Date.now() - d;
+                (e < 1e3 &&
+                  (await new Promise((t) => window.setTimeout(t, 1e3 - e))),
+                  y(!1),
+                  ((e, t) => {
+                    const a = String(t || "").trim();
+                    "" !== a &&
+                      ("function" != typeof window.linnmsToast
+                        ? "function" != typeof window.linnmsNotify
+                          ? h(
+                              a,
+                              "success" === e
+                                ? "success"
+                                : "error" === e
+                                  ? "error"
+                                  : "",
+                            )
+                          : window.linnmsNotify(e || "info", a)
+                        : window.linnmsToast(e || "info", a));
+                  })(i, s));
+              }
+            }),
+            f(),
+            v());
+        });
+    })(),
+      (() => {
+        "use strict";
+        root.querySelectorAll("[data-device-create-form]").forEach((e) => {
+          const t = e.querySelector("[data-device-type]"),
+            a = e.querySelector("[data-device-submit]");
+          if (!t || !a) return;
+          const d = e.querySelector("[data-snmp-community]"),
+            i = e.querySelector("[data-cli-toggle]"),
+            n = Array.from(e.querySelectorAll("[data-cli-field]")),
+            s = e.querySelector("[data-device-add-tip]");
+          let r = t.value;
+          const l = (e, t) => {
+              ((e.hidden = !t),
+                e
+                  .querySelectorAll("input,select,textarea")
+                  .forEach((e) => (e.disabled = !t)));
+            },
+            o = () => {
+              const o = t.options[t.selectedIndex],
+                c = o?.dataset.method || "",
+                u = "1" === o?.dataset.telnetCli,
+                m = Boolean(
+                  o?.value &&
+                  "1" === o.dataset.enabled &&
+                  "1" === o.dataset.quotaAllowed,
+                );
+              if (s) {
+                const label = o?.textContent.trim() || "",
+                  tip =
+                    deviceTipMessages[
+                      /ZTE|GPON/i.test(label) ? "zte" : "hioso"
+                    ],
+                  name = s.querySelector("[data-device-tip-name]"),
+                  message = s.querySelector("[data-device-tip-message]"),
+                  extra = s.querySelector("[data-device-tip-extra]");
+                (name && (name.textContent = label),
+                  message && (message.innerHTML = tip.feature),
+                  extra && (extra.innerHTML = tip.extra),
+                  (s.hidden = !(o?.value && u)));
+              }
+              if (d) {
+                const e = o?.dataset.communityDefault || "public";
+                (r !== t.value && (d.value = e), (d.dataset.driverDefault = e));
+              }
+              r = t.value;
+              const f = m && ("snmp" === c || "api" === c);
+              e.querySelectorAll('[data-device-method-fields="snmp"]').forEach(
+                (e) => l(e, f),
+              );
+              const v = m && u;
+              (e
+                .querySelectorAll('[data-device-method-fields="telnet"]')
+                .forEach((e) => l(e, v)),
+                ((e) => {
+                  const t = Boolean(e && i?.checked);
+                  n.forEach((e) => (e.disabled = !t));
+                })(v),
+                (a.disabled = Boolean(o?.value && !m)));
+            };
+          (t.addEventListener("change", o),
+            i?.addEventListener("change", o),
+            o());
+        });
+      })(),
+      (() => {
+        "use strict";
+        root.querySelectorAll("[data-device-edit-form]").forEach((e) => {
+          const t = e.querySelector("[data-edit-device-type]");
+          if (!t) return;
+          const a = e.querySelector("[data-snmp-community]"),
+            d = e.querySelector("[data-cli-toggle]"),
+            i = Array.from(e.querySelectorAll("[data-cli-field]"));
+          let n = t.value;
+          const s = (e, t) => {
+              ((e.hidden = !t),
+                e.querySelectorAll("input,select,textarea").forEach((e) => {
+                  e.disabled = !t;
+                }));
+            },
+            r = () => {
+              const r =
+                  t instanceof HTMLSelectElement
+                    ? t.options[t.selectedIndex]
+                    : { value: t.value, dataset: t.dataset },
+                l = r?.dataset.method || "",
+                o = "1" === r?.dataset.telnetCli;
+              if (a) {
+                const e = r?.dataset.communityDefault || "public";
+                (n !== t.value && (a.value = e), (a.dataset.driverDefault = e));
+              }
+              n = t.value;
+              const c = "snmp" === l;
+              (e
+                .querySelectorAll('[data-device-method-fields="snmp"]')
+                .forEach((e) => s(e, c)),
+                e
+                  .querySelectorAll('[data-device-method-fields="telnet"]')
+                  .forEach((e) => s(e, o)),
+                ((e) => {
+                  const t = Boolean(e && d?.checked);
+                  i.forEach((e) => {
+                    e.disabled = !t;
+                  });
+                })(o));
+            };
+          (t.addEventListener("change", r),
+            d?.addEventListener("change", r),
+            r());
+        });
+      })());
+  };
+  window.linnmsDeviceFormInit();
+})();

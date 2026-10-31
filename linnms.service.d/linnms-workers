@@ -1,7 +1,4 @@
-#!/usr/bin/with-contenv sh
 set -u
-
-# s6 meneruskan nama service sebagai argumen pertama; abaikan agar mode default berjalan.
 case "${1:-}" in
   custom-svc-*) set -- ;;
 esac

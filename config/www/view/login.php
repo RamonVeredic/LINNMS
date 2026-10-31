@@ -17,8 +17,8 @@
     <?php endif; ?>
     <form method="post" class="login-form required-fields">
         <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>"><input type="hidden" name="action" value="login">
-        <div class="field"><label for="loginUsername">Username</label><input id="loginUsername" name="username" value="<?= h($oldLoginUsername) ?>" autocomplete="username" required autofocus placeholder="Username"></div>
-        <div class="field"><label for="loginPassword">Password</label><input id="loginPassword" type="password" name="password" autocomplete="current-password" required placeholder="Password"></div>
+        <div class="field"><label for="loginUsername">Username</label><input id="loginUsername" name="username" value="<?= h($oldLoginUsername) ?>" autocomplete="username" required autofocus placeholder="Masukkan Username"></div>
+        <div class="field"><label for="loginPassword">Password</label><input id="loginPassword" type="password" name="password" autocomplete="current-password" required placeholder="Masukkan Password"></div>
         <button class="button primary login-button">Masuk</button>
     </form>
     <?php if (!empty($publicRegistrationEnabled)): ?>

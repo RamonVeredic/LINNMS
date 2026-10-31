@@ -2,7 +2,8 @@
 $serviceContact = is_array($serviceContact ?? null) ? $serviceContact : [];
 $serviceContactLinks = [];
 
-if (trim((string)($serviceContact['phone'] ?? '')) !== '') $serviceContactLinks[] = ['label' => 'Telepon', 'value' => trim((string)$serviceContact['phone']), 'url' => 'tel:' . preg_replace('/[^0-9+]/', '', (string)$serviceContact['phone']), 'icon' => 'telephone'];
+// Nomor telepon dari kontrol panel tidak ditampilkan di UI.
+// if (trim((string)($serviceContact['phone'] ?? '')) !== '') $serviceContactLinks[] = ['label' => 'Telepon', 'value' => trim((string)$serviceContact['phone']), 'url' => 'tel:' . preg_replace('/[^0-9+]/', '', (string)$serviceContact['phone']), 'icon' => 'telephone'];
 if (trim((string)($serviceContact['email'] ?? '')) !== '') $serviceContactLinks[] = ['label' => 'Email', 'value' => trim((string)$serviceContact['email']), 'url' => 'mailto:' . trim((string)$serviceContact['email']), 'icon' => 'envelope'];
 if (trim((string)($serviceContact['github'] ?? '')) !== '') $serviceContactLinks[] = ['label' => 'GitHub', 'value' => trim((string)$serviceContact['github']), 'url' => (str_starts_with((string)$serviceContact['github'], 'http') ? trim((string)$serviceContact['github']) : 'https://github.com/' . trim((string)$serviceContact['github'])), 'icon' => 'github'];
 if (trim((string)($serviceContact['web'] ?? '')) !== '') $serviceContactLinks[] = ['label' => 'Web', 'value' => trim((string)$serviceContact['web']), 'url' => (str_starts_with((string)$serviceContact['web'], 'http') ? trim((string)$serviceContact['web']) : 'https://' . trim((string)$serviceContact['web'])), 'icon' => 'globe2'];

@@ -1,4 +1,4 @@
-**Release:** `v1.0.0`
+**Release:** `v1.0.1`
 # LINNMS - Network Management System
 
 <p align="center">
@@ -59,7 +59,15 @@ Dukungan
 - @RamonVeredic
 
 ---
+Changelog: 
+- fix:Service WaGateway
+- fix:Service Workers
+- fix:Trafik Networking
+- fix:Monitoring Event
+- Update Format pesan group notifikasi
+- Update riwayat notifikasi
+- Optimasi Edit Delete Device
 
 <p align="center">
-  <sub>LINNMS Network Management System • v1.0.0</sub>
+  <sub>LINNMS Network Management System • v1.0.2</sub>
 </p>

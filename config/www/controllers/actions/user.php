@@ -78,7 +78,7 @@ function handle_user_action(string $action): bool
 
     if ($action === 'update_profile') {
         $data = [];
-        foreach (['display_name', 'current_password', 'new_password', 'email', 'company', 'phone_number'] as $key) {
+        foreach (['display_name', 'current_password', 'new_password', 'phone_number'] as $key) {
             $data[$key] = (string)($_POST[$key] ?? '');
         }
         $error = null;
@@ -88,10 +88,6 @@ function handle_user_action(string $action): bool
             $error = 'Password saat ini wajib diisi.';
         } elseif ($data['new_password'] !== '' && mb_strlen($data['new_password']) < 6) {
             $error = 'Password baru minimal 6 karakter.';
-        } elseif ($data['email'] !== '' && (mb_strlen($data['email']) > 190 || !filter_var($data['email'], FILTER_VALIDATE_EMAIL))) {
-            $error = 'Email tidak valid.';
-        } elseif (mb_strlen($data['company']) > 190) {
-            $error = 'Deskripsi maksimal 190 karakter.';
         } elseif (mb_strlen($data['phone_number']) > 24) {
             $error = 'Kontak maksimal 24 karakter.';
         }

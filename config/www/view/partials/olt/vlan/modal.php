@@ -22,7 +22,7 @@ $oltVlanOltRowId = (int)($oltVlanOltRowId ?? $oltRowId ?? 0);
 
             <div class="olt-onu-type-row">
                 <span class="olt-onu-type-label">Nama</span>
-                <input type="text" name="name" maxlength="32" autocomplete="off" placeholder="VLAN0100">
+                <input type="text" name="name" maxlength="32" autocomplete="off" placeholder="Masukkan Nama VLAN">
             </div>
 
             <div class="olt-onu-type-modal-actions">

@@ -59,7 +59,7 @@
   --app-bar-height: 56px;
   --footer-height: 34px;
   --modal-gap: clamp(16px, 3vh, 32px);
-  --modal-height: calc(100dvh - var(--footer-height) - var(--modal-gap) * 2 -env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0));
+  --modal-height: calc(100dvh - var(--footer-height) - var(--modal-gap) * 2 - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0));
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --dur: 0.2s;
 }
@@ -142,6 +142,7 @@ button.is-loading > i {
   display: flex;
   flex-direction: column;
   z-index: 30;
+  padding-bottom: var(--footer-height);
 }
 .brand {
   height: var(--app-bar-height);
@@ -578,10 +579,9 @@ button.is-loading > i {
   color: inherit;
   text-align: left;
   appearance: none;
-}
-.summary-stats button.stat-card {
   cursor: pointer;
 }
+
 .summary-stats .stat-card > span {
   margin-bottom: 9px;
 }
@@ -1070,14 +1070,15 @@ button.is-loading > i {
   flex: 0 0 30px;
   width: 30px;
   height: 30px;
-  border-color: transparent;
-  background: transparent;
-  color: var(--text-secondary);
+  border: 1px solid var(--bg-line);
+  background: var(--bg-input);
+  color: var(--red);
 }
-.modal-close-button:hover {
-  border-color: var(--bg-line);
-  background: var(--bg-hover);
-  color: var(--text-primary);
+.modal-close-button:hover,
+.modal-close-button:focus-visible {
+  border-color: var(--red);
+  background: rgba(234, 57, 65, 0.12);
+  color: var(--red);
 }
 .device-table-actions .icon-button {
   color: var(--text-secondary);
@@ -1135,11 +1136,13 @@ button.is-loading > i {
   font-size: var(--font-size-md);
   margin-bottom: 5px;
 }
-.required-fields.field > label:has(~ :is(input, select, textarea)[required]:not(:disabled), ~ .input-button-group:is(input, select, textarea)[required]:not(:disabled))::after, .field
+.field
   > label:has(
-    ~ input[type="password"]:not(:disabled),
-    ~ .password-input-wrap input[type="password"]:not(:disabled)
-  )::after{
+    ~ :is(input, select, textarea)[required]:not(:disabled),
+    ~ .select select[required]:not(:disabled),
+    ~ .password-input-wrap input[required]:not(:disabled),
+    ~ .input-button-group :is(input, select, textarea)[required]:not(:disabled)
+  )::after {
   content: " *";
   color: var(--red);
 }
@@ -1318,22 +1321,35 @@ letter-spacing: -0.1px;
   opacity: 0;
   pointer-events: none;
 }
-:is(.toggle-card, .settings-row)
-  input[type="checkbox"]:focus-visible
-  + .toggle-switch {
-  outline: 1px solid var(--cyan);
-  box-shadow: var(--focus-ring);
-}
-:is(.toggle-card, .settings-row) .toggle-switch {
+.toggle-switch {
+  display: inline-block;
+  position: relative;
   width: 42px;
   height: 24px;
   border-radius: 999px;
   border: 1px solid var(--border-hover);
   background: #12151b;
-  position: relative;
   flex: 0 0 auto;
 }
-:is(.toggle-card, .settings-row) .toggle-switch::after {
+input.toggle-switch {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 24px;
+  margin: 0;
+  border: 1px solid var(--border-hover);
+  border-radius: 999px;
+  background: #12151b;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+  flex: 0 0 auto;
+}
+.toggle-switch::after,
+input.toggle-switch::after {
   content: "";
   position: absolute;
   width: 18px;
@@ -1342,18 +1358,33 @@ letter-spacing: -0.1px;
   left: 2px;
   top: 2px;
   background: rgba(91, 239, 207, 0.5);
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
-:is(.toggle-card, .settings-row) input:checked + .toggle-switch {
+input:focus-visible + .toggle-switch,
+input.toggle-switch:focus-visible {
+  outline: 1px solid var(--cyan);
+  box-shadow: var(--focus-ring);
+}
+input:checked + .toggle-switch,
+input.toggle-switch:checked {
   background: rgba(91, 239, 207, 0.2);
   border-color: rgba(91, 239, 207, 0.5);
   box-shadow:
     0 0 0 2px rgba(91, 239, 207, 0.12),
     0 0 20px rgba(91, 239, 207, 0.2);
 }
-:is(.toggle-card, .settings-row) input:checked + .toggle-switch::after {
-  left: 20px;
+input:checked + .toggle-switch::after,
+input.toggle-switch:checked::after {
+  transform: translateX(18px);
   background: var(--cyan);
   box-shadow: 0 0 9px rgba(91, 239, 207, 0.55);
+}
+input.toggle-switch:disabled {
+  opacity: 0.6;
+  cursor: progress;
 }
 .alert-config {
   margin-top: 18px;
@@ -1366,7 +1397,7 @@ letter-spacing: -0.1px;
 }
 .modal {
   position: fixed;
-  inset: 0 0 calc(var(--footer-height) + env(safe-area-inset-bottom, 0));
+  inset: 0;
   background: rgba(5, 6, 10, 0.68);
   z-index: 100;
   display: grid;
@@ -1468,10 +1499,10 @@ letter-spacing: -0.1px;
 }
 .app-footer {
   position: fixed;
-  left: 216px;
+  left: 0;
   right: 0;
   bottom: 0;
-  z-index: 24;
+  z-index: 31;
   height: var(--footer-height);
   min-height: var(--footer-height);
   display: flex;
@@ -2355,45 +2386,6 @@ fieldset {
 .title {
   margin-top: 50px;
 }
-input[role="switch"] {
-  appearance: none;
-  -webkit-appearance: none;
-  position: relative;
-  display: inline-block;
-  width: 38px;
-  height: 20px;
-  margin: 0;
-  border: 1px solid var(--bg-line);
-  border-radius: 999px;
-  background: var(--surface-raised, rgba(127, 127, 127, 0.18));
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease;
-  flex: 0 0 auto;
-}
-input[role="switch"]::after {
-  content: "";
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #fff;
-  transition: transform 0.15s ease;
-}
-input[role="switch"]:checked {
-  background: var(--green, #22c55e);
-  border-color: var(--green, #22c55e);
-}
-input[role="switch"]:checked::after {
-  transform: translateX(18px);
-}
-input[role="switch"]:disabled {
-  opacity: 0.6;
-  cursor: progress;
-}
 .pon-catat-switch,
 .pon-status-switch {
   display: inline-flex;
@@ -2922,10 +2914,13 @@ input[readonly]:focus {
 .serial-copy {
   display: inline-flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px;
+  max-width: 100%;
+  vertical-align: middle;
 }
 .serial-copy > [data-serial-value] {
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2937,13 +2932,16 @@ input[readonly]:focus {
   background-color: color-mix(in srgb, var(--green) 30%, transparent);
 }
 .serial-copy .icon-button {
-  width: 30px;
-  height: 30px;
-  padding: 5px;
+  width: 26px;
+  height: 26px;
+  padding: 4px;
+  font-size: 12px;
 }
 .serial-copy-action {
   position: relative;
   display: inline-flex;
+  flex: 0 0 auto;
+  top: -2px;
 }
 .serial-copy-action > .linnms-toast {
   position: absolute;
@@ -3008,6 +3006,15 @@ input[readonly]:focus {
 .text-cyan {
   color: var(--cyan) !important;
 }
+.text-success {
+  color: var(--green) !important;
+}
+.text-warning {
+  color: var(--amber) !important;
+}
+.text-danger {
+  color: var(--red) !important;
+}
 .success {
   --state-color: var(--green);
   color: var(--state-color) !important;
@@ -3042,9 +3049,7 @@ input[readonly]:focus {
 .f-sm {
   font-size: var(--font-size-sm);
 }
-.fw-md {
-  font-size: var(--font-size-md);
-}
+
 .fw-bold {
   font-weight: 700 !important;
 }

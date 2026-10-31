@@ -42,7 +42,7 @@ $addOnuFieldPrefix = $addOnuModalId . '-field-';
                             <button type="button" class="is-active" data-onu-id-mode="auto">Auto</button>
                             <button type="button" data-onu-id-mode="custom">Custom</button>
                         </div>
-                        <input id="<?= h($addOnuFieldPrefix) ?>onu-id" class="mono add-onu-id-custom" name="onu_id_custom" inputmode="numeric" placeholder="Nomor ONU" aria-label="Nomor ONU" hidden data-add-onu-id-custom>
+                        <input id="<?= h($addOnuFieldPrefix) ?>onu-id" class="mono add-onu-id-custom" name="onu_id_custom" inputmode="numeric" placeholder="Masukkan Nomor ONU" aria-label="Nomor ONU" hidden data-add-onu-id-custom>
                     </fieldset>
                     <div class="add-onu-form-grid">
                         <div class="field"><label for="<?= h($addOnuFieldPrefix) ?>serial">Serial Number</label><input id="<?= h($addOnuFieldPrefix) ?>serial" class="mono" name="onu_serial" data-add-onu-serial readonly aria-readonly="true" required></div>
@@ -66,7 +66,7 @@ $addOnuFieldPrefix = $addOnuModalId . '-field-';
                     </div>
 
                     </div>
-                    <div class="add-onu-service-head add-onu-toggle-row" data-onu-capability="veip"><label class="add-onu-switch"><input type="checkbox" name="use_veip" value="1" checked aria-label="Gunakan VEIP"><span class="add-onu-switch-track" aria-hidden="true"></span></label><h4>Gunakan VEIP</h4></div>
+                    <div class="add-onu-service-head add-onu-toggle-row" data-onu-capability="veip"><label class="add-onu-switch"><input type="checkbox" role="switch" name="use_veip" value="1" checked aria-label="Gunakan VEIP"><span class="toggle-switch" aria-hidden="true"></span></label><h4>Gunakan VEIP</h4></div>
                 </div>
             </section>
 
@@ -76,11 +76,11 @@ $addOnuFieldPrefix = $addOnuModalId . '-field-';
                     <div class="add-onu-form-grid">
                         <div class="field">
                             <label for="<?= h($addOnuFieldPrefix) ?>name">Nama</label>
-                            <input id="<?= h($addOnuFieldPrefix) ?>name" name="onu_name" maxlength="127" required pattern=".*\S.*" data-add-onu-name autocomplete="off" placeholder="Bapak siapa">
+                            <input id="<?= h($addOnuFieldPrefix) ?>name" name="onu_name" maxlength="127" required pattern=".*\S.*" data-add-onu-name autocomplete="off" placeholder="Masukkan Nama">
                         </div>
                         <div class="field">
                             <label for="<?= h($addOnuFieldPrefix) ?>location">Lokasi</label>
-                            <input id="<?= h($addOnuFieldPrefix) ?>location" name="onu_location" maxlength="255" data-add-onu-location autocomplete="off" placeholder="Jl. jalan dengan RT/RW (opsional)">
+                            <input id="<?= h($addOnuFieldPrefix) ?>location" name="onu_location" maxlength="255" data-add-onu-location autocomplete="off" placeholder="Masukkan Lokasi (opsional)">
                         </div>
                     </div>
                 </div>
@@ -112,8 +112,8 @@ $addOnuFieldPrefix = $addOnuModalId . '-field-';
                         <article class="add-onu-service-card<?= $addOnuSvcNo === 1 ? ' is-open' : '' ?>" data-add-onu-service-card="<?= $addOnuSvcNo ?>">
                             <div class="add-onu-service-head">
                                 <label class="add-onu-switch">
-                                    <input type="checkbox" name="service<?= $addOnuSvcNo ?>_enabled" value="1" <?= $addOnuSvcNo === 1 ? 'checked' : '' ?> data-add-onu-service-toggle aria-label="Aktifkan Service <?= $addOnuSvcNo ?>">
-                                    <span class="add-onu-switch-track" aria-hidden="true"></span>
+                                    <input type="checkbox" role="switch" name="service<?= $addOnuSvcNo ?>_enabled" value="1" <?= $addOnuSvcNo === 1 ? 'checked' : '' ?> data-add-onu-service-toggle aria-label="Aktifkan Service <?= $addOnuSvcNo ?>">
+                                    <span class="toggle-switch" aria-hidden="true"></span>
                                 </label>
                                 <h4>Service <?= $addOnuSvcNo ?></h4>
                                 <span class="add-onu-service-no">#0<?= $addOnuSvcNo ?></span>
@@ -142,7 +142,7 @@ $addOnuFieldPrefix = $addOnuModalId . '-field-';
                                 </div>
                                 <div class="field" data-add-onu-iptv-field hidden>
                                     <label for="<?= h($addOnuFieldPrefix) ?>service<?= $addOnuSvcNo ?>-lan">Port LAN IPTV</label>
-                                    <input id="<?= h($addOnuFieldPrefix) ?>service<?= $addOnuSvcNo ?>-lan" name="service<?= $addOnuSvcNo ?>_lan_ports" inputmode="numeric" placeholder="1,2" disabled>
+                                    <input id="<?= h($addOnuFieldPrefix) ?>service<?= $addOnuSvcNo ?>-lan" name="service<?= $addOnuSvcNo ?>_lan_ports" inputmode="numeric" placeholder="Masukkan Port LAN" disabled>
                                 </div>
                                 <?php if ($addOnuSvcNo > 1): ?>
                                     <div class="field" data-add-onu-primary-vlan="<?= $addOnuSvcNo ?>">
@@ -205,7 +205,7 @@ $addOnuFieldPrefix = $addOnuModalId . '-field-';
                     <div class="add-onu-service-row">
                         <div class="field">
                             <label for="<?= h($addOnuFieldPrefix) ?>service-name">Nama Layanan</label>
-                            <input id="<?= h($addOnuFieldPrefix) ?>service-name" name="service_name" maxlength="32" data-add-onu-service-name autocomplete="off" placeholder="Nama layanan">
+                            <input id="<?= h($addOnuFieldPrefix) ?>service-name" name="service_name" maxlength="32" data-add-onu-service-name autocomplete="off" placeholder="Masukkan Nama Layanan">
                         </div>
                         <div class="field">
                             <label for="<?= h($addOnuFieldPrefix) ?>service-index">Index awal T-CONT / GEMPORT</label>
@@ -216,8 +216,8 @@ $addOnuFieldPrefix = $addOnuModalId . '-field-';
             </section>
             <section class="add-onu-modal-section" data-onu-capability="tr069">
                 <div class="add-onu-modal-section-body">
-                    <div class="add-onu-service-head add-onu-toggle-row"><label class="add-onu-switch"><input type="checkbox" name="use_tr069" value="1" data-add-onu-tr069-toggle aria-label="Gunakan TR069"><span class="add-onu-switch-track" aria-hidden="true"></span></label><h4>Gunakan TR069 <span class="add-onu-optional">opsional</span></h4></div>
-                    <div class="field" data-add-onu-tr069-field hidden><label for="<?= h($addOnuFieldPrefix) ?>tr069-acs">Alamat ACS <span class="add-onu-optional">opsional</span></label><input id="<?= h($addOnuFieldPrefix) ?>tr069-acs" name="tr069_acs" maxlength="255" autocomplete="off" placeholder="https://acs.example.com" disabled></div>
+                    <div class="add-onu-service-head add-onu-toggle-row"><label class="add-onu-switch"><input type="checkbox" role="switch" name="use_tr069" value="1" data-add-onu-tr069-toggle aria-label="Gunakan TR069"><span class="toggle-switch" aria-hidden="true"></span></label><h4>Gunakan TR069 <span class="add-onu-optional">opsional</span></h4></div>
+                    <div class="field" data-add-onu-tr069-field hidden><label for="<?= h($addOnuFieldPrefix) ?>tr069-acs">Alamat ACS <span class="add-onu-optional">opsional</span></label><input id="<?= h($addOnuFieldPrefix) ?>tr069-acs" name="tr069_acs" maxlength="255" autocomplete="off" placeholder="Masukkan Alamat ACS" disabled></div>
                     <div class="field" data-add-onu-tr069-field hidden><label for="<?= h($addOnuFieldPrefix) ?>tr069-username">Username ACS</label><input id="<?= h($addOnuFieldPrefix) ?>tr069-username" name="tr069_username" maxlength="64" autocomplete="off" disabled></div>
                     <div class="field" data-add-onu-tr069-field hidden><label for="<?= h($addOnuFieldPrefix) ?>tr069-password">Password ACS</label><input id="<?= h($addOnuFieldPrefix) ?>tr069-password" name="tr069_password" type="password" maxlength="64" autocomplete="new-password" disabled></div>
                 </div>

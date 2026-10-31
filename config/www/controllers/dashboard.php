@@ -19,13 +19,15 @@ function dashboard_recent_activity_rows(array $events): array
         };
         $serial = (string)($event['serial'] ?? '—');
         $powerTrend = (string)($event['new_power_trend'] ?? '');
+        $detailText = trim((string)($event['detail'] ?? ''));
+        $isEditDetail = str_starts_with($detailText, 'Mengedit nama') || str_starts_with($detailText, 'lokasi ');
         $event['view'] = [
             'time' => format_feed_time($event['created_at'] ?? null),
             'pon_event' => is_array($event['pon_event'] ?? null) ? $event['pon_event'] : null,
             'subject' => trim((string)($event['subject'] ?? '')),
             'serial' => $serial,
             'show_identity' => !empty($event['show_identity']),
-            'show_serial' => empty($event['show_identity']) && $serial !== '—' && $serial !== '',
+            'show_serial' => empty($event['show_identity']) && !$isEditDetail && $serial !== '—' && $serial !== '',
             'old_power' => (string)($event['old_power_display'] ?? ''),
             'new_power' => (string)($event['new_power_display'] ?? ''),
             'power_trend' => in_array($powerTrend, ['better', 'critical', 'worse', 'same'], true) ? $powerTrend : 'same',

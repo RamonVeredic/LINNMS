@@ -51,7 +51,8 @@ final class SyncPipelineWriteService
         if (!is_array($device)) {
             return ['ok' => false, 'message' => 'Perangkat tidak ditemukan.', 'retryable' => false];
         }
-        if (snmp_monitoring_driver($device) !== $handler) {
+        $definition = monitoring_driver_definition(device_driver_type($device));
+        if (!is_array($definition) || (string)($definition['handler'] ?? '') !== $handler) {
             return ['ok' => false, 'message' => 'Identitas perangkat pipeline tidak sesuai.', 'retryable' => false];
         }
         $stored = $this->deviceWriter()->write(

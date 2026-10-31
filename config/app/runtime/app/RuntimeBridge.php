@@ -298,6 +298,8 @@ final class RuntimeBridge
         $password=(string)($input['password']??'');
         $confirm=(string)($input['password_confirm']??'');
         $display=trim((string)($input['display_name']??''));
+        $email=trim((string)($input['email']??''));
+        $company=trim((string)($input['company']??''));
 
         if (!preg_match('/^[a-z0-9._-]{3,80}$/',$username)) {
             throw new RuntimeException('Data aktivasi tidak valid. Aktivasi ulang diperlukan.');
@@ -307,8 +309,14 @@ final class RuntimeBridge
         if (mb_strlen($display)>120) throw new InvalidArgumentException('Nama pengguna terlalu panjang.');
         if (strlen($password)<8) throw new InvalidArgumentException('Password minimal 8 karakter.');
         if ($password!==$confirm) throw new InvalidArgumentException('Konfirmasi password tidak sama.');
+        if ($email !== '' && (mb_strlen($email) > 190 || filter_var($email, FILTER_VALIDATE_EMAIL) === false)) {
+            throw new InvalidArgumentException('Alamat email tidak valid.');
+        }
+        if (mb_strlen($company) > 190) throw new InvalidArgumentException('Nama perusahaan maksimal 190 karakter.');
 
-        return $db->createUser($username,$password,$display,0,0,0,'admin');
+        $id = $db->createUser($username,$password,$display,0,0,0,'admin');
+        if ($email !== '' || $company !== '') $db->saveActivationContact($email, $company);
+        return $id;
     }
 
     public function updateContext(): array
@@ -550,12 +558,15 @@ final class RuntimeBridge
         if ($version !== '') { $this->putAppSetting('app_version', mb_substr($version, 0, 40)); $this->clearAppIdentityCache(); }
 
         $contact = $claims['branding']['contact'] ?? ($claims['contact'] ?? null);
-        if (!is_array($contact)) return;
-        $map = ['phone' => 'service_phone', 'email' => 'service_email', 'whatsapp' => 'service_whatsapp', 'github' => 'service_github', 'web' => 'service_web'];
-        foreach ($map as $source => $key) {
-            $value = trim((string)($contact[$source] ?? ''));
-            if ($value !== '') $this->putAppSetting($key, mb_substr($value, 0, 255));
+        if (is_array($contact)) {
+            $map = ['phone' => 'service_phone', 'email' => 'service_email', 'company' => 'service_company', 'whatsapp' => 'service_whatsapp', 'github' => 'service_github', 'web' => 'service_web'];
+            foreach ($map as $source => $key) {
+                $value = trim((string)($contact[$source] ?? ''));
+                if ($value !== '') $this->putAppSetting($key, mb_substr($value, 0, 255));
+            }
         }
+        $company = trim((string)($claims['branding']['company'] ?? $claims['company'] ?? ''));
+        if ($company !== '') $this->putAppSetting('service_company', mb_substr($company, 0, 255));
     }
 
     private function putAppSetting(string $key, string $value): void

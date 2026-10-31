@@ -408,7 +408,13 @@ final class WhatsAppGateway
     {
         $response = $this->performRaw($request);
         if (!$response['ok']) {
-            return ['ok' => false, 'message' => 'Gagal menghubungi ' . $this->providerLabel() . ': ' . $response['error'], 'raw' => []];
+            return [
+                'ok' => false,
+                'message' => 'Gagal menghubungi ' . $this->providerLabel() . ': ' . $response['error'],
+                'raw' => [],
+                'http' => (int)($response['http'] ?? 0),
+                'transport' => true,
+            ];
         }
         $status = (int)$response['http'];
         $raw = is_array($response['raw'])
@@ -422,9 +428,19 @@ final class WhatsAppGateway
         $value = is_array($decoded) ? self::jsonPath($decoded, trim((string)($result['ok_path'] ?? 'status'))) : null;
         $ok = false;
         if ($value !== null) {
-            $ok = is_bool($okEquals) ? ((bool)$value === $okEquals) : ((string)$value === (string)$okEquals);
+            if (is_bool($okEquals)) {
+                if (is_bool($value)) {
+                    $ok = $value === $okEquals;
+                } else {
+                    $normalized = strtolower(trim((string)$value));
+                    $truthy = ['1', 'true', 'ok', 'success', 'sent', 'connected', 'active'];
+                    $ok = $okEquals ? in_array($normalized, $truthy, true) : !in_array($normalized, $truthy, true);
+                }
+            } else {
+                $ok = (string)$value === (string)$okEquals;
+            }
         }
-        if (!$ok && $httpOkOnly && $status >= 200 && $status < 300) $ok = true;
+        if (!$ok && $httpOkOnly && $value === null && $status >= 200 && $status < 300) $ok = true;
 
         $detail = '';
         foreach ([(string)($result['message_path'] ?? ''), 'detail', 'message', 'reason'] as $path) {
@@ -444,6 +460,8 @@ final class WhatsAppGateway
                 ? ($detail !== '' ? $detail : 'Pesan diterima gateway.')
                 : ($detail !== '' ? $detail : 'Gateway menolak permintaan.'),
             'raw' => $raw,
+            'http' => $status,
+            'transport' => false,
         ];
     }
 

@@ -78,11 +78,11 @@ final class LinnmsDefaults
     // Nilai maksimum yang diizinkan untuk ambang deteksi sinyal RX ONU, dalam dBm.
     public const ONU_RX_DETECTION_MAX_DBM = 20.0;
     // Ambang sinyal RX ONU bermasalah bawaan, dalam dBm.
-    public const ONU_RX_PROBLEM_DEFAULT_DBM = 30.0;
+    public const ONU_RX_PROBLEM_DEFAULT_DBM = -30.0;
     // Nilai minimum yang diizinkan untuk ambang masalah sinyal RX ONU, dalam dBm.
-    public const ONU_RX_PROBLEM_MIN_DBM = 1.0;
+    public const ONU_RX_PROBLEM_MIN_DBM = -60.0;
     // Nilai maksimum yang diizinkan untuk ambang masalah sinyal RX ONU, dalam dBm.
-    public const ONU_RX_PROBLEM_MAX_DBM = 60.0;
+    public const ONU_RX_PROBLEM_MAX_DBM = -1.0;
     // Panjang kode OTP WhatsApp.
     public const WHATSAPP_OTP_LENGTH = 4;
     // Masa berlaku kode OTP WhatsApp dalam detik.

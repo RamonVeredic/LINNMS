@@ -192,12 +192,14 @@ final class WhatsAppActionService
         if (!$gateway->isValidTarget($target)) {
             return ['ok' => false, 'code' => $targetType === 'group' ? 'group_invalid' : 'target_invalid'];
         }
-        $result = $gateway->send($target, 'Tes notifikasi WhatsApp dari ' . $this->db->getAppName());
+        $message = 'Tes notifikasi WhatsApp dari ' . $this->db->getAppName();
+        $result = $gateway->send($target, $message);
+        $historyStatus = !empty($result['ok']) ? 'sent' : (!empty($result['transport']) ? 'pending' : 'failed');
+        $this->db->recordNotificationHistory($userId, 'whatsapp', $message, $gateway->providerKey(), '', '', $historyStatus, null, 1);
         if (empty($result['ok'])) {
             $this->logDriver($userId, 'connection_test_whatsapp', (string)($result['message'] ?? 'Pengiriman gagal.'));
             return ['ok' => false, 'code' => 'device_rejected'];
         }
-        $this->db->recordNotificationHistory($userId, 'whatsapp', $gateway->providerKey());
         return ['ok' => true, 'code' => 'ok'];
     }
 

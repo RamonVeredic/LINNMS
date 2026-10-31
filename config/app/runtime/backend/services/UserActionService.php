@@ -88,8 +88,6 @@ final class UserActionService
             (string)($data['display_name'] ?? ''),
             (string)($data['current_password'] ?? ''),
             (string)($data['new_password'] ?? ''),
-            (string)($data['email'] ?? ''),
-            (string)($data['company'] ?? ''),
             (string)($data['phone_number'] ?? '')
         );
         return ['ok' => true, 'code' => 'ok', 'data' => [

@@ -30,9 +30,9 @@ $oltSpeedModalId = 'oltSpeedProfileModal';
                 <label class="olt-uplink-row"><span>CVLAN</span><input class="olt-uplink-control" type="number" min="1" max="4095" data-speed-input="cvlan"></label>
             </div>
             <div data-speed-fields="ip" hidden>
-                <label class="olt-uplink-row"><span>Gateway</span><input class="olt-uplink-control" type="text" data-speed-input="gateway" placeholder="10.0.0.1"></label>
-                <label class="olt-uplink-row"><span>Primary DNS</span><input class="olt-uplink-control" type="text" data-speed-input="primary_dns" placeholder="8.8.8.8"></label>
-                <label class="olt-uplink-row"><span>Secondary DNS</span><input class="olt-uplink-control" type="text" data-speed-input="secondary_dns" placeholder="8.8.4.4"></label>
+                <label class="olt-uplink-row"><span>Gateway</span><input class="olt-uplink-control" type="text" data-speed-input="gateway" placeholder="Masukkan Gateway"></label>
+                <label class="olt-uplink-row"><span>Primary DNS</span><input class="olt-uplink-control" type="text" data-speed-input="primary_dns" placeholder="Masukkan Primary DNS"></label>
+                <label class="olt-uplink-row"><span>Secondary DNS</span><input class="olt-uplink-control" type="text" data-speed-input="secondary_dns" placeholder="Masukkan Secondary DNS"></label>
             </div>
             <div data-speed-fields="tcont" hidden>
                 <label class="olt-uplink-row"><span>Type</span><input class="olt-uplink-control" type="number" min="1" max="5" data-speed-input="type"></label>

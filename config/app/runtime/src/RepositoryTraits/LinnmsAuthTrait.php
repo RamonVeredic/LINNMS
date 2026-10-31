@@ -87,7 +87,7 @@ trait LinnmsAuthTrait
     {
         $stmt = $this->pdo->query(
             "SELECT setting_key,setting_value FROM app_settings
-             WHERE setting_key IN ('service_whatsapp','service_email','service_phone','service_github','service_web')"
+             WHERE setting_key IN ('service_whatsapp','service_email','service_company','service_phone','service_github','service_web')"
         );
         $values = [];
         foreach ($stmt->fetchAll() ?: [] as $row) {
@@ -96,10 +96,37 @@ trait LinnmsAuthTrait
         return [
             'whatsapp' => (string)($values['service_whatsapp'] ?? ''),
             'email' => (string)($values['service_email'] ?? ''),
+            'company' => (string)($values['service_company'] ?? ''),
             'phone' => (string)($values['service_phone'] ?? ''),
             'github' => (string)($values['service_github'] ?? ''),
             'web' => (string)($values['service_web'] ?? ''),
         ];
+    }
+
+    public function saveActivationContact(string $email, string $company): void
+    {
+        $email = trim($email);
+        $company = trim($company);
+        if (mb_strlen($email) > 190 || ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false)) {
+            throw new InvalidArgumentException('Alamat email tidak valid.');
+        }
+        if (mb_strlen($company) > 190) {
+            throw new InvalidArgumentException('Nama perusahaan maksimal 190 karakter.');
+        }
+        $stmt = $this->pdo->prepare(
+            "INSERT INTO app_settings(setting_key,setting_value) VALUES (:key,:value)
+             ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value)"
+        );
+        $owned = !$this->pdo->inTransaction();
+        if ($owned) $this->pdo->beginTransaction();
+        try {
+            if ($email !== '') $stmt->execute(['key' => 'service_email', 'value' => $email]);
+            if ($company !== '') $stmt->execute(['key' => 'service_company', 'value' => $company]);
+            if ($owned) $this->pdo->commit();
+        } catch (Throwable $e) {
+            if ($owned && $this->pdo->inTransaction()) $this->pdo->rollBack();
+            throw $e;
+        }
     }
 
     public function saveServiceContact(string $whatsapp, string $email): void

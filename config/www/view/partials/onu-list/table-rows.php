@@ -87,7 +87,7 @@ $onus = $onus ?? [];
                 <span class="serial-copy">
                     <span data-serial-value><?= h($onuSerial) ?></span>
                     <?php if ($onuSerialCopyable): ?>
-                    <span class="serial-copy-action"><button class="icon-button" type="button" data-copy-serial="<?= h((string)$onu['onu_serial']) ?>" aria-label="Salin serial <?= h($onuSerial) ?>"><i class="bi bi-clipboard" aria-hidden="true"></i></button></span>
+                    <span class="serial-copy-action text-muted"><button class="icon-button" type="button" data-copy-serial="<?= h((string)$onu['onu_serial']) ?>" aria-label="Salin serial <?= h($onuSerial) ?>"><i class="bi bi-clipboard" aria-hidden="true"></i></button></span>
                     <?php endif; ?>
                 </span>
             </td>

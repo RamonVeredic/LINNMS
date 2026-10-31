@@ -15,8 +15,6 @@ trait LinnmsSchemaTrait
             password VARCHAR(255) NOT NULL,
             display_name VARCHAR(120) NULL,
             phone_number VARCHAR(24) NULL,
-            email VARCHAR(190) NULL,
-            company VARCHAR(190) NULL,
             role VARCHAR(20) NOT NULL DEFAULT 'user',
             is_active TINYINT(1) NOT NULL DEFAULT 1,
             olt_limit BIGINT UNSIGNED NOT NULL DEFAULT 1,
@@ -24,7 +22,6 @@ trait LinnmsSchemaTrait
             switch_limit BIGINT UNSIGNED NOT NULL DEFAULT 1,
             last_login_at DATETIME NULL,
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             INDEX idx_users_role_active(role,is_active),
             INDEX idx_users_phone(phone_number)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
@@ -32,12 +29,50 @@ trait LinnmsSchemaTrait
         
         
         $this->createTenantTables();
+        if ($this->pdo->query("SHOW COLUMNS FROM notification_history LIKE 'message'")->fetchColumn() === false) {
+            $this->pdo->exec('ALTER TABLE notification_history ADD COLUMN message LONGTEXT NULL AFTER provider');
+        }
+        if ($this->pdo->query("SHOW COLUMNS FROM notification_history LIKE 'device_name'")->fetchColumn() === false) {
+            $this->pdo->exec("ALTER TABLE notification_history ADD COLUMN device_name VARCHAR(500) NOT NULL DEFAULT '' AFTER message");
+        }
+        if ($this->pdo->query("SHOW COLUMNS FROM notification_history LIKE 'category'")->fetchColumn() === false) {
+            $this->pdo->exec("ALTER TABLE notification_history ADD COLUMN category VARCHAR(80) NOT NULL DEFAULT '' AFTER device_name");
+        }
+        if ($this->pdo->query("SHOW COLUMNS FROM notification_history LIKE 'status'")->fetchColumn() === false) {
+            $this->pdo->exec("ALTER TABLE notification_history ADD COLUMN status VARCHAR(16) NULL DEFAULT NULL AFTER category");
+        }
+        $statusColumn = $this->pdo->query("SHOW COLUMNS FROM notification_history LIKE 'status'")->fetch(PDO::FETCH_ASSOC);
+        if ($statusColumn !== false) {
+            $statusNullable = strtoupper((string)($statusColumn['Null'] ?? '')) === 'YES';
+            $statusDefault = $statusColumn['Default'] ?? null;
+            if (!$statusNullable || $statusDefault !== null) {
+                $this->pdo->exec("ALTER TABLE notification_history MODIFY COLUMN status VARCHAR(16) NULL DEFAULT NULL");
+            }
+        }
+        if ($this->pdo->query("SHOW COLUMNS FROM notification_history LIKE 'event_id'")->fetchColumn() === false) {
+            $this->pdo->exec("ALTER TABLE notification_history ADD COLUMN event_id BIGINT UNSIGNED NULL AFTER status");
+        }
+        if ($this->pdo->query("SHOW COLUMNS FROM notification_history LIKE 'attempts'")->fetchColumn() === false) {
+            $this->pdo->exec("ALTER TABLE notification_history ADD COLUMN attempts INT UNSIGNED NOT NULL DEFAULT 1 AFTER event_id");
+        }
+        if ($this->pdo->query("SHOW INDEX FROM notification_history WHERE Key_name='idx_notification_history_event'")->fetchColumn() === false) {
+            $this->pdo->exec('ALTER TABLE notification_history ADD INDEX idx_notification_history_event(event_id)');
+        }
+        $firstEventHistoryId = $this->pdo->query("SELECT MIN(id) FROM notification_history WHERE event_id IS NOT NULL")->fetchColumn();
+        if ($firstEventHistoryId !== false && $firstEventHistoryId !== null) {
+            // Baris lama tidak punya status pengiriman; jangan pernah dianggap "sent".
+            $this->pdo->exec("UPDATE notification_history SET status=NULL WHERE status='sent' AND event_id IS NULL AND id < " . (int)$firstEventHistoryId);
+        }
 
         $this->ensureAppSettings();
         $this->ensureOnuTrafficSamplesTable();
         $this->ensureSyncPipelineTable();
         $this->ensureOltScanRequestsTable();
         $this->ensureUserSettingsForAllUsers();
+        $this->pdo->exec("UPDATE user_settings SET setting_value=CONCAT('-', setting_value)
+            WHERE setting_key='onu_rx_problem_threshold_dbm'
+              AND setting_value REGEXP '^[0-9]+([.][0-9]+)?$'
+              AND CAST(setting_value AS DECIMAL(10,2)) > 0");
     }
 
     
@@ -318,9 +353,16 @@ trait LinnmsSchemaTrait
             user_id BIGINT UNSIGNED NOT NULL,
             gateway VARCHAR(20) NOT NULL,
             provider VARCHAR(32) NOT NULL DEFAULT '',
+            message LONGTEXT NULL,
+            device_name VARCHAR(500) NOT NULL DEFAULT '',
+            category VARCHAR(80) NOT NULL DEFAULT '',
+            status VARCHAR(16) NULL DEFAULT NULL,
+            event_id BIGINT UNSIGNED NULL,
+            attempts INT UNSIGNED NOT NULL DEFAULT 1,
             send_at DATETIME NOT NULL,
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             INDEX idx_notification_history_user_gateway_created(user_id,gateway,created_at),
+            INDEX idx_notification_history_event(event_id),
             CONSTRAINT fk_notification_history_user FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 

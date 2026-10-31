@@ -19,7 +19,7 @@ trait LinnmsTelegramTrait
              INNER JOIN user_settings enabled ON enabled.user_id=u.id AND enabled.setting_key='telegram_enabled' AND enabled.setting_value='1'
              INNER JOIN user_settings chat ON chat.user_id=u.id AND chat.setting_key='telegram_chat_id'
              INNER JOIN user_settings token ON token.user_id=u.id AND token.setting_key='telegram_bot_token'
-             WHERE u.is_active=1 AND u.role<>'admin'
+             WHERE u.is_active=1
                AND TRIM(chat.setting_value)<>''
                AND TRIM(token.setting_value)<>''
              ORDER BY u.id"
@@ -40,7 +40,7 @@ trait LinnmsTelegramTrait
              LEFT JOIN user_settings bot_name ON bot_name.user_id=u.id AND bot_name.setting_key='telegram_bot_name'
              LEFT JOIN user_settings chat_type ON chat_type.user_id=u.id AND chat_type.setting_key='telegram_chat_type'
              LEFT JOIN user_settings chat_title ON chat_title.user_id=u.id AND chat_title.setting_key='telegram_chat_title'
-             WHERE u.role<>'admin' AND u.is_active=1
+             WHERE u.is_active=1
                AND token.setting_value<>'' AND chat.setting_value<>''
              ORDER BY COALESCE(NULLIF(u.display_name,''),u.username),u.id"
         );
@@ -49,7 +49,7 @@ trait LinnmsTelegramTrait
 
     public function getTelegramMessageTarget(int $userId): ?array
     {
-        $stmt = $this->pdo->prepare("SELECT id AS user_id,username,display_name FROM users WHERE id=:uid AND role<>'admin' AND is_active=1 LIMIT 1");
+        $stmt = $this->pdo->prepare("SELECT id AS user_id,username,display_name FROM users WHERE id=:uid AND is_active=1 LIMIT 1");
         $stmt->execute(['uid'=>$userId]);
         $row = $stmt->fetch();
         if (!is_array($row)) return null;

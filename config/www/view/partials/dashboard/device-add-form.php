@@ -44,13 +44,13 @@ $errorTip = static fn(string $field): string => $fieldError($field) !== ''
 
     <div class="field">
         <label for="addDeviceName">Nama Perangkat</label>
-        <input id="addDeviceName" name="device_name" required value="<?= h($name) ?>" placeholder="Nama perangkat"<?= $errorAttributes('device_name') ?>>
+        <input id="addDeviceName" name="device_name" required value="<?= h($name) ?>" placeholder="Masukkan Nama Perangkat"<?= $errorAttributes('device_name') ?>>
         <?= $errorTip('device_name') ?>
     </div>
 
     <div class="field">
         <label for="addDeviceHost">Host</label>
-        <input id="addDeviceHost" name="ip_address" required value="<?= h($old['ip_address'] ?? '') ?>" placeholder="192.168.1.1"<?= $errorAttributes('ip_address') ?>
+        <input id="addDeviceHost" name="ip_address" required value="<?= h($old['ip_address'] ?? '') ?>" placeholder="Masukkan IP Address"<?= $errorAttributes('ip_address') ?>
             inputmode="decimal" pattern="(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])">
         <?= $errorTip('ip_address') ?>
     </div>
@@ -91,13 +91,13 @@ $errorTip = static fn(string $field): string => $fieldError($field) !== ''
                 <div class="field">
                     <label for="addDeviceCliUsername">Username</label>
                     <input id="addDeviceCliUsername" name="username" value="<?= h($old['username'] ?? '') ?>"
-                        data-cli-field autocomplete="username" placeholder="Username" required<?= $errorAttributes('username') ?>>
+                        data-cli-field autocomplete="username" placeholder="Masukkan Username" required<?= $errorAttributes('username') ?>>
                     <?= $errorTip('username') ?>
                 </div>
                 <div class="field">
                     <label for="addDeviceCliPassword">Password</label>
                     <input id="addDeviceCliPassword" type="password" name="password" data-cli-field
-                        autocomplete="new-password" placeholder="Password" required<?= $errorAttributes('password') ?>>
+                        autocomplete="new-password" placeholder="Masukkan Password" required<?= $errorAttributes('password') ?>>
                     <?= $errorTip('password') ?>
                 </div>
             </div>
@@ -118,7 +118,7 @@ $errorTip = static fn(string $field): string => $fieldError($field) !== ''
         <i class="bi bi-lightbulb" aria-hidden="true"></i>
         <div>
             <div class="text-cyan fw-bold">INFORMASI</div>
-            <p><b class="uppercase" data-device-tip-name></b> <span data-device-tip-message></span></p>
+            <p><span class="text-cyan">✧</span> <b class="uppercase" data-device-tip-name></b> <span data-device-tip-message></span></p>
             <div data-device-tip-extra></div>
         </div>
     </div>

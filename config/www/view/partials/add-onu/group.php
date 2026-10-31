@@ -50,15 +50,15 @@ $oltIp = trim((string)($olt['ip_address'] ?? ''));
                         <div class="add-onu-device-copy">
                             <div class="add-onu-device-heading">
                                 <div class="add-onu-device-title">
-                                <strong><?= h($onuName) ?></strong>
-                            <?php if ($onuIndex !== ''): ?>
-                                <span class="mono add-onu-index pl-3"><i class="bi bi-diagram-3" aria-hidden="true"></i> <?= h($onuIndex) ?></span>
-                            <?php endif; ?>
+                                    <strong><?= h($onuName) ?></strong>
+                                    <?php if ($onuIndex !== ''): ?>
+                                        <span class="mono add-onu-index pl-3"><i class="bi bi-diagram-3" aria-hidden="true"></i> <?= h($onuIndex) ?></span>
+                                    <?php endif; ?>
                                 </div>
 
                             </div>
                             <div class="add-onu-meta">
-                                <span class="serial-copy"><span class="mono uppercase" data-serial-value><i class="bi bi-upc-scan" aria-hidden="true"></i> <?= h($serial) ?></span><span class="serial-copy-action"><button class="icon-button" type="button" data-copy-serial="<?= h($serial) ?>" aria-label="Salin serial <?= h($serial) ?>"><i class="bi bi-clipboard" aria-hidden="true"></i></button></span></span>
+                                <span class="serial-copy"><span class="mono uppercase" data-serial-value><i class="bi bi-upc-scan" aria-hidden="true"></i> <?= h($serial) ?></span><span class="serial-copy-action text-muted"><button class="icon-button" type="button" data-copy-serial="<?= h($serial) ?>" aria-label="Salin serial <?= h($serial) ?>"><i class="bi bi-clipboard" aria-hidden="true"></i></button></span></span>
 
                             </div>
                         </div>
@@ -68,7 +68,7 @@ $oltIp = trim((string)($olt['ip_address'] ?? ''));
                     <div class="add-onu-actions">
                         <button
                             class="button primary"
-                            type="button"
+                            type="button" 
                             data-add-onu-register
                             data-onu-row-id="<?= (int)($onu['id'] ?? 0) ?>"
                             data-onu-name="<?= h($rawName) ?>"

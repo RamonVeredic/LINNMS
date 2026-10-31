@@ -432,32 +432,6 @@
   width: 0;
   height: 0;
 }
-.add-onu-switch-track {
-  position: relative;
-  display: inline-block;
-  width: 34px;
-  height: 18px;
-  border-radius: 999px;
-  background: var(--bg-line);
-  transition: background 0.15s ease;
-}
-.add-onu-switch-track::after {
-  content: "";
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #fff;
-  transition: transform 0.15s ease;
-}
-.add-onu-switch input:checked + .add-onu-switch-track {
-  background: var(--cyan);
-}
-.add-onu-switch input:checked + .add-onu-switch-track::after {
-  transform: translateX(16px);
-}
 .add-onu-id-custom {
   margin-top: 0.45rem;
 }

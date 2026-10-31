@@ -64,29 +64,49 @@ $whatsappConnected = ($whatsappTokenSaved || $whatsappBaseUrlSaved) && $whatsapp
                 <span class="channel-credential-meta"><?= h($whatsappProviderLabel) ?> &middot; <?= $whatsappTargetType === 'group' ? 'grup' : 'nomor' ?> <?= h((string)$whatsappUserSettings['target']) ?></span>
             </div>
             <div class="channel-credential-actions">
-                <button class="button secondary channel-credential-edit" type="button" data-channel-credential-edit aria-expanded="false">
-                    <i class="bi bi-pencil-square" aria-hidden="true"></i>
-                    <span>Edit koneksi</span>
-                </button>
+                <div class="channel-credential-menu" data-channel-credential-menu>
+                    <button class="icon-button channel-credential-menu-toggle" type="button" data-channel-credential-menu-toggle aria-label="Aksi koneksi WhatsApp" aria-haspopup="menu" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical" aria-hidden="true"></i>
+                    </button>
+                    <div class="channel-credential-menu-list" data-channel-credential-menu-list role="menu" hidden>
+                        <button type="button" role="menuitem" data-channel-credential-edit>
+                            <i class="bi bi-pencil-square" aria-hidden="true"></i> Edit
+                        </button>
+                        <form method="post" class="channel-credential-menu-form">
+                            <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
+                            <input type="hidden" name="action" value="whatsapp_disable">
+                            <button type="submit" role="menuitem" class="channel-credential-menu-danger">
+                                <i class="bi bi-plug" aria-hidden="true"></i> Putuskan
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     <?php endif; ?>
 
+    <div id="whatsappCredentialsModal" class="<?= $whatsappConnected ? 'modal channel-credential-modal' : 'channel-credential-inline' ?>"<?= $whatsappConnected ? ' data-channel-credential-modal hidden aria-hidden="true"' : '' ?>>
+        <div class="<?= $whatsappConnected ? 'modal-card channel-credential-modal-card' : '' ?>"<?= $whatsappConnected ? ' role="dialog" aria-modal="true" aria-labelledby="whatsappCredentialsModalTitle"' : '' ?>>
+            <?php if ($whatsappConnected): ?>
+            <div class="channel-credential-modal-head modal-header">
+                <h2 id="whatsappCredentialsModalTitle">Edit Koneksi WhatsApp</h2>
+                <button class="icon-button modal-close-button" type="button" data-channel-credential-modal-close aria-label="Tutup"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+            </div>
+            <?php endif; ?>
     <form
         id="whatsappCredentialsForm"
         method="post"
         class="stack-form settings-form-narrow channel-credentials-form required-fields"
         data-channel-credentials-form data-channel-edit-focus="[name='whatsapp_target']:not(:disabled)"
         data-whatsapp-credentials-form data-whatsapp-supports-group-listing="<?= $whatsappSupportsGroupListing ? '1' : '0' ?>"
-        data-credentials-saved="<?= $whatsappConnected ? '1' : '0' ?>"
-        <?= $whatsappConnected ? 'hidden' : '' ?>>
+        data-credentials-saved="<?= $whatsappConnected ? '1' : '0' ?>">
         <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
         <input type="hidden" name="action" value="save_whatsapp_connection">
         <input type="hidden" name="whatsapp_target_type" value="<?= h($whatsappTargetType) ?>" data-whatsapp-target-type-input>
 
         <div class="field">
             <label for="whatsappProvider">Gateway</label>
-            <select id="whatsappProvider" name="whatsapp_provider" data-whatsapp-provider required>
+            <select id="whatsappProvider" name="whatsapp_provider" data-whatsapp-provider>
                 <?php foreach ($whatsappProviders as $providerKey => $providerOptionLabel): ?>
                     <option value="<?= h((string)$providerKey) ?>" <?= (string)$providerKey === $whatsappProvider ? 'selected' : '' ?>><?= h((string)$providerOptionLabel) ?><?= !empty($whatsappGatewayRegistry[$providerKey]['verified']) ? ' - OK' : '' ?></option>
                 <?php endforeach; ?>
@@ -115,7 +135,7 @@ $whatsappConnected = ($whatsappTokenSaved || $whatsappBaseUrlSaved) && $whatsapp
                 data-whatsapp-target-saved="<?= $whatsappTargetSaved && $whatsappTargetType === 'phone' ? '1' : '0' ?>"
                 <?= $whatsappTargetType === 'group' ? 'disabled' : '' ?>
                 <?= !$whatsappTargetSaved && $whatsappTargetType === 'phone' ? 'required' : '' ?>
-                pattern="(0|62|8)[0-9]{8,15}" placeholder="08123456789" data-whatsapp-target-input>
+                pattern="(0|62|8)[0-9]{8,15}" placeholder="Masukkan Nomor Tujuan" data-whatsapp-target-input>
         </div>
 
         <div class="field" data-whatsapp-group-field <?= $whatsappTargetType === 'phone' ? 'hidden' : '' ?>>
@@ -131,13 +151,13 @@ $whatsappConnected = ($whatsappTokenSaved || $whatsappBaseUrlSaved) && $whatsapp
                     <option value="__manual__">Group ID manual</option>
                 </select>
                 <button class="button secondary" type="button" data-whatsapp-load-groups <?= $whatsappSupportsGroupListing ? '' : 'hidden' ?>>
-                    <i class="bi bi-arrow-down-circle" aria-hidden="true"></i>Minta Grup</button>
+                    <i class="bi bi-arrow-down-circle" aria-hidden="true"></i>Minta</button>
             </div>
            
             <label for="whatsappGroupManual" data-whatsapp-group-manual-label hidden>Group ID manual</label>
             <input id="whatsappGroupManual" type="text" name="whatsapp_target" autocomplete="off" maxlength="120"
                 pattern="([A-Za-z0-9_.:\-]{3,80}@[A-Za-z0-9.\-]{2,20}|[0-9]{6,30})"
-                placeholder="120363429831826454@g.us"
+                placeholder="Masukkan Group ID"
                 data-whatsapp-group-manual hidden disabled>
         </div>
 
@@ -150,14 +170,8 @@ $whatsappConnected = ($whatsappTokenSaved || $whatsappBaseUrlSaved) && $whatsapp
             </button>
         </div>
     </form>
-
-    <?php if ($whatsappConnected): ?>
-        <form method="post" class="form-actions channel-save-actions">
-            <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
-            <input type="hidden" name="action" value="whatsapp_disable">
-            <button class="button button-danger" type="submit"><i class="bi bi-plug" aria-hidden="true"></i> Putuskan WhatsApp</button>
-        </form>
-    <?php endif; ?>
+        </div>
+    </div>
 
 </section>
 

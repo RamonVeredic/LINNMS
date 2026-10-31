@@ -139,6 +139,33 @@ final class SyncService
 
     public function sendPendingTelegramChanges(int $userId): array
     {
+        if (!$this->db->acquireNotificationLock($userId, 5)) {
+            return [
+                'pending' => 0,
+                'superseded' => 0,
+                'selected' => 0,
+                'skipped' => 0,
+                'sent' => 0,
+                'failed' => 0,
+                'groups_sent' => 0,
+                'groups_failed' => 0,
+                'whatsapp_sent' => 0,
+                'whatsapp_failed' => 0,
+                'status' => 'locked',
+                'message' => 'Notifikasi pengguna sedang diproses oleh worker lain.',
+                'error' => null,
+            ];
+        }
+
+        try {
+            return $this->sendPendingTelegramChangesUnlocked($userId);
+        } finally {
+            $this->db->releaseNotificationLock($userId);
+        }
+    }
+
+    private function sendPendingTelegramChangesUnlocked(int $userId): array
+    {
         $settings = $this->db->getUserSettings($userId);
         $summary = [
             'pending' => 0,
@@ -267,7 +294,7 @@ final class SyncService
             }
             if (
                 $type === 'ONU'
-                && in_array($field, ['onu_edit', 'auth_mode', 'onu_registration', 'deleted'], true)
+                && in_array($field, ['onu_edit', 'onu_name', 'auth_mode', 'onu_registration', 'deleted'], true)
             ) {
                 $allowed = false;
             }
@@ -318,6 +345,14 @@ final class SyncService
         $lastError = null;
         foreach ($groups as $group) {
             $categoryEvents = (array)($group['events'] ?? []);
+            $historyEventId = $this->notificationHistoryEventId($categoryEvents);
+            if ($historyEventId === null) {
+                foreach ((array)($group['ids'] ?? []) as $fallbackEventId) {
+                    $fallbackEventId = (int)$fallbackEventId;
+                    if ($fallbackEventId > 0) { $historyEventId = $fallbackEventId; break; }
+                }
+            }
+            $historyAttempts = $this->notificationHistoryAttempts($categoryEvents);
             $result = $this->telegram->sendChunks(
                 $token,
                 $chatId,
@@ -327,9 +362,12 @@ final class SyncService
                 'HTML'
             );
             $ids = (array)($group['ids'] ?? []);
+            foreach ((array)($result['sent_messages'] ?? []) as $sentMessage) {
+                $plainMessage = html_entity_decode(strip_tags((string)$sentMessage), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                $this->db->recordNotificationHistory($userId, 'telegram', $plainMessage, '', (string)($group['name'] ?? ''), (string)($group['status_category'] ?? ''), 'sent', $historyEventId, $historyAttempts);
+            }
             if (!empty($result['ok'])) {
                 $this->db->markEventsNotified($ids);
-                $this->db->recordNotificationHistory($userId, 'telegram');
                 $summary['groups_sent']++;
                 $sentEvents += count($categoryEvents);
                 continue;
@@ -340,10 +378,18 @@ final class SyncService
             $error = (string)($result['error'] ?? '');
             if ($error === '') $error = 'TelegramNotifier::sendChunks() returned ok=false without an error message.';
             $lastError = $error;
+            $failedMessage = trim((string)($result['failed_message'] ?? ''));
+            if ($failedMessage === '') $failedMessage = trim((string)($group['plain'] ?? ''));
+            if ($failedMessage !== '') {
+                $failedMessage = html_entity_decode(strip_tags($failedMessage), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                $failedStatus = !empty($result['transport']) ? 'pending' : 'failed';
+                $this->db->recordNotificationHistory($userId, 'telegram', $failedMessage, '', (string)($group['name'] ?? ''), (string)($group['status_category'] ?? ''), $failedStatus, $historyEventId, $historyAttempts);
+            }
             $this->db->markEventsNotificationError($ids, $error);
             try {
                 $this->db->logApplication(null, 'System', 'send_notification', 'error', 'Pengguna #' . $userId . ': Telegram: ' . $error, [
                     'telegram_status' => (int)($result['status'] ?? 0),
+                    'transport' => !empty($result['transport']),
                     'event_count' => count($categoryEvents),
                     'event_ids' => $ids,
                     'device' => (string)($group['name'] ?? ''),
@@ -360,17 +406,33 @@ final class SyncService
             foreach ($whatsappGroups as $whatsappGroup) {
                 $whatsappMessage = trim((string)($whatsappGroup['plain'] ?? ''));
                 $whatsappIds = (array)($whatsappGroup['ids'] ?? []);
+                $historyEventId = $this->notificationHistoryEventId((array)($whatsappGroup['events'] ?? []));
+                if ($historyEventId === null) {
+                    foreach ($whatsappIds as $fallbackEventId) {
+                        $fallbackEventId = (int)$fallbackEventId;
+                        if ($fallbackEventId > 0) { $historyEventId = $fallbackEventId; break; }
+                    }
+                }
+                $historyAttempts = $this->notificationHistoryAttempts((array)($whatsappGroup['events'] ?? []));
                 if ($whatsappMessage === '') continue;
                 
                 $whatsappChunks = $this->chunkMessageByLines($whatsappMessage, 120, 3000);
-                $whatsappResult = ['ok' => false, 'message' => '', 'raw' => []];
+                $whatsappResult = ['ok' => false, 'message' => '', 'raw' => [], 'transport' => false];
+                $sentChunks = [];
+                $failedChunk = null;
                 try {
                     foreach ($whatsappChunks as $whatsappChunk) {
+                        $failedChunk = $whatsappChunk;
                         $whatsappResult = $whatsapp->send($whatsappTarget, $whatsappChunk);
                         if (empty($whatsappResult['ok'])) break;
+                        $sentChunks[] = $whatsappChunk;
                     }
+                    if (!empty($whatsappResult['ok'])) $failedChunk = null;
                 } catch (Throwable $e) {
-                    $whatsappResult = ['ok' => false, 'message' => $e->getMessage(), 'raw' => []];
+                    $whatsappResult = ['ok' => false, 'message' => $e->getMessage(), 'raw' => [], 'transport' => true];
+                }
+                foreach ($sentChunks as $sentChunk) {
+                    $this->db->recordNotificationHistory($userId, 'whatsapp', $sentChunk, $whatsapp->providerKey(), (string)($whatsappGroup['name'] ?? ''), (string)($whatsappGroup['status_category'] ?? ''), 'sent', $historyEventId, $historyAttempts);
                 }
                 $whatsappOk = !empty($whatsappResult['ok']);
                 $whatsappDetail = trim((string)($whatsappResult['message'] ?? ''));
@@ -381,6 +443,12 @@ final class SyncService
                 } else {
                     $whatsappFailed += $whatsappCount;
                     $lastError = $whatsappDetail !== '' ? $whatsappDetail : 'Pengiriman WhatsApp gagal.';
+                    $failedStatus = !empty($whatsappResult['transport']) ? 'pending' : 'failed';
+                    $failedMessage = trim((string)($failedChunk ?? ''));
+                    if ($failedMessage === '') $failedMessage = $whatsappMessage;
+                    if ($failedMessage !== '') {
+                        $this->db->recordNotificationHistory($userId, 'whatsapp', $failedMessage, $whatsapp->providerKey(), (string)($whatsappGroup['name'] ?? ''), (string)($whatsappGroup['status_category'] ?? ''), $failedStatus, $historyEventId, $historyAttempts);
+                    }
                     if (!$telegramReady) $this->db->markEventsNotificationError($whatsappIds, $lastError);
                 }
                 $this->db->setUserWhatsAppResult(
@@ -388,7 +456,6 @@ final class SyncService
                     $whatsappOk,
                     $whatsappDetail !== '' ? $whatsappDetail : ($whatsappOk ? 'Notifikasi terkirim.' : 'Pengiriman gagal.')
                 );
-                if ($whatsappOk) $this->db->recordNotificationHistory($userId, 'whatsapp', $whatsapp->providerKey());
                 $this->db->logApplication(
                     $whatsappOk ? $userId : null,
                     $whatsappOk ? 'WhatsApp' : 'System',
@@ -397,6 +464,8 @@ final class SyncService
                     $whatsappOk ? $whatsappDetail : ('Pengguna #' . $userId . ': WhatsApp: ' . ($whatsappDetail !== '' ? $whatsappDetail : 'Pengiriman gagal.')),
                     [
                         'provider' => $whatsapp->providerKey(),
+                        'http_status' => (int)($whatsappResult['http'] ?? 0),
+                        'transport' => !empty($whatsappResult['transport']),
                         'event_count' => $whatsappCount,
                         'device' => (string)($whatsappGroup['name'] ?? ''),
                         'source' => 'scheduled_sync',
@@ -447,6 +516,24 @@ final class SyncService
         if ($source !== '') return $oltRowsByKey[$source . '|' . $oltId] ?? null;
         $matches = array_values(array_unique($oltRowsByExternalId[$oltId] ?? []));
         return count($matches) === 1 ? $matches[0] : null;
+    }
+
+    private function notificationHistoryEventId(array $events): ?int
+    {
+        foreach ($events as $event) {
+            $id = (int)($event['id'] ?? 0);
+            if ($id > 0) return $id;
+        }
+        return null;
+    }
+
+    private function notificationHistoryAttempts(array $events): int
+    {
+        $attempts = 0;
+        foreach ($events as $event) {
+            $attempts = max($attempts, (int)($event['notification_attempts'] ?? 0));
+        }
+        return max(1, $attempts + 1);
     }
 
     

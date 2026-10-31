@@ -4,18 +4,30 @@ declare(strict_types=1);
 
 trait LinnmsLogTrait
 {
-    public function recordNotificationHistory(int $userId, string $gateway, string $provider = ''): void
+    public function recordNotificationHistory(int $userId, string $gateway, string $message, string $provider = '', string $deviceName = '', string $category = '', ?string $status = null, ?int $eventId = null, int $attempts = 1): void
     {
-        if ($userId < 1 || !in_array($gateway, ['telegram', 'whatsapp'], true)) {
+        $message = trim($message);
+        if ($userId < 1 || !in_array($gateway, ['telegram', 'whatsapp'], true) || $message === '') {
             throw new InvalidArgumentException('Riwayat notifikasi tidak valid.');
         }
+        $status = strtolower(trim((string)$status));
+        // Status kosong berarti tidak diketahui; jangan default ke "sent".
+        if (!in_array($status, ['sent', 'failed', 'pending'], true)) $status = null;
+        $eventId = $eventId !== null && $eventId > 0 ? $eventId : null;
+        $attempts = max(1, $attempts);
         $stmt = $this->pdo->prepare(
-            'INSERT INTO notification_history(user_id,gateway,provider,send_at) VALUES (:uid,:gateway,:provider,NOW())'
+            'INSERT INTO notification_history(user_id,gateway,provider,message,device_name,category,status,event_id,attempts,send_at) VALUES (:uid,:gateway,:provider,:message,:device_name,:category,:status,:event_id,:attempts,NOW())'
         );
         $stmt->execute([
             'uid' => $userId,
             'gateway' => $gateway,
             'provider' => mb_substr(trim($provider), 0, 32),
+            'message' => $message,
+            'device_name' => mb_substr(trim($deviceName), 0, 500),
+            'category' => mb_substr(trim($category), 0, 80),
+            'status' => $status,
+            'event_id' => $eventId,
+            'attempts' => $attempts,
         ]);
         $this->trimNotificationHistory($userId, $gateway);
     }
@@ -53,7 +65,7 @@ trait LinnmsLogTrait
         $limit = max(1, min(500, $limit));
         $offset = max(0, $offset);
         $stmt = $this->pdo->prepare(
-            "SELECT id,user_id,gateway,provider,send_at,created_at
+            "SELECT id,user_id,gateway,provider,message,device_name,category,status,event_id,attempts,send_at,created_at
              FROM notification_history WHERE user_id=:uid AND gateway=:gateway
              ORDER BY created_at DESC,id DESC LIMIT {$limit} OFFSET {$offset}"
         );

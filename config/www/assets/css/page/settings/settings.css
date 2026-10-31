@@ -74,13 +74,6 @@
   flex: 0 0 72px;
   font-size: 32px;
 }
-.profile-identity h2 {
-  margin: 0;
-}
-.profile-identity p {
-  margin: 4px 0 9px;
-  color: var(--text-muted);
-}
 [data-profile-edit-open][hidden],
 .profile-edit-panel[hidden] {
   display: none;
@@ -129,6 +122,13 @@
   padding: 9px 0;
   border-bottom: 1px solid #e7e6e642;
 }
+.profile-information-list > .profile-info-username { grid-column: 1; grid-row: 1; }
+.profile-information-list > .profile-info-whatsapp { grid-column: 1; grid-row: 2; }
+.profile-information-list > .profile-info-olt { grid-column: 1; grid-row: 3; }
+.profile-information-list > .profile-info-router { grid-column: 1; grid-row: 4; }
+.profile-information-list > .profile-info-switch { grid-column: 2; grid-row: 1; }
+.profile-information-list > .profile-info-registered { grid-column: 2; grid-row: 2; }
+.profile-information-list > .profile-info-last { grid-column: 2; grid-row: 3; }
 .profile-information-value {
   min-width: 0;
   line-height: 1.45;
@@ -141,16 +141,14 @@
 .profile-edit-heading {
   align-items: center;
 }
-.profile-onu-backup {
+#onu-backup{
   display: flex;
   flex-direction: column;
   gap: 16px;
   padding: 22px 24px 24px;
   border-top: 1px solid var(--bg-line);
 }
-.profile-onu-backup > .profile-information-heading {
-  margin-top: 0;
-}
+
 .onu-backup-content,
 .onu-backup-preview {
   min-width: 0;
@@ -270,6 +268,12 @@
   gap: 9px;
   margin-top: 14px;
 }
+#profileTitle {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
 .profile-eyebrow {
   display: block;
   margin-bottom: 5px;
@@ -281,14 +285,7 @@
 }
 .profile-header {
   padding: 26px 28px;
-  background: linear-gradient(
-    135deg,
-    rgba(41, 98, 255, 0.08),
-    rgba(18, 21, 27, 0) 58%
-  );
-}
-.profile-identity p {
-  margin: 5px 0 0;
+  background:rgba(41, 98, 255, 0.08),;
 }
 .profile-information {
   padding: 0 28px;
@@ -299,9 +296,7 @@
 .profile-edit-panel {
   padding: 24px 28px 28px;
 }
-.profile-onu-backup {
-  padding: 26px 28px 28px;
-}
+
 .toggle-card.is-access-locked {
   opacity: 1;
   background: var(--surface-input);
@@ -415,8 +410,7 @@ body.settings-modal-open {
     width: 100%;
   }
   .profile-header,
-  .profile-edit-panel,
-  .profile-onu-backup {
+  .profile-edit-panel {
     padding: 20px;
   }
   .profile-information {
@@ -430,6 +424,16 @@ body.settings-modal-open {
   .profile-information-list {
     grid-template-columns: minmax(0, 1fr) !important;
   }
+  .profile-information-list > .profile-info-username,
+  .profile-information-list > .profile-info-whatsapp,
+  .profile-information-list > .profile-info-olt,
+  .profile-information-list > .profile-info-router,
+  .profile-information-list > .profile-info-switch,
+  .profile-information-list > .profile-info-registered,
+  .profile-information-list > .profile-info-last {
+    grid-column: auto;
+    grid-row: auto;
+  }
   .profile-information-list > div {
     grid-template-columns: 205px minmax(0, 1fr);
     min-width: 0;
@@ -438,8 +442,7 @@ body.settings-modal-open {
   .profile-information {
     padding: 0 16px;
   }
-  .profile-edit-panel,
-  .profile-onu-backup {
+  .profile-edit-panel {
     padding: 18px 16px;
   }
   .profile-header {
@@ -455,14 +458,6 @@ body.settings-modal-open {
     height: 52px;
     flex-basis: 52px;
     font-size: 24px;
-  }
-  .profile-identity h2 {
-    font-size: var(--font-size-lg);
-    overflow-wrap: anywhere;
-  }
-  .profile-identity p {
-    margin-bottom: 0;
-    overflow-wrap: anywhere;
   }
   .profile-edit-heading {
     align-items: flex-start;

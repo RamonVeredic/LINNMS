@@ -33,7 +33,7 @@
                                 <td class="mono interface-rate-value is-tx" data-interface-tx><?= h($formatRate($interfaceRate['tx_bps']??null)) ?></td>
                                 <td class="interface-record-cell">
                                     <label class="pon-catat-switch" title="Simpan riwayat trafik interface ini">
-                                        <input type="checkbox" role="switch" data-traffic-record
+                                        <input type="checkbox" role="switch" class="toggle-switch" data-traffic-record
                                                data-device-id="<?= (int)$deviceDetail['id'] ?>"
                                                data-if-ref="<?= h($interfaceName) ?>"
                                                data-csrf="<?= h(csrf_token()) ?>"<?= isset($deviceTrafficSelected[$interfaceName]) ? ' checked' : '' ?>>

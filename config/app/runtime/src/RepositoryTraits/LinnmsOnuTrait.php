@@ -546,9 +546,20 @@ trait LinnmsOnuTrait
 
     public static function clampOnuRxProblemLimit(mixed $value): float
     {
-        $limit = is_numeric($value) ? abs((float)$value) : self::ONU_RX_PROBLEM_DEFAULT_DBM;
+        $limit = is_numeric($value) && is_finite((float)$value) && (float)$value < 0
+            ? (float)$value : self::ONU_RX_PROBLEM_DEFAULT_DBM;
 
         return max(self::ONU_RX_PROBLEM_MIN_DBM, min(self::ONU_RX_PROBLEM_MAX_DBM, $limit));
+    }
+
+    public static function validateOnuRxProblemLimit(mixed $value): float
+    {
+        if (!is_numeric($value) || !is_finite((float)$value)
+            || (float)$value < self::ONU_RX_PROBLEM_MIN_DBM
+            || (float)$value > self::ONU_RX_PROBLEM_MAX_DBM) {
+            throw new InvalidArgumentException('Batas RX bermasalah harus bernilai negatif.');
+        }
+        return (float)$value;
     }
 
     public function getOnuProblemSettings(int $userId): array
@@ -565,7 +576,7 @@ trait LinnmsOnuTrait
 
     public function saveOnuRxProblemThreshold(float $thresholdDbm, int $userId): void
     {
-        $value = number_format(self::clampOnuRxProblemLimit($thresholdDbm), 2, '.', '');
+        $value = number_format(self::validateOnuRxProblemLimit($thresholdDbm), 2, '.', '');
         $this->saveUserSetting($userId, 'onu_rx_problem_threshold_dbm', $value);
     }
 
@@ -763,7 +774,7 @@ trait LinnmsOnuTrait
                         $rxPower,
                         $signalThreshold
                     );
-                    if ($emitOnuSignalEvents && $confirmedPower !== null && $rxPower !== null && $rxPower > -$rxProblemThreshold) {
+                    if ($emitOnuSignalEvents && $confirmedPower !== null && $rxPower !== null && $rxPower > $rxProblemThreshold) {
                         $events[] = $this->insertChangeEvent(
                             $userId,'ONU',$identity,
                             'rx_power',$confirmedPower['old'],$confirmedPower['new'],
@@ -783,7 +794,7 @@ trait LinnmsOnuTrait
                     if ($emitOnuSignalEvents && $confirmedProblem !== null && $confirmedProblem['new'] === 'problem' && $rxPower !== null) {
                         $events[] = $this->insertChangeEvent(
                             $userId, 'ONU', $identity,
-                            'problem_rx_power', -$rxProblemThreshold, $rxPower,
+                            'problem_rx_power', $rxProblemThreshold, $rxPower,
                             $oltName . ' ' . $index . ' ONU ' . display_onu_name($name)
                                 . ' bermasalah karena RX Power ' . format_power($rxPower) ,
                             $context
@@ -792,7 +803,7 @@ trait LinnmsOnuTrait
                     if ($emitOnuSignalEvents && $confirmedProblem !== null && $confirmedProblem['new'] === 'normal' && $rxPower !== null) {
                         $events[] = $this->insertChangeEvent(
                             $userId, 'ONU', $identity,
-                            'problem_rx_recovered', -$rxProblemThreshold, $rxPower,
+                            'problem_rx_recovered', $rxProblemThreshold, $rxPower,
                             $oltName . ' ' . $index . ' ONU ' . display_onu_name($name)
                                 . ' RX Power kembali normal (' . format_power($rxPower) . ').',
                             $context
@@ -801,10 +812,10 @@ trait LinnmsOnuTrait
                 }
                 $ponNumberForId = (int)($row['pon_number'] ?? 0);
                 if ($ponNumberForId < 1 && preg_match('/(\d+)\s*$/', (string)($row['pon'] ?? ''), $pm) === 1) $ponNumberForId = (int)$pm[1];
+                $rowSerial = $this->snmpOnuSerialValue($row);
                 $values = ['uid'=>$userId,'olt_device_id'=>$oltDeviceId,'idx'=>$index,
                     'pon_id'=>(int)(($ponIdByNumber[$ponNumberForId] ?? 0)) ?: null,
-                    'serial'=>$snapshotSource === 'fast_sync' && ($row['auth_mode'] ?? '') !== 'uncfg'
-                        ? null : $this->nullText($row['serial'] ?? $row['mac'] ?? $old['onu_serial'] ?? null),
+                    'serial'=>$this->nullText($rowSerial !== '' ? $rowSerial : (is_array($old) ? ($old['onu_serial'] ?? null) : null)),
                     'name'=>$name ?? '',
                     'location'=>$locationFromDevice,
                     'state'=>$persistedState,
@@ -1227,6 +1238,12 @@ trait LinnmsOnuTrait
         ];
         $key = (string)($context['source'] ?? '') . '|' . (int)($before['olt_id'] ?? 0) . '|' . (string)($before['onu_index'] ?? '');
 
+        $beforeLocation = onu_location_value($before['onu_location'] ?? null);
+        $afterLocation = onu_location_value($after['onu_location'] ?? null);
+        $locationMessage = $beforeLocation === ''
+            ? ($afterLocation === '' ? 'Lokasi ONU dihapus' : 'Mengedit lokasi menjadi ' . $afterLocation)
+            : ($afterLocation === '' ? 'Mengedit lokasi ' . $beforeLocation . ' dihapus' : 'Mengedit lokasi ' . $beforeLocation . ' ➠ ' . $afterLocation);
+
         $this->insertChangeEvent(
             $userId,
             'ONU',
@@ -1234,8 +1251,7 @@ trait LinnmsOnuTrait
             'onu_location',
             $before['onu_location'] ?? null,
             $after['onu_location'] ?? null,
-            'Mengedit lokasi ' . display_text($before['onu_location'] ?? null)
-                . ' ➠ ' . display_text($after['onu_location'] ?? null) ,
+            $locationMessage,
             $context
         );
 

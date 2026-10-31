@@ -824,6 +824,7 @@ trait LinnmsOltTrait
                 'snmp_port'=>$snmpPort,
             ]);
             $id = (int)$this->pdo->lastInsertId();
+            $this->ensureNotificationDeviceTarget($userId, $id);
             $this->saveDeviceCommunity($id, $userId, $community);
             $credentials = ['hybrid_status' => $hybridStatus === 1 ? 1 : 0];
             if ($hybridStatus === 1) {

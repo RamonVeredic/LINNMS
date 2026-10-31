@@ -1,6 +1,5 @@
 #!/usr/bin/with-contenv sh
 set -eu
-
 APP_ROOT=/config/app
 LEGACY_APP_ROOT=/config/linnms-public
 RUNTIME_ROOT=/opt/linnms/runtime
@@ -13,8 +12,6 @@ NGINX_LOG_ROOT=/config/log/nginx
 PHP_LOG_ROOT=/config/log/php
 APP_LOG_ROOT=/config/log/app
 DATABASE_FILE="$APP_ROOT/config/database.php"
-
-# Migrasikan state runtime dari nama direktori lama.
 if [ -d "$LEGACY_APP_ROOT" ]; then
   if [ ! -e "$APP_ROOT" ]; then
     mv "$LEGACY_APP_ROOT" "$APP_ROOT"
@@ -50,7 +47,7 @@ rm -f "$APP_ROOT/.init-ready"
   rm -rf /config/www
   ln -s "$FRONTEND_IMAGE" /config/www
   if [ "$(readlink -f /config/www)" != "$FRONTEND_IMAGE" ]; then
-    echo "[LINNMS] Target webroot salah." >&2
+    echo "[LINNMS] Target webroot salah" >&2
     exit 1
   fi
 if [ -L /config/nginx/log ]; then
@@ -125,20 +122,20 @@ else
 fi
 
 if ! grep -F "include /config/nginx/site-confs/*.conf;" /config/nginx/nginx.conf >/dev/null; then
-  echo "[LINNMS] nginx.conf tidak memuat site-confs LINNMS." >&2
+  echo "[LINNMS] nginx.conf tidak memuat site-confs LINNMS" >&2
   exit 1
 fi
 if ! grep -F "root /config/www;" /config/nginx/site-confs/default.conf >/dev/null; then
-  echo "[LINNMS] Site LINNMS tidak menggunakan root /config/www." >&2
+  echo "[LINNMS] Site LINNMS tidak menggunakan root /config/www" >&2
   exit 1
 fi
 if grep -F 'set $root /config/www;' /config/nginx/site-confs/default.conf >/dev/null; then
-  echo "[LINNMS] Site default LinuxServer masih aktif." >&2
+  echo "[LINNMS] Site default LinuxServer masih aktif" >&2
   exit 1
 fi
 if ! nginx -t -c /config/nginx/nginx.conf >/dev/null 2>&1; then
   nginx -t -c /config/nginx/nginx.conf >&2 || true
-  echo "[LINNMS] Konfigurasi Nginx LINNMS tidak valid." >&2
+  echo "[LINNMS] Konfigurasi Nginx LINNMS tidak valid" >&2
   exit 1
 fi
 
@@ -228,16 +225,16 @@ DB_NAME_VALUE="${DB_NAME:-}"
 DB_USER_VALUE="${DB_USER:-}"
 
 if [ -z "$DB_NAME_VALUE" ] || [ -z "$DB_USER_VALUE" ]; then
-  echo "[LINNMS] DB_NAME dan DB_USER wajib pada deployment." >&2
+  echo "[LINNMS] Pastikan DB_NAME DB dan user sesuai" >&2
   exit 1
 fi
 if [ -z "$DB_SOCKET_PATH" ] && [ -z "$DB_HOST_VALUE" ]; then
-  echo "[LINNMS] DB_SOCKET atau DB_HOST wajib pada deployment." >&2
+  echo "[LINNMS] Pastikan DB_HOST teredia" >&2
   exit 1
 fi
 case "$DB_PORT_VALUE" in
   *[!0-9]*|'')
-    echo "[LINNMS] DB_PORT harus berupa angka." >&2
+    echo "[LINNMS] DB_PORT harus berupa angka" >&2
     exit 1
     ;;
 esac
@@ -252,7 +249,7 @@ php -r '
   $password = getenv("DB_PASSWORD");
 
   if (($socket === "" && $host === "") || $name === "" || $user === "") {
-      fwrite(STDERR, "[LINNMS] Konfigurasi database deployment tidak lengkap." . PHP_EOL);
+      fwrite(STDERR, "[LINNMS] Konfigurasi database  tidak lengkap." . PHP_EOL);
       exit(1);
   }
   if ($port < 1 || $port > 65535) {
@@ -263,11 +260,11 @@ php -r '
       $password = "";
   }
   if (preg_match("/^[A-Za-z0-9_]+$/", $name) !== 1) {
-      fwrite(STDERR, "[LINNMS] DB_NAME tidak valid." . PHP_EOL);
+      fwrite(STDERR, "[LINNMS] DB_NAME tidak valid" . PHP_EOL);
       exit(1);
   }
 
-  $data = "<?php\n\ndeclare(strict_types=1);\n\nreturn " . var_export([
+  $data = "<?php\n\ndeclare(strict_types=1);\n\nreturn" . var_export([
       "socket" => $socket,
       "host" => $host,
       "port" => $port,
@@ -278,11 +275,11 @@ php -r '
   ], true) . ";\n";
 
   if (file_put_contents($path . ".tmp", $data, LOCK_EX) === false) {
-      fwrite(STDERR, "[LINNMS] Gagal menulis konfigurasi database deployment." . PHP_EOL);
+      fwrite(STDERR, "[LINNMS] Gagal menulis konfigurasi database" . PHP_EOL);
       exit(1);
   }
   if (!rename($path . ".tmp", $path)) {
-      fwrite(STDERR, "[LINNMS] Gagal mengaktifkan konfigurasi database deployment." . PHP_EOL);
+      fwrite(STDERR, "[LINNMS] Gagal mengaktifkan konfigurasi database" . PHP_EOL);
       exit(1);
   }
 '
@@ -290,12 +287,12 @@ php -r '
 chown root:abc "$DATABASE_FILE"
 chmod 0440 "$DATABASE_FILE"
 
-if ! php -r '$d=require "/config/app/config/database.php"; $s=trim((string)($d["socket"]??"")); $h=trim((string)($d["host"]??"")); if(!is_array($d) || ($s==="" && $h==="")){fwrite(STDERR,"[LINNMS] Konfigurasi database hasil materialisasi tidak valid.".PHP_EOL); exit(1);}'; then
+if ! php -r '$d=require "/config/app/config/database.php"; $s=trim((string)($d["socket"]??"")); $h=trim((string)($d["host"]??"")); if(!is_array($d) || ($s==="" && $h==="")){fwrite(STDERR,"[LINNMS] Konfigurasi database tidak valid".PHP_EOL); exit(1);}'; then
   exit 1
 fi
 
 if ! php -r 'exit(in_array("mysql", PDO::getAvailableDrivers(), true) ? 0 : 1);'; then
-  echo "[LINNMS] Driver PDO MySQL tidak tersedia pada image." >&2
+  echo "[LINNMS] Driver PDO MySQL tidak tersedia pada image" >&2
   exit 1
 fi
 
@@ -303,19 +300,20 @@ i=0
 while ! php -r '$d=require "/config/app/config/database.php"; $s=trim((string)($d["socket"]??"")); $h=trim((string)($d["host"]??"")); $port=(int)($d["port"]??3306); $dsn=$s!=="" ? "mysql:unix_socket={$s};charset={$d["charset"]}" : "mysql:host={$h};port={$port};charset={$d["charset"]}"; try{$p=new PDO($dsn,$d["user"],$d["password"],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]); $p->query("SELECT 1")->fetchColumn(); exit(0);}catch(Throwable $e){fwrite(STDERR,"[LINNMS] Menunggu server database: ".$e->getMessage().PHP_EOL); exit(1);}'; do
   i=$((i+1))
   if [ "$i" -ge 30 ]; then
-    echo "[LINNMS] Server database tidak tersedia setelah 30 detik." >&2
+    echo "[LINNMS] Server database tidak tersedia" >&2
     exit 1
   fi
   sleep 1
 done
 
 if ! php "$RUNTIME_ROOT/database/migrate.php" >/dev/null; then
-  echo "[LINNMS] Peringatan: migrasi database gagal dijalankan." >&2
-  echo "[LINNMS] Aplikasi tetap dijalankan dengan skema yang ada; selaraskan dengan:" >&2
-  echo "[LINNMS]   docker exec -it <container> php /opt/linnms/runtime/database/migrate.php" >&2
+  echo "[LINNMS] Migrasi database gagal" >&2
+  echo "[LINNMS] Periksa migrasi dengan:" >&2
+  echo "[LINNMS] docker exec -it <container> php /opt/linnms/runtime/database/migrate.php" >&2
+  exit 1
 fi
 
-if ! s6-setuidgid abc php -r '$d=require "/config/app/config/database.php"; $s=trim((string)($d["socket"]??"")); $h=trim((string)($d["host"]??"")); $port=(int)($d["port"]??3306); $dsn=$s!=="" ? "mysql:unix_socket={$s};dbname={$d["name"]};charset={$d["charset"]}" : "mysql:host={$h};port={$port};dbname={$d["name"]};charset={$d["charset"]}"; try{$p=new PDO($dsn,$d["user"],$d["password"],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]); $p->query("SELECT 1")->fetchColumn(); exit(0);}catch(Throwable $e){fwrite(STDERR,"[LINNMS] User aplikasi abc gagal akses database: ".$e->getMessage().PHP_EOL); exit(1);}'; then
+if ! s6-setuidgid abc php -r '$d=require "/config/app/config/database.php"; $s=trim((string)($d["socket"]??"")); $h=trim((string)($d["host"]??"")); $port=(int)($d["port"]??3306); $dsn=$s!=="" ? "mysql:unix_socket={$s};dbname={$d["name"]};charset={$d["charset"]}" : "mysql:host={$h};port={$port};dbname={$d["name"]};charset={$d["charset"]}"; try{$p=new PDO($dsn,$d["user"],$d["password"],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]); $p->query("SELECT 1")->fetchColumn(); exit(0);}catch(Throwable $e){fwrite(STDERR,"[LINNMS] User aplikasi abc gagal mengakses database: ".$e->getMessage().PHP_EOL); exit(1);}'; then
   exit 1
 fi
 

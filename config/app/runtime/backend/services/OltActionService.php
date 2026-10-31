@@ -52,7 +52,7 @@ final class OltActionService
     {
         $validation = preg_match('/(?:_invalid|_required|_empty)$/', $code) === 1;
         $driver = in_array($code, ['device_failed', 'device_rejected', 'device_unreachable', 'device_auth_failed', 'partial'], true);
-        if (!$validation) {
+        if (!$validation || in_array($action, ['save_olt_card_label', 'save_olt_cli_connection'], true)) {
             try {
                 $this->db->logApplication($userId, $driver ? 'Driver' : 'OLT',
                     $action . ($driver ? '_driver' : ''),

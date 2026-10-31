@@ -135,7 +135,7 @@ return [
             'item_name_path' => 'name',
             'item_name_path_alternatives' => ['subject', 'title', 'formattedTitle'],
         ],
-        'result' => ['http_ok_only' => true, 'message_path' => 'message'],
+        'result' => ['ok_path' => 'status', 'ok_equals' => true, 'message_path' => 'message', 'http_ok_only' => false],
     ],
 
 ];

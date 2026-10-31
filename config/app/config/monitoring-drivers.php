@@ -9,7 +9,7 @@ $onuHiosoDetailFields = array_values(array_diff($onuExtendedDetailFields, ['olt_
 return [
     'external_olt_api' => [
         'vendor' => 'external',
-        'label' => 'OLT External API',
+        'label' => 'OLT External',
         'group' => 'olt',
         'method' => 'api',
         'handler' => 'external_api',
@@ -24,7 +24,7 @@ return [
     ],
     'hioso_2p_snmp' => [
         'vendor' => 'hioso',
-        'label' => 'HIOSO 2 PON EPON',
+        'label' => 'HIOSO EPON 2P',
         'group' => 'olt',
         'method' => 'snmp',
         'handler' => 'snmp_olt',
@@ -57,7 +57,7 @@ return [
     ],
     'hisfocus_2p_snmp' => [
         'vendor' => 'hisfocus',
-        'label' => 'HISFOCUS 2 PON EPON',
+        'label' => 'HISFOCUS EPON 2P',
         'group' => 'olt',
         'method' => 'snmp',
         'handler' => 'snmp_olt',

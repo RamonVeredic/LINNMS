@@ -33,7 +33,8 @@ if ($requestMethod === 'POST' && in_array($operation, ['access_submit', 'setup_s
             'data' => $operation === 'access_submit'
                 ? ['account' => $_POST['account'] ?? '', 'token' => $_POST['token'] ?? '']
                 : ['display_name' => $_POST['display_name'] ?? '', 'password' => $_POST['password'] ?? '',
-                    'password_confirm' => $_POST['password_confirm'] ?? ''],
+                    'password_confirm' => $_POST['password_confirm'] ?? '',
+                    'email' => $_POST['email'] ?? '', 'company' => $_POST['company'] ?? ''],
         ], 60);
         if ($operation === 'access_submit') {
             unset($_SESSION['user_id'], $_SESSION['username'], $_SESSION['display_name'], $_SESSION['role']);
@@ -76,6 +77,9 @@ if (empty($entry['profile_exists'])) {
     if ($requestPath !== '/setup') { header('Location: ' . $setupUrl, true, 303); exit; }
     $flashes = pull_flashes();
     $presetUser = mb_strtolower(trim((string)($entry['subject'] ?? '')));
+    $setupContact = is_array($entry['service_contact'] ?? null) ? $entry['service_contact'] : [];
+    $presetEmail = (string)($setupContact['email'] ?? '');
+    $presetCompany = (string)($setupContact['company'] ?? '');
     require project_path('view', 'setup.php');
     exit;
 }

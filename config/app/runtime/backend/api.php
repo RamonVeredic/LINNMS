@@ -141,12 +141,14 @@ try {
         $subject = trim((string)($access['row']['subject'] ?? ''));
         if ($mode === 'ready' && $subject !== '') $db->synchronizeVerifiedAdmin($subject);
         $identity = $mode === 'ready' ? $db->getAppIdentity() : LinnmsDefaults::APP_IDENTITY;
+        $serviceContact = $db->getServiceContact();
         ApiJson::ok([
             'mode' => $mode,
             'subject' => $subject,
             'profile_exists' => $mode === 'ready' && $db->usernameExists($subject),
             'identity' => $identity,
-            'service_whatsapp' => $mode === 'ended' ? normalize_phone_number($db->getServiceContact()['whatsapp'] ?? '') : '',
+            'service_contact' => $serviceContact,
+            'service_whatsapp' => $mode === 'ended' ? normalize_phone_number($serviceContact['whatsapp'] ?? '') : '',
             'session_user' => $userId > 0 ? $db->getUser($userId) : null,
         ]);
     }
@@ -157,7 +159,11 @@ try {
         $mode = (string)($GLOBALS['bridge']->state()['mode'] ?? 'pending');
         try {
             if ($operation === 'access_submit' && in_array($mode, ['pending', 'fault'], true)) {
-                $GLOBALS['bridge']->open((string)($input['account'] ?? ''), (string)($input['token'] ?? ''), $db);
+                $GLOBALS['bridge']->open(
+                    (string)($input['account'] ?? ''),
+                    (string)($input['token'] ?? ''),
+                    $db
+                );
                 ApiJson::ok(['completed' => true]);
             }
             if ($operation === 'setup_submit' && $mode === 'ready') {

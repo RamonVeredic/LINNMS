@@ -92,20 +92,20 @@ if (str_starts_with($serviceWhatsappDigits, '0')) {
                     <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
                     <input type="hidden" name="action" value="register_account">
                     <div class="field registration-field">
-                        <label for="registerDisplayName">Nama lengkap</label>
-                        <input id="registerDisplayName" name="display_name" minlength="2" maxlength="120" value="<?= h((string)($oldRegister['display_name'] ?? ($pendingRegister['display_name'] ?? ''))) ?>" autocomplete="name" required <?= $registrationStep === 'form' ? 'autofocus' : '' ?> placeholder="Contoh: Budi Santoso"<?= $registerValidationAttributes('display_name') ?>>
+                        <label for="registerDisplayName">Nama Lengkap</label>
+                        <input id="registerDisplayName" name="display_name" minlength="2" maxlength="120" value="<?= h((string)($oldRegister['display_name'] ?? ($pendingRegister['display_name'] ?? ''))) ?>" autocomplete="name" required <?= $registrationStep === 'form' ? 'autofocus' : '' ?> placeholder="Masukkan Nama Lengkap"<?= $registerValidationAttributes('display_name') ?>>
                     </div>
                     <div class="field registration-field">
                         <label for="registerUsername">Username</label>
-                        <input id="registerUsername" name="username" maxlength="80" value="<?= h((string)($oldRegister['username'] ?? ($pendingRegister['username'] ?? ''))) ?>" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="Nama pengguna untuk masuk"<?= $registerValidationAttributes('username') ?>>
+                        <input id="registerUsername" name="username" maxlength="80" value="<?= h((string)($oldRegister['username'] ?? ($pendingRegister['username'] ?? ''))) ?>" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="Masukkan Username"<?= $registerValidationAttributes('username') ?>>
                     </div>
                     <div class="field registration-field">
                         <label for="registerPassword">Password</label>
-                        <input id="registerPassword" type="password" name="password" minlength="<?= (int)$minPasswordLength ?>" maxlength="200" autocomplete="new-password" required placeholder="Minimal <?= (int)$minPasswordLength ?> karakter"<?= $registerValidationAttributes('password') ?>>
+                        <input id="registerPassword" type="password" name="password" minlength="<?= (int)$minPasswordLength ?>" maxlength="200" autocomplete="new-password" required placeholder="Masukkan Password"<?= $registerValidationAttributes('password') ?>>
                     </div>
                     <div class="field registration-field">
-                        <label for="registerPasswordConfirm">Konfirmasi password</label>
-                        <input id="registerPasswordConfirm" type="password" name="password_confirm" minlength="<?= (int)$minPasswordLength ?>" maxlength="200" autocomplete="new-password" required placeholder="Ketik ulang password"<?= $registerValidationAttributes('password_confirm') ?>>
+                        <label for="registerPasswordConfirm">Konfirmasi Password</label>
+                        <input id="registerPasswordConfirm" type="password" name="password_confirm" minlength="<?= (int)$minPasswordLength ?>" maxlength="200" autocomplete="new-password" required placeholder="Masukkan Konfirmasi Password"<?= $registerValidationAttributes('password_confirm') ?>>
                     </div>
                     <label class="registration-honeypot" aria-hidden="true"><span>Website</span><input name="website" tabindex="-1" autocomplete="off"></label>
                     <button class="button primary login-button registration-submit" type="submit">Daftar</button>
@@ -120,7 +120,7 @@ if (str_starts_with($serviceWhatsappDigits, '0')) {
                     <input type="hidden" name="action" value="register_otp_request">
                     <div class="field registration-field">
                         <label for="registerPhone">WhatsApp</label>
-                        <input id="registerPhone" name="phone_number" type="tel" inputmode="numeric" value="<?= h($pendingPhone !== '' ? $pendingPhone : (string)($oldRegister['phone_number'] ?? '')) ?>" autocomplete="tel" required pattern="(0|62|8)[0-9]{8,15}" <?= $registrationStep === 'wa' ? 'autofocus' : '' ?> placeholder="Contoh: 08123456789"<?= $registerValidationAttributes('phone_number') ?>>
+                        <input id="registerPhone" name="phone_number" type="tel" inputmode="numeric" value="<?= h($pendingPhone !== '' ? $pendingPhone : (string)($oldRegister['phone_number'] ?? '')) ?>" autocomplete="tel" required pattern="(0|62|8)[0-9]{8,15}" <?= $registrationStep === 'wa' ? 'autofocus' : '' ?> placeholder="Masukkan Nomor WhatsApp"<?= $registerValidationAttributes('phone_number') ?>>
                     </div>
                     <button class="button primary login-button registration-submit" type="submit" data-otp-request data-otp-rate-phone="<?= h($otpCooldownPhone) ?>" data-otp-rate-wait="<?= $otpCooldownWait ?>"><i class="bi bi-whatsapp" aria-hidden="true"></i><span data-otp-request-label>Kirim kode</span></button>
                 </form>
@@ -143,7 +143,7 @@ if (str_starts_with($serviceWhatsappDigits, '0')) {
                     <input type="hidden" name="action" value="register_otp_verify">
                     <div class="field registration-field registration-otp-field">
                         <label for="registerOtp">Kode verifikasi</label>
-                        <input id="registerOtp" name="otp_code" inputmode="numeric" autocomplete="one-time-code" minlength="<?= (int)$otpLength ?>" maxlength="<?= (int)$otpLength ?>" pattern="[0-9]{<?= (int)$otpLength ?>}" required <?= $registrationStep === 'otp' ? 'autofocus' : '' ?> placeholder="<?= str_repeat('0', (int)$otpLength) ?>"<?= $registerValidationAttributes('otp_code') ?>>
+                        <input id="registerOtp" name="otp_code" inputmode="numeric" autocomplete="one-time-code" minlength="<?= (int)$otpLength ?>" maxlength="<?= (int)$otpLength ?>" pattern="[0-9]{<?= (int)$otpLength ?>}" required <?= $registrationStep === 'otp' ? 'autofocus' : '' ?> placeholder="Masukkan Kode Verifikasi"<?= $registerValidationAttributes('otp_code') ?>>
                     </div>
                     <button class="button primary login-button registration-submit" type="submit"><i class="bi bi-check2-circle" aria-hidden="true"></i><span>Buat akun</span></button>
                 </form>

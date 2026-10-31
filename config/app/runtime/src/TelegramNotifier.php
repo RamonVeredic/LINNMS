@@ -30,7 +30,7 @@ final class TelegramNotifier
         $response = $this->request($botToken, 'sendMessage', $params, true);
 
         if (!$response['ok']) {
-            return $this->sendFailure($response['error'], $response['status']);
+            return $this->sendFailure($response['error'], $response['status'], !empty($response['transport']));
         }
 
         $result = is_array($response['result']) ? $response['result'] : [];
@@ -41,6 +41,7 @@ final class TelegramNotifier
             'ok' => true,
             'error' => '',
             'status' => $response['status'],
+            'transport' => false,
             'message_id' => (int)($result['message_id'] ?? 0),
             'chat_id' => trim((string)($chat['id'] ?? $chatId)),
             'chat_type' => trim((string)($chat['type'] ?? '')),
@@ -340,15 +341,24 @@ final class TelegramNotifier
             'ok' => true,
             'error' => '',
             'status' => 200,
+            'transport' => false,
             'message_id' => 0,
             'chat_id' => trim($chatId),
             'chat_type' => '',
             'chat_title' => '',
+            'failed_message' => '',
         ];
+        $sentMessages = [];
         foreach ($chunks as $chunk) {
             $last = $this->send($botToken, $chatId, $chunk, $parseMode);
-            if (!$last['ok']) return $last;
+            if (!$last['ok']) {
+                $last['sent_messages'] = $sentMessages;
+                $last['failed_message'] = $chunk;
+                return $last;
+            }
+            $sentMessages[] = $this->withoutTerminalPeriods(trim($chunk));
         }
+        $last['sent_messages'] = $sentMessages;
         return $last;
     }
 
@@ -376,7 +386,7 @@ final class TelegramNotifier
         $botToken = trim($botToken);
         $method = trim($method);
         if ($botToken === '' || $method === '') {
-            return ['ok'=>false,'error'=>'Request Telegram tidak lengkap.','status'=>0,'result'=>null];
+            return ['ok'=>false,'error'=>'Request Telegram tidak lengkap.','status'=>0,'result'=>null,'transport'=>false];
         }
 
         $url = 'https://api.telegram.org/bot' . $botToken . '/' . $method;
@@ -441,17 +451,18 @@ final class TelegramNotifier
                 'error'=>$transportError !== '' ? $transportError : 'Tidak dapat terhubung ke Telegram Bot API.',
                 'status'=>$status,
                 'result'=>null,
+                'transport'=>true,
             ];
         }
 
         $decoded = json_decode((string)$raw, true);
         if (!is_array($decoded)) {
-            return ['ok'=>false,'error'=>'Respons Telegram bukan JSON yang valid.','status'=>$status,'result'=>null];
+            return ['ok'=>false,'error'=>'Respons Telegram bukan JSON yang valid.','status'=>$status,'result'=>null,'transport'=>false];
         }
 
         $ok = $status >= 200 && $status < 300 && ($decoded['ok'] ?? false) === true;
         if ($ok) {
-            return ['ok'=>true,'error'=>'','status'=>$status,'result'=>$decoded['result'] ?? null];
+            return ['ok'=>true,'error'=>'','status'=>$status,'result'=>$decoded['result'] ?? null,'transport'=>false];
         }
 
         $description = trim((string)($decoded['description'] ?? ''));
@@ -461,16 +472,17 @@ final class TelegramNotifier
         }
         if ($description === '') $description = 'Telegram menolak request.';
 
-        return ['ok'=>false,'error'=>$description,'status'=>$status,'result'=>$decoded['result'] ?? null];
+        return ['ok'=>false,'error'=>$description,'status'=>$status,'result'=>$decoded['result'] ?? null,'transport'=>false];
     }
 
     
-    private function sendFailure(string $error, int $status = 0): array
+    private function sendFailure(string $error, int $status = 0, bool $transport = false): array
     {
         return [
             'ok' => false,
             'error' => trim($error),
             'status' => $status,
+            'transport' => $transport,
             'message_id' => 0,
             'chat_id' => '',
             'chat_type' => '',

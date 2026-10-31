@@ -29,6 +29,10 @@ trait LinnmsSettingTrait
             'value' => '',
         ]);
         $insert->execute([
+            'key' => 'service_company',
+            'value' => '',
+        ]);
+        $insert->execute([
             'key' => 'public_registration_enabled',
             'value' => '1',
         ]);
@@ -322,20 +326,14 @@ trait LinnmsSettingTrait
         return $this->getAppIdentity()['name'];
     }
 
-    public function updateProfile(int $userId, string $displayName, string $currentPassword, string $newPassword = '', ?string $email = null, ?string $company = null, ?string $phoneNumber = null): array
+    public function updateProfile(int $userId, string $displayName, string $currentPassword, string $newPassword = '', ?string $phoneNumber = null): array
     {
         $displayName = trim($displayName);
         if ($displayName === '' || mb_strlen($displayName) > 60) {
             throw new InvalidArgumentException('Nama wajib diisi dan maksimal 60 karakter.');
         }
-        $email = $email !== null ? trim($email) : null;
-        $company = $company !== null ? trim($company) : null;
         $phoneNumber = $phoneNumber !== null ? trim($phoneNumber) : null;
-        if ($email !== null && $email !== '' && (mb_strlen($email) > 190 || !filter_var($email, FILTER_VALIDATE_EMAIL))) {
-            throw new InvalidArgumentException('Email tidak valid.');
-        }
-        if ($company !== null && mb_strlen($company) > 190) throw new InvalidArgumentException('Deskripsi maksimal 190 karakter.');
-        if ($phoneNumber !== null && mb_strlen($phoneNumber) > 24) throw new InvalidArgumentException('Kontak maksimal 24 karakter.');
+        if ($phoneNumber !== null && mb_strlen($phoneNumber) > 24) throw new InvalidArgumentException('Maksimal 24 karakter.');
         if ($currentPassword === '') throw new InvalidArgumentException('Password saat ini wajib diisi.');
         if ($newPassword !== '' && mb_strlen($newPassword) < 6) throw new InvalidArgumentException('Password baru minimal 6 karakter.');
 
@@ -348,10 +346,9 @@ trait LinnmsSettingTrait
 
         $fields = ['display_name=:display_name'];
         $params = ['display_name' => $displayName, 'id' => $userId];
-        foreach (['email' => $email, 'company' => $company, 'phone_number' => $phoneNumber] as $field => $value) {
-            if ($value === null) continue;
-            $fields[] = $field . '=:' . $field;
-            $params[$field] = $value !== '' ? $value : null;
+        if ($phoneNumber !== null) {
+            $fields[] = 'phone_number=:phone_number';
+            $params['phone_number'] = $phoneNumber !== '' ? $phoneNumber : null;
         }
         if ($newPassword !== '') {
             $fields[] = 'password=:password';

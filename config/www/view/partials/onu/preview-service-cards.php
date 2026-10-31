@@ -53,7 +53,7 @@ foreach ((array)($onuServiceConfig['mgmt_lines'] ?? []) as $line) {
     <div class="onu-service-disabled-list">
         <?php foreach ($onuServiceDisabledIndexes as $serviceIndex): ?>
             <?php $partial = isset($onuServicePortsByIndex[$serviceIndex], $onuServiceTcontByIndex[$serviceIndex], $onuServiceGemportByIndex[$serviceIndex]); ?>
-            <label class="onu-service-toggle-row"><span>Service <?= (int)$serviceIndex ?></span><input type="checkbox" role="switch" data-onu-service-toggle data-onu-service-index="<?= (int)$serviceIndex ?>" data-onu-service-configured="<?= isset($onuServiceTemplates[$serviceIndex]) ? '1' : '0' ?>" data-onu-service-partial="<?= $partial ? '1' : '0' ?>" data-onu-service-name="<?= h((string)($onuServiceTcontByIndex[$serviceIndex]['name'] ?? '')) ?>" data-onu-service-vlan="<?= (int)($onuServicePortsByIndex[$serviceIndex]['vlan'] ?? 0) ?>" aria-label="Enable Service <?= (int)$serviceIndex ?>"<?= empty($onuViewCapabilities['onu_service']) ? ' disabled' : '' ?>><span class="text-muted" data-onu-service-status>Disable</span></label>
+            <label class="onu-service-toggle-row"><span>Service <?= (int)$serviceIndex ?></span><input type="checkbox" role="switch" class="toggle-switch" data-onu-service-toggle data-onu-service-index="<?= (int)$serviceIndex ?>" data-onu-service-configured="<?= isset($onuServiceTemplates[$serviceIndex]) ? '1' : '0' ?>" data-onu-service-partial="<?= $partial ? '1' : '0' ?>" data-onu-service-name="<?= h((string)($onuServiceTcontByIndex[$serviceIndex]['name'] ?? '')) ?>" data-onu-service-vlan="<?= (int)($onuServicePortsByIndex[$serviceIndex]['vlan'] ?? 0) ?>" aria-label="Enable Service <?= (int)$serviceIndex ?>"<?= empty($onuViewCapabilities['onu_service']) ? ' disabled' : '' ?>><span class="text-muted" data-onu-service-status>Disable</span></label>
         <?php endforeach; ?>
     </div>
     <?php endif; ?>
@@ -73,7 +73,7 @@ foreach ((array)($onuServiceConfig['mgmt_lines'] ?? []) as $line) {
             <article class="onu-wan-service" data-onu-service-index="<?= (int)$serviceIndex ?>">
                 <strong>Service <?= (int)$serviceIndex ?></strong>
                 <dl class="onu-wan-details">
-                    <div><dt><label for="onu-service-status-<?= (int)$serviceIndex ?>">Status</label></dt><dd><span class="onu-service-toggle-row"><input id="onu-service-status-<?= (int)$serviceIndex ?>" type="checkbox" role="switch" data-onu-service-toggle data-onu-service-index="<?= (int)$serviceIndex ?>" aria-label="Status Service <?= (int)$serviceIndex ?>" checked<?= empty($onuViewCapabilities['onu_service']) ? ' disabled' : '' ?>><span class="text-muted" data-onu-service-status>Enable</span></span></dd></div>
+                    <div><dt><label for="onu-service-status-<?= (int)$serviceIndex ?>">Status</label></dt><dd><span class="onu-service-toggle-row"><input id="onu-service-status-<?= (int)$serviceIndex ?>" type="checkbox" role="switch" class="toggle-switch" data-onu-service-toggle data-onu-service-index="<?= (int)$serviceIndex ?>" aria-label="Status Service <?= (int)$serviceIndex ?>" checked<?= empty($onuViewCapabilities['onu_service']) ? ' disabled' : '' ?>><span class="text-muted" data-onu-service-status>Enable</span></span></dd></div>
                     <div><dt>VLAN</dt><dd><?= h($vlanLabel) ?></dd></div>
                     <div><dt>Download</dt><dd><?= h((string)($gemport['traffic_limit'] ?? '')) ?: '—' ?></dd></div>
                     <div><dt>Upload</dt><dd><?= h((string)($tcont['profile'] ?? '')) ?: '—' ?></dd></div>

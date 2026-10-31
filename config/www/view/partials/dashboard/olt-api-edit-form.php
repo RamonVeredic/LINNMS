@@ -24,12 +24,12 @@ $editApiOltTypeLabel = (string)(olt_type_options()[$editApiOltType] ?? $editApiO
 
     <div class="field">
         <label for="editApiOltName">Nama OLT</label>
-        <input id="editApiOltName" name="olt_name" required value="<?= h((string)($editApiOlt['name'] ?? '')) ?>" placeholder="Nama OLT">
+        <input id="editApiOltName" name="olt_name" required value="<?= h((string)($editApiOlt['name'] ?? '')) ?>" placeholder="Masukkan Nama OLT">
     </div>
 
     <div class="field">
         <label for="editApiOltHost">Host</label>
-        <input id="editApiOltHost" name="ip_address" required value="<?= h((string)($editApiOlt['ip_address'] ?? '')) ?>" placeholder="192.168.1.1"
+        <input id="editApiOltHost" name="ip_address" required value="<?= h((string)($editApiOlt['ip_address'] ?? '')) ?>" placeholder="Masukkan IP Address"
             inputmode="decimal" pattern="(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])">
     </div>
 

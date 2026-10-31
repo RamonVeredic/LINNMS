@@ -235,10 +235,20 @@ function activity_event_parts(array $event): array
             return ['subject' => '', 'detail' => activity_event_detail_text(safe_event_message($event['message'] ?? null)), 'status_key' => 'neutral'];
         }
         if ($field === 'onu_name') {
-            return ['subject' => '', 'detail' => 'Mengedit nama ' . $old . ' ➠ ' . $new, 'status_key' => 'neutral'];
+            $oldName = $old === '—' ? '' : $old;
+            $newName = $new === '—' ? '' : $new;
+            $detail = $oldName === ''
+                ? ($newName === '' ? 'Nama ONU dihapus' : 'Mengedit nama menjadi ' . $newName)
+                : ($newName === '' ? 'Menghapus nama ' . $oldName : 'Mengedit nama ' . $oldName . ' ➠ ' . $newName);
+            return ['subject' => '', 'detail' => $detail, 'status_key' => 'neutral'];
         }
         if ($field === 'onu_location') {
-            return ['subject' => $subject, 'detail' => 'lokasi ' . $old . ' ➠ ' . $new, 'status_key' => 'neutral'];
+            $oldLocation = $old === '—' ? '' : $old;
+            $newLocation = $new === '—' ? '' : $new;
+            $detail = $oldLocation === ''
+                ? ($newLocation === '' ? 'Lokasi ONU dihapus' : 'lokasi ' . $newLocation)
+                : ($newLocation === '' ? 'lokasi ' . $oldLocation . ' dihapus' : 'lokasi ' . $oldLocation . ' ➠ ' . $newLocation);
+            return ['subject' => $subject, 'detail' => $detail, 'status_key' => 'neutral'];
         }
         if ($field === 'deleted') {
             return ['subject' => $subject, 'detail' => 'Dihapus', 'status_key' => 'offline'];
@@ -550,12 +560,13 @@ function activity_events_telegram_device_batches(array $events): array
     $batches = [];
     foreach ($notifications as $notification) {
         $htmlLines = [];
-        $plainLines = [(string)$notification['notification_category']];
+        $plainLines = [];
         $deviceNames = [];
+        $statusCategory = '';
 
         foreach ($notification['devices'] as $device) {
             if ($htmlLines !== []) $htmlLines[] = '';
-            if (count($plainLines) > 1) $plainLines[] = '';
+            if ($plainLines !== []) $plainLines[] = '';
 
             $deviceName = (string)$device['name'];
             $deviceNames[] = $deviceName;
@@ -566,12 +577,17 @@ function activity_events_telegram_device_batches(array $events): array
             foreach ($device['categories'] as $category => $categoryEvents) {
                 $count = count($categoryEvents);
                 if ($count < 1) continue;
+                if ($statusCategory === '') $statusCategory = $category;
                 if ($category !== 'TX Power') $htmlLines[] = '';
                 $categoryHeading = $category === 'TX Power' ? $category : $category . ': ' . $count;
                 $htmlLines[] = '<b>' . htmlspecialchars($categoryHeading, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</b>';
                 if ($category !== 'TX Power') $plainLines[] = '';
                 $plainLines[] = $categoryHeading;
-                foreach ($categoryEvents as $event) {
+                foreach ($categoryEvents as $index => $event) {
+                    if ($index > 0) {
+                        $htmlLines[] = '';
+                        $plainLines[] = '';
+                    }
                     $htmlLine = activity_event_telegram_compact_line($event);
                     $htmlLines[] = $htmlLine;
                     $plainLines[] = html_entity_decode(strip_tags($htmlLine), ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -592,7 +608,8 @@ function activity_events_telegram_device_batches(array $events): array
         $batches[] = [
             'name' => implode(', ', array_values(array_unique($deviceNames))),
             'category' => $notification['notification_category'],
-            'title' => '<b>' . htmlspecialchars((string)$notification['notification_category'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</b>',
+            'status_category' => $statusCategory,
+            'title' => '',
             'html_lines' => $htmlLines,
             'plain' => implode("\n", $plainLines),
             'ids' => $ids,

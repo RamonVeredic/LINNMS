@@ -947,12 +947,16 @@ trait LinnmsSyncTrait
                 VALUES (:uid,'olt',:type,'api',:oid,:name,:ip,:snmp_port)
                 ON DUPLICATE KEY UPDATE type=VALUES(type),name=VALUES(name),ip_address=VALUES(ip_address),snmp_port=VALUES(snmp_port)");
             $this->executeInventoryWrite($stmt, ['uid'=>$userId,'oid'=>$oltId,'name'=>$new['name'],'ip'=>$new['ip_address'],'snmp_port'=>$new['snmp_port'],'type'=>$new['olt_type']]);
+            $apiDeviceInserted = $stmt->rowCount() === 1;
             
             $apiDeviceId = (int)$this->pdo->lastInsertId();
             if ($apiDeviceId < 1) {
                 $findApiDevice = $this->pdo->prepare("SELECT id FROM devices WHERE user_id=:uid AND device_type='olt' AND source='api' AND olt_id=:oid LIMIT 1");
                 $this->executeInventoryWrite($findApiDevice, ['uid'=>$userId,'oid'=>$oltId]);
                 $apiDeviceId = (int)$findApiDevice->fetchColumn();
+            }
+            if ($apiDeviceInserted && $apiDeviceId > 0) {
+                $this->ensureNotificationDeviceTarget($userId, $apiDeviceId);
             }
             if ($apiDeviceId > 0) {
                 $this->markDeviceOnline($apiDeviceId, $userId, null, $new['total_onus']);
@@ -1079,7 +1083,7 @@ trait LinnmsSyncTrait
                     $new['rx_power'],
                     $signalThreshold
                 );
-                if ($confirmedPower !== null && $new['rx_power'] !== null && $new['rx_power'] > -$rxProblemThreshold) {
+                if ($confirmedPower !== null && $new['rx_power'] !== null && $new['rx_power'] > $rxProblemThreshold) {
                     $events[] = $this->insertChangeEvent($userId,'ONU','api|' . $oltId . '|' . $idx,'rx_power',$confirmedPower['old'],$confirmedPower['new'],
                         'ONU ' . display_onu_name($new['onu_name'] ?? $old['onu_name'] ?? null) . " [OLT {$oltId} / {$idx}] " . event_field_label('rx_power') . ': ' . format_power($confirmedPower['old']) . ' -> ' . format_power($confirmedPower['new']),
                         ['source'=>'api','olt_id'=>$oltId,'onu_index'=>$idx,'onu_name'=>$new['onu_name'] ?? $old['onu_name'] ?? null]);
@@ -1105,7 +1109,7 @@ trait LinnmsSyncTrait
                 if ($confirmedProblem !== null && $confirmedProblem['new'] === 'problem' && $new['rx_power'] !== null) {
                     $events[] = $this->insertChangeEvent(
                         $userId, 'ONU', 'api|' . $oltId . '|' . $idx,
-                        'problem_rx_power', -$rxProblemThreshold, $new['rx_power'],
+                        'problem_rx_power', $rxProblemThreshold, $new['rx_power'],
                         'ONU ' . display_onu_name($new['onu_name'] ?? (is_array($old) ? ($old['onu_name'] ?? null) : null))
                             . " [OLT {$oltId} / {$idx}] bermasalah karena RX Power " . format_power($new['rx_power']) . '.',
                         ['source'=>'api','olt_id'=>$oltId,'onu_index'=>$idx,'onu_name'=>$new['onu_name'] ?? (is_array($old) ? ($old['onu_name'] ?? null) : null)]
@@ -1114,7 +1118,7 @@ trait LinnmsSyncTrait
                 if ($confirmedProblem !== null && $confirmedProblem['new'] === 'normal' && $new['rx_power'] !== null) {
                     $events[] = $this->insertChangeEvent(
                         $userId, 'ONU', 'api|' . $oltId . '|' . $idx,
-                        'problem_rx_recovered', -$rxProblemThreshold, $new['rx_power'],
+                        'problem_rx_recovered', $rxProblemThreshold, $new['rx_power'],
                         'ONU ' . display_onu_name($new['onu_name'] ?? (is_array($old) ? ($old['onu_name'] ?? null) : null))
                             . " [OLT {$oltId} / {$idx}] RX Power kembali normal (" . format_power($new['rx_power']) . ').',
                         ['source'=>'api','olt_id'=>$oltId,'onu_index'=>$idx,'onu_name'=>$new['onu_name'] ?? (is_array($old) ? ($old['onu_name'] ?? null) : null)]

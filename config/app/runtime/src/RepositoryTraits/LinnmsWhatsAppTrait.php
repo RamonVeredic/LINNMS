@@ -169,7 +169,7 @@ trait LinnmsWhatsAppTrait
              INNER JOIN user_settings target ON target.user_id=u.id AND target.setting_key='whatsapp_target'
              LEFT JOIN user_settings token ON token.user_id=u.id AND token.setting_key='whatsapp_token'
              LEFT JOIN user_settings base_url ON base_url.user_id=u.id AND base_url.setting_key='whatsapp_base_url'
-             WHERE u.is_active=1 AND u.role<>'admin'
+             WHERE u.is_active=1
                AND TRIM(provider.setting_value)<>''
                AND TRIM(target.setting_value)<>''
                AND (COALESCE(TRIM(token.setting_value),'')<>'' OR COALESCE(TRIM(base_url.setting_value),'')<>'')

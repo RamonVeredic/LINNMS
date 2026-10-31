@@ -138,7 +138,6 @@ function dashboard_olt_row(array $olt, int $number, array $active, array $status
         'connections' => $connections,
         'scan' => $scanAction,
         'edit_url' => public_page_url('dashboard', ['edit_device' => $id]),
-        'edit_title' => 'Edit OLT',
         'edit_modal' => true,
         'delete' => dashboard_device_delete_action($id),
     ];
@@ -168,7 +167,6 @@ function dashboard_snmp_row(array $device, int $number, array $group): array
         'connections' => $connections,
         'scan' => null,
         'edit_url' => public_page_url('dashboard', ['edit_device' => $id]),
-        'edit_title' => 'Edit ' . (string)($group['label'] ?? 'Perangkat'),
         'edit_modal' => true,
         'delete' => dashboard_device_delete_action($id),
     ];

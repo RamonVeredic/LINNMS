@@ -13,8 +13,8 @@ $whatsappDefaultLabels = [
 ];
 $whatsappFieldLimits = ['base_url' => 190, 'token' => 120, 'device' => 120];
 $whatsappFieldPlaceholders = [
-    'base_url' => 'http://192.0.0.2:21465',
-    'device' => 'device-id',
+    'base_url' => 'Masukkan URL API',
+    'device' => 'Masukkan Device ID',
 ];
 
 $whatsappFields = (array)($whatsappDefinition['fields'] ?? []);
@@ -49,9 +49,10 @@ foreach ($whatsappFieldOrder as $whatsappFieldKey):
 endforeach;
 
 if (!empty($whatsappDefinition['token_generator']['enabled'])):
+    $whatsappGeneratorRequired = trim((string)($whatsappUserSettings['token'] ?? '')) === '';
 ?>
-    <div class="field" data-whatsapp-generator-fields><label for="whatsappGeneratorSession">Nama Session</label><input id="whatsappGeneratorSession" name="whatsapp_generator_session" autocomplete="off" maxlength="80" placeholder="Masukkan nama session" data-whatsapp-generator-session></div>
-    <div class="field" data-whatsapp-generator-fields><label for="whatsappGeneratorSecret">Secret Key</label><input id="whatsappGeneratorSecret" type="password" name="whatsapp_generator_secret" autocomplete="off" maxlength="120" placeholder="Masukkan secret key" data-whatsapp-generator-secret></div>
+    <div class="field" data-whatsapp-generator-fields><label for="whatsappGeneratorSession">Nama Session</label><input id="whatsappGeneratorSession" name="whatsapp_generator_session" autocomplete="off" maxlength="80" placeholder="Masukkan nama session" data-whatsapp-generator-session<?= $whatsappGeneratorRequired ? ' required' : '' ?>></div>
+    <div class="field" data-whatsapp-generator-fields><label for="whatsappGeneratorSecret">Secret Key</label><input id="whatsappGeneratorSecret" type="password" name="whatsapp_generator_secret" autocomplete="off" maxlength="120" placeholder="Masukkan secret key" data-whatsapp-generator-secret<?= $whatsappGeneratorRequired ? ' required' : '' ?>></div>
 <?php
 endif;
 
@@ -70,7 +71,7 @@ if (array_key_exists('token', $whatsappFields)):
                 data-whatsapp-field-saved="<?= $whatsappFieldSaved ? '1' : '0' ?>"
                 data-whatsapp-token-input <?= $whatsappFieldRequired ? 'required' : '' ?>
                 <?= $whatsappTokenGenerated ? 'readonly' : '' ?>
-                placeholder="<?= h($whatsappFieldLabel) ?>">
+                placeholder="Masukkan <?= h($whatsappFieldLabel) ?>">
             <?php if ($whatsappTokenGenerated): ?>
                 <button class="button secondary" type="button" data-whatsapp-generate-token><i class="bi bi-lightning-charge-fill" aria-hidden="true"></i>Buat</button>
             <?php endif; ?>
@@ -89,5 +90,6 @@ unset(
     $whatsappField,
     $whatsappFieldSaved,
     $whatsappFieldRequired,
-    $whatsappFieldLabel
+    $whatsappFieldLabel,
+    $whatsappGeneratorRequired
 );

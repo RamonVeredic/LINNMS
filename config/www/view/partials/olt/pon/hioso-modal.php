@@ -35,7 +35,7 @@ $ponInterfaceLabel = olt_pon_interface_label(
                     <div class="olt-field field-switch">
                         <span>AutoNeg</span>
                         <label class="pon-status-switch">
-                            <input type="checkbox" role="switch" data-pon-unsupported-toggle="AutoNeg"
+                            <input type="checkbox" role="switch" class="toggle-switch" data-pon-unsupported-toggle="AutoNeg"
                                    <?= $ponAutonegControl['checked_attribute'] ?>>
                             <span><?= h($ponAutonegControl['label']) ?></span>
                         </label>
@@ -50,7 +50,7 @@ $ponInterfaceLabel = olt_pon_interface_label(
                     </div>
                     <div class="olt-field field-switch">
                         <span>Flow Control</span>
-                        <label class="pon-status-switch"><input type="checkbox" role="switch" aria-label="Flow Control" data-pon-flow-control-switch data-pon-flow-control-known="<?= $ponFlowControl['known_attribute'] ?>" data-olt-row-id="<?= (int)$oltDetail['id'] ?>" data-pon-number="<?= $ponNumber > 0 ? $ponNumber : 1 ?>" data-pon-ref="<?= h($ponRef) ?>" data-csrf="<?= h(csrf_token()) ?>"<?= $ponFlowControl['checked_attribute'] ?>><span data-pon-flow-control-label><?= h($ponFlowControl['switch_label']) ?></span></label>
+                        <label class="pon-status-switch"><input type="checkbox" role="switch" class="toggle-switch" aria-label="Flow Control" data-pon-flow-control-switch data-pon-flow-control-known="<?= $ponFlowControl['known_attribute'] ?>" data-olt-row-id="<?= (int)$oltDetail['id'] ?>" data-pon-number="<?= $ponNumber > 0 ? $ponNumber : 1 ?>" data-pon-ref="<?= h($ponRef) ?>" data-csrf="<?= h(csrf_token()) ?>"<?= $ponFlowControl['checked_attribute'] ?>><span data-pon-flow-control-label><?= h($ponFlowControl['switch_label']) ?></span></label>
                     </div>
                 </div>
                 <form method="post" class="pon-description-form" data-olt-pon-edit-form data-pon-description-form>

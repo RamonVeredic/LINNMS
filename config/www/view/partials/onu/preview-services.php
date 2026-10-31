@@ -188,8 +188,8 @@ $onuRowCapabilities = ['remote' => 'onu_remote_access', 'veip' => 'onu_veip', 't
             <input id="onuTr069State" name="state" type="hidden" value="lock">
             <div class="onu-eth-body">
                 <div class="device-system-info-list onu-eth-info-list">
-                    <div class="field"><label class="label" for="onuTr069ModalStatus">Status</label><span class="device-info-value"><span class="onu-service-toggle-row"><input id="onuTr069ModalStatus" type="checkbox" role="switch" data-onu-service-status><span data-onu-service-status-label>Disable</span></span></span></div>
-                    <div class="field"><label class="label" for="onuTr069Acs">Alamat ACS <span class="text-muted">(opsional)</span></label><input id="onuTr069Acs" name="acs" maxlength="255" autocomplete="off" placeholder="https://acs.example.com"></div>
+                    <div class="field"><label class="label" for="onuTr069ModalStatus">Status</label><span class="device-info-value"><span class="onu-service-toggle-row"><input id="onuTr069ModalStatus" type="checkbox" role="switch" class="toggle-switch" data-onu-service-status><span data-onu-service-status-label>Disable</span></span></span></div>
+                    <div class="field"><label class="label" for="onuTr069Acs">Alamat ACS <span class="text-muted">(opsional)</span></label><input id="onuTr069Acs" name="acs" maxlength="255" autocomplete="off" placeholder="Masukkan Alamat ACS"></div>
 <div class="field"><label class="label" for="onuTr069Auth">Autentikasi ACS</label><select id="onuTr069Auth" name="auth_action"><option value="keep">Pertahankan</option><option value="disable">Tanpa autentikasi</option><option value="basic">Basic</option></select></div>
 <div class="field" data-onu-tr069-credential hidden><label class="label" for="onuTr069Username">Username ACS</label><input id="onuTr069Username" name="username" maxlength="64" autocomplete="off" disabled></div>
 <div class="field" data-onu-tr069-credential hidden><label class="label" for="onuTr069Password">Password ACS</label><input id="onuTr069Password" name="password" type="password" maxlength="64" autocomplete="new-password" disabled></div>
@@ -210,13 +210,13 @@ $onuRowCapabilities = ['remote' => 'onu_remote_access', 'veip' => 'onu_veip', 't
             <input name="config_action" type="hidden" value="create"><input name="state" type="hidden" value="enable">
             <div class="onu-eth-body">
                 <div class="device-system-info-list onu-eth-info-list">
-                    <div class="field"><label class="label" for="onuRemoteAccessModalStatus">Status</label><span class="device-info-value"><span class="onu-service-toggle-row"><input id="onuRemoteAccessModalStatus" type="checkbox" role="switch" data-onu-service-status><span data-onu-service-status-label>Disable</span></span></span></div>
+                    <div class="field"><label class="label" for="onuRemoteAccessModalStatus">Status</label><span class="device-info-value"><span class="onu-service-toggle-row"><input id="onuRemoteAccessModalStatus" type="checkbox" role="switch" class="toggle-switch" data-onu-service-status><span data-onu-service-status-label>Disable</span></span></span></div>
                     <div class="field"><label class="label" for="onuRemoteIndex">Remote ID</label><span class="device-info-value"><input id="onuRemoteIndex" name="index" type="number" min="1" max="65535" required></span></div>
 <div class="field"><label class="label" for="onuRemoteMode">Mode</label><span class="device-info-value"><select id="onuRemoteMode" name="mode" required><option value="">Pilih</option><option value="forward">Allowed</option><option value="discard">Blocked</option></select></span></div>
 <div class="field"><label class="label" for="onuRemoteIngress">Ingress Type</label><span class="device-info-value"><select id="onuRemoteIngress" name="ingress_type" required><option value="">Pilih</option><option value="wan">WAN</option><option value="lan">LAN</option></select></span></div>
-<div class="field"><label class="label" for="onuRemoteProtocols">Service List</label><span class="device-info-value"><input id="onuRemoteProtocols" name="protocols" placeholder="web https snmp" required></span></div>
-<div class="field"><label class="label" for="onuRemoteStartIp">Start Source IP</label><span class="device-info-value"><input id="onuRemoteStartIp" name="start_ip" inputmode="decimal" placeholder="0.0.0.0"></span></div>
-<div class="field"><label class="label" for="onuRemoteEndIp">End Source IP</label><span class="device-info-value"><input id="onuRemoteEndIp" name="end_ip" inputmode="decimal" placeholder="0.0.0.0"></span></div>
+<div class="field"><label class="label" for="onuRemoteProtocols">Service List</label><span class="device-info-value"><input id="onuRemoteProtocols" name="protocols" placeholder="Masukkan Service List" required></span></div>
+<div class="field"><label class="label" for="onuRemoteStartIp">Start Source IP</label><span class="device-info-value"><input id="onuRemoteStartIp" name="start_ip" inputmode="decimal" placeholder="Masukkan Start Source IP"></span></div>
+<div class="field"><label class="label" for="onuRemoteEndIp">End Source IP</label><span class="device-info-value"><input id="onuRemoteEndIp" name="end_ip" inputmode="decimal" placeholder="Masukkan End Source IP"></span></div>
                 </div>
                 <div class="onu-eth-actions"><button class="button primary" type="submit">Simpan</button></div>
             </div>
@@ -232,7 +232,7 @@ $onuRowCapabilities = ['remote' => 'onu_remote_access', 'veip' => 'onu_veip', 't
             <input id="onuVeipState" name="state" type="hidden" value="lock">
             <div class="onu-eth-body">
                 <div class="device-system-info-list onu-eth-info-list">
-                    <div class="field"><label class="label" for="onuVeipModalStatus">Status</label><span class="device-info-value"><span class="onu-service-toggle-row"><input id="onuVeipModalStatus" type="checkbox" role="switch" data-onu-service-status><span data-onu-service-status-label>Disable</span></span></span></div>
+                    <div class="field"><label class="label" for="onuVeipModalStatus">Status</label><span class="device-info-value"><span class="onu-service-toggle-row"><input id="onuVeipModalStatus" type="checkbox" role="switch" class="toggle-switch" data-onu-service-status><span data-onu-service-status-label>Disable</span></span></span></div>
                     <div class="field"><label class="label" for="onuVeipMode">Mode</label><select id="onuVeipMode" name="mode"><option value="">—</option><option value="access">Access</option><option value="trunk">Trunk</option><option value="hybrid">Hybrid</option></select></div>
 <div class="field"><label class="label" for="onuVeipDefault">VLAN Access</label><select id="onuVeipDefault" name="default_vlan" data-select-checkbox data-select-menu-class="onu-select-menu" data-select-search="Cari VLAN"><?php foreach ((array)($onuView['oltVlanIds'] ?? []) as $vlanId): ?><option value="<?= (int)$vlanId ?>"><?= (int)$vlanId ?></option><?php endforeach; ?></select></div>
 <div class="field"><label class="label" for="onuVeipVlans">VLAN Trunk</label><select id="onuVeipVlans" name="vlans" multiple data-select-checkbox data-select-menu-class="onu-select-menu" data-select-search="Cari VLAN"><?php foreach ((array)($onuView['oltVlanIds'] ?? []) as $vlanId): ?><option value="<?= (int)$vlanId ?>"><?= (int)$vlanId ?></option><?php endforeach; ?></select></div>
@@ -251,7 +251,7 @@ $onuRowCapabilities = ['remote' => 'onu_remote_access', 'veip' => 'onu_veip', 't
             <input id="onuWifiState" name="state" type="hidden" value="lock">
             <div class="onu-eth-body">
                 <div class="device-system-info-list onu-eth-info-list">
-                    <div class="field"><label class="label" for="onuWifiModalStatus">Status</label><span class="device-info-value"><span class="onu-service-toggle-row"><input id="onuWifiModalStatus" type="checkbox" role="switch" data-onu-service-status><span data-onu-service-status-label>Disable</span></span></span></div>
+                    <div class="field"><label class="label" for="onuWifiModalStatus">Status</label><span class="device-info-value"><span class="onu-service-toggle-row"><input id="onuWifiModalStatus" type="checkbox" role="switch" class="toggle-switch" data-onu-service-status><span data-onu-service-status-label>Disable</span></span></span></div>
                     <div class="field"><label class="label" for="onuWifiPort">Port WiFi</label><select id="onuWifiPort" name="port" required></select></div>
 <div class="field"><label class="label" for="onuWifiSsid">Nama SSID</label><input id="onuWifiSsid" name="ssid" maxlength="32" autocomplete="off"></div>
 <div class="field"><label class="label" for="onuWifiMode">Mode</label><select id="onuWifiMode" name="mode"><option value="">—</option><option value="access">Access</option><option value="trunk">Trunk</option><option value="hybrid">Hybrid</option></select></div>

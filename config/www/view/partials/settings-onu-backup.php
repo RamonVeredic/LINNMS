@@ -1,4 +1,4 @@
-<section class="profile-onu-backup" id="onu-backup" aria-labelledby="onuBackupTitle">
+<section id="onu-backup" aria-labelledby="onuBackupTitle">
    
     <div class="onu-backup-content">
         <div class="onu-backup-actions">
