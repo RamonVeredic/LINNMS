@@ -368,20 +368,22 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-@media (max-width: 479px) {
-  .onu-view .onu-info-list,
+@media (max-width: 779px) {
   .onu-view .onu-detail-list,
   .onu-view .onu-wan-grid {
     grid-template-columns: minmax(0, 1fr);
   }
-  .onu-view .onu-detail-hero {
-    flex-wrap: wrap;
-  }
+
   .onu-view .onu-detail-hero-main {
     flex: 1 1 100%;
   }
   .onu-view .onu-ethernet-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 400px) {
+  .onu-view .onu-info-list {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 .onu-port-name {
@@ -1067,7 +1069,8 @@ body.onu-modal-open {
 }
 .onu-view
   .onu-info-list
-  .onu-inline-edit-shell:has([data-onu-edit-control]:disabled):is(
+  .onu-inline-edit-shell:has([data-onu-edit-control]:disabled)
+  :is(
     .select-chevron,
     .select-icon
   ) {
@@ -1454,20 +1457,14 @@ body.onu-modal-open {
   }
 }
 @media (max-width: 479px) {
-  .onu-view .onu-port-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-  }
+
   .onu-view .onu-port-layout .optical-card {
     margin: 0 auto;
   }
   .onu-view .onu-ethernet-grid {
-    gap: 5px;
+    justify-content: space-between; 
   }
-  .onu-view .onu-lan-icon {
-    width: 30px;
-    height: 28px;
-  }
+
 }
 .onu-detail-hero .button {
   min-height: clamp(28px, 4.75vw, 38px);

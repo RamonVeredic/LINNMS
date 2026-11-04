@@ -244,6 +244,7 @@
       const input = document.createElement('input');
       input.id = id;
       input.type = 'checkbox';
+      input.className = 'toggle-switch';
       input.name = field.key;
       input.setAttribute('role', 'switch');
       input.setAttribute('aria-label', field.label || field.key);

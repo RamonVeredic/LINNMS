@@ -1,1 +1,399 @@
-(()=>{"use strict";document.querySelectorAll("[data-interface-list]").forEach((e=>{const t=()=>Array.from(e.querySelectorAll("[data-interface-list-row]")),r=e.querySelector("[data-interface-search]"),a=e.querySelector("[data-interface-filter-empty]"),n=e.querySelector("[data-interface-pagination]"),i=e.querySelector("[data-interface-page-info]"),o=e.querySelector("[data-interface-page-number]"),c=e.querySelector("[data-interface-page-prev]"),l=e.querySelector("[data-interface-page-next]");let s=1;const d=()=>{const e=t(),d=(r?.value||"").trim().toLocaleLowerCase("id-ID"),u=e.filter((e=>!d||(e.dataset.interfaceSearchName||"").toLocaleLowerCase("id-ID").includes(d))),m=Math.max(1,Math.ceil(u.length/10));s=Math.min(Math.max(1,s),m);const h=10*(s-1),f=new Set(u.slice(h,h+10));if(e.forEach((e=>{e.hidden=!f.has(e)})),a&&(a.hidden=0!==u.length||""===d),i){const e=0===u.length?0:h+1,t=Math.min(h+10,u.length);i.textContent=`${e}-${t} dari ${u.length}`}o&&(o.textContent=`${s} / ${m}`),c&&(c.disabled=s<=1),l&&(l.disabled=s>=m),n&&(n.hidden=0===e.length)};r?.addEventListener("input",(()=>{s=1,d()})),c?.addEventListener("click",(()=>{s<=1||(s-=1,d())})),l?.addEventListener("click",(()=>{const e=t(),a=(r?.value||"").trim().toLocaleLowerCase("id-ID"),n=e.filter((e=>!a||(e.dataset.interfaceSearchName||"").toLocaleLowerCase("id-ID").includes(a))).length;s>=Math.max(1,Math.ceil(n/10))||(s+=1,d())})),d()})),document.querySelectorAll("[data-vlan-toggle]").forEach((e=>{e.addEventListener("click",(()=>{const t=e.closest(".switch-vlan-summary"),r=t?.querySelector("[data-vlan-preview]"),a=t?.querySelector("[data-vlan-all]");if(!r||!a)return;const n="true"===e.getAttribute("aria-expanded");r.hidden=!n,a.hidden=n,e.setAttribute("aria-expanded",n?"false":"true"),e.textContent=n?"Lihat semua VLAN":"Ringkas"}))}))})(),(()=>{const e=e=>{const t=e.querySelector(":scope > span"),r=Number.parseFloat(t?.style.width||"");e.classList.remove("is-level-1","is-level-2","is-level-3","is-level-4"),!Number.isFinite(r)||r<=0||e.classList.add("is-level-"+(r<=25?1:r<=50?2:r<=75?3:4))},t=()=>{document.querySelectorAll(".olt-card-health .device-meter").forEach((e=>e.classList.add("heat-meter"))),document.querySelectorAll(".device-health-card").forEach((e=>{const t=String(e.querySelector(".device-health-head")?.textContent||"").toLowerCase();(t.includes("cpu")||t.includes("ram")||t.includes("memory"))&&e.querySelector(".device-meter")?.classList.add("heat-meter")})),document.querySelectorAll(".olt-temperature, .olt-card-health > div, .olt-optical-details > div, .olt-uplink-row, .olt-pon-optics > div").forEach((e=>{let t=e,r=null;if(!e.matches(".olt-temperature")){r=e.querySelector("span, dt");const a=String(r?.textContent||"").trim().toLowerCase();if(!a.includes("temperature")&&!a.includes("suhu"))return;if(t=e.querySelector("strong, dd, .value"),!t)return}if(t.classList.remove("temperature-ok","temperature-warn","temperature-hot","temperature-unknown"),t.classList.add((e=>{const t=Number.parseFloat(String(e??"").replace(",","."));return Number.isFinite(t)&&0!==t?t>=50?"temperature-hot":t>=40?"temperature-warn":"temperature-ok":"temperature-unknown"})(t.textContent)),r&&!r.querySelector(".bi-thermometer-half")){const e=document.createElement("i");e.className="bi bi-thermometer-half",e.setAttribute("aria-hidden","true"),r.prepend(e," ")}})),document.querySelectorAll(".heat-meter:not(.olt-fan-meter)").forEach(e)};t();new MutationObserver((e=>{e.some((e=>"childList"===e.type||"characterData"===e.type))&&t()})).observe(document.querySelector("[data-olt-view]")||document.body,{childList:!0,characterData:!0,attributes:!0,attributeFilter:["style"],subtree:!0})})(),(()=>{"use strict";const e=document.querySelector("[data-device-view]");if(!e?.dataset.deviceId)return;e.dataset.deviceId;const t=e.dataset.deviceRef||"",r=e.dataset.interfaceName||"",a=document.body.dataset.liveUrl||"",n=Array.from(document.querySelectorAll("[data-traffic-poll-state]")),i=document.querySelector("[data-mikrotik-traffic-chart]"),o=[];let c=0,l=0,s=null,d=!1,u=!1,m="false"===e.dataset.trafficActive,h=0,f=0;const p=e=>{const t=Number(e);if(!Number.isFinite(t)||t<0)return"—";const r=["bps","Kbps","Mbps","Gbps","Tbps"];let a=t,n=0;for(;a>=1e3&&n<r.length-1;)a/=1e3,n+=1;return`${a>=100?a.toFixed(0):a.toFixed(2)} ${r[n]}`},x=e=>n.forEach((t=>{t.textContent=e})),y=()=>!document.hidden&&document.hasFocus()&&!d&&!m,w=()=>{if(!(i instanceof HTMLCanvasElement))return;const e=i.getContext("2d");if(!e)return;const t=(e=>{if(!Number.isFinite(e)||e<=0)return 1;const t=10**Math.floor(Math.log10(e)),r=e/t;return(r<=1?1:r<=2?2:r<=5?5:10)*t})(Math.max(0,...o.flatMap((e=>[e.rx,e.tx])))/9),r=Math.max(320,Math.floor(i.clientWidth)),a=Math.max(220,Math.floor(i.clientHeight)),n=Math.max(1,window.devicePixelRatio||1);i.width=Math.floor(r*n),i.height=Math.floor(a*n),e.setTransform(n,0,0,n,0,0),e.clearRect(0,0,r,a);const c=14,l=12,s=62,d=r-s-l,u=a-c-24,m=getComputedStyle(document.documentElement),h=m.getPropertyValue("--bg-line").trim()||"rgba(255,255,255,.08)",f=m.getPropertyValue("--text-faint").trim()||"#64748b";e.font="10px sans-serif",e.textAlign="right",e.textBaseline="middle";for(let a=0;a<10;a+=1){const n=c+u*a/9;e.strokeStyle=h,e.beginPath(),e.moveTo(s,n),e.lineTo(r-l,n),e.stroke(),e.fillStyle=f,e.fillText(p((9-a)*t),s-8,n)}const x=(r,a)=>{if(0===o.length)return;const n=s+d*Math.max(0,1-(o.length-1)/59);e.strokeStyle=a,e.lineWidth=2,e.lineJoin="round",e.beginPath(),o.forEach(((a,i)=>{const o=n+d*i/59,l=c+u*(1-a[r]/t/9);0===i?e.moveTo(o,l):e.lineTo(o,l)})),e.stroke()};e.save(),e.beginPath(),e.rect(s,c,d,u),e.clip(),x("rx",m.getPropertyValue("--green").trim()||"#57c785"),x("tx",m.getPropertyValue("--primary").trim()||"#1254d6"),e.restore()},v=e=>{window.clearTimeout(c),c=0,s?.abort(),s=null,e&&x(e)},b=()=>{if(!y()||u||c)return;const e=Math.max(0,performance.now()-h);c=window.setTimeout((()=>{c=0,g()}),Math.max(0,1e3-e))};async function g(){if(y()&&!u)if(a){u=!0,h=performance.now(),s=new AbortController;try{!1===(r?await(async e=>{const n=await window.linnmsAjax.request(`${a}?type=device-traffic&ref=${encodeURIComponent(t)}&interface=${encodeURIComponent(r)}`,{credentials:"same-origin",cache:"no-store",signal:e}),i=await n.json();if(!n.ok||!i.ok)throw new Error(i.message||"Trafik tidak tersedia");if(!1===i.active)return!1;const c=document.querySelector("[data-device-rx]"),l=document.querySelector("[data-device-tx]");return c&&(c.textContent=p(i.rx_bps)),l&&(l.textContent=p(i.tx_bps)),Number.isFinite(Number(i.rx_bps))&&Number.isFinite(Number(i.tx_bps))&&(o.push({rx:Math.max(0,Number(i.rx_bps)),tx:Math.max(0,Number(i.tx_bps))}),o.length>60&&o.shift(),w()),!0})(s.signal):await(async e=>{const r=Array.from(document.querySelectorAll("[data-interface-rate-row][data-if-index]")).filter((e=>!e.hidden)),n=Array.from(new Set(r.map((e=>Number.parseInt(e.dataset.ifIndex||"",10))))).filter((e=>Number.isFinite(e)&&e>0)).slice(0,256);if(0===n.length)return;const i=await window.linnmsAjax.request(`${a}?type=device-interface-rates&ref=${encodeURIComponent(t)}&indexes=${encodeURIComponent(n.join(","))}`,{credentials:"same-origin",cache:"no-store",signal:e}),o=await i.json();if(!i.ok||!o.ok||"object"!=typeof o.rates)throw new Error(o.message||"Trafik tidak tersedia");return!1!==o.active&&(r.forEach((e=>{const t=o.rates[String(e.dataset.ifIndex)],r=e.querySelector("[data-interface-rx]"),a=e.querySelector("[data-interface-tx]");r&&(r.textContent=p(t?.rx_bps)),a&&(a.textContent=p(t?.tx_bps))})),!0)})(s.signal))?(m=!0,x(""),document.querySelectorAll("[data-device-rx], [data-device-tx], [data-interface-rx], [data-interface-tx]").forEach((e=>{e.textContent="—"}))):x("TX/RX diperbarui setiap detik")}catch(e){"AbortError"!==e?.name&&(m=!0,x(""))}finally{s=null,u=!1,b()}}else v("Endpoint realtime belum tersedia")}const S=(e=!1)=>{const t=Date.now();!e&&!d&&t-f<1e3||(f=t,d=!1,window.clearTimeout(l),l=window.setTimeout((()=>{d=!0,v("Polling TX/RX berhenti karena tidak ada aktivitas")}),6e4),b())};["pointerdown","pointermove","keydown","touchstart","wheel"].forEach((e=>{window.addEventListener(e,(()=>S(!1)),{passive:!0})})),document.addEventListener("visibilitychange",(()=>{document.hidden?v("Polling TX/RX berhenti saat halaman tidak aktif"):S(!0)})),window.addEventListener("blur",(()=>v("Polling TX/RX berhenti saat halaman tidak aktif"))),window.addEventListener("focus",(()=>S(!0))),window.addEventListener("pagehide",(()=>v())),window.addEventListener("resize",w),S(!0),m&&(x(""),document.querySelectorAll("[data-device-rx], [data-device-tx]").forEach((e=>{e.textContent="—"}))),w(),g()})();
+((() => {
+  "use strict";
+  (document.querySelectorAll("[data-interface-list]").forEach((e) => {
+    const t = () => Array.from(e.querySelectorAll("[data-interface-list-row]")),
+      r = e.querySelector("[data-interface-search]"),
+      a = e.querySelector("[data-interface-filter-empty]"),
+      n = e.querySelector("[data-interface-pagination]"),
+      i = e.querySelector("[data-interface-page-info]"),
+      o = e.querySelector("[data-interface-page-number]"),
+      c = e.querySelector("[data-interface-page-prev]"),
+      l = e.querySelector("[data-interface-page-next]");
+    let s = 1;
+    const d = () => {
+      const e = t(),
+        d = (r?.value || "").trim().toLocaleLowerCase("id-ID"),
+        u = e.filter(
+          (e) =>
+            !d ||
+            (e.dataset.interfaceSearchName || "")
+              .toLocaleLowerCase("id-ID")
+              .includes(d),
+        ),
+        m = Math.max(1, Math.ceil(u.length / 10));
+      s = Math.min(Math.max(1, s), m);
+      const h = 10 * (s - 1),
+        f = new Set(u.slice(h, h + 10));
+      if (
+        (e.forEach((e) => {
+          e.hidden = !f.has(e);
+        }),
+        a && (a.hidden = 0 !== u.length || "" === d),
+        i)
+      ) {
+        const e = 0 === u.length ? 0 : h + 1,
+          t = Math.min(h + 10, u.length);
+        i.textContent = `${e}-${t} dari ${u.length}`;
+      }
+      (o && (o.textContent = `${s} / ${m}`),
+        c && (c.disabled = s <= 1),
+        l && (l.disabled = s >= m),
+        n && (n.hidden = 0 === e.length));
+    };
+    (r?.addEventListener("input", () => {
+      ((s = 1), d());
+    }),
+      c?.addEventListener("click", () => {
+        s <= 1 || ((s -= 1), d());
+      }),
+      l?.addEventListener("click", () => {
+        const e = t(),
+          a = (r?.value || "").trim().toLocaleLowerCase("id-ID"),
+          n = e.filter(
+            (e) =>
+              !a ||
+              (e.dataset.interfaceSearchName || "")
+                .toLocaleLowerCase("id-ID")
+                .includes(a),
+          ).length;
+        s >= Math.max(1, Math.ceil(n / 10)) || ((s += 1), d());
+      }),
+      d());
+  }),
+    document.querySelectorAll("[data-vlan-toggle]").forEach((e) => {
+      e.addEventListener("click", () => {
+        const t = e.closest(".switch-vlan-summary"),
+          r = t?.querySelector("[data-vlan-preview]"),
+          a = t?.querySelector("[data-vlan-all]");
+        if (!r || !a) return;
+        const n = "true" === e.getAttribute("aria-expanded");
+        ((r.hidden = !n),
+          (a.hidden = n),
+          e.setAttribute("aria-expanded", n ? "false" : "true"),
+          (e.textContent = n ? "Lihat semua VLAN" : "Ringkas"));
+      });
+    }));
+})(),
+  (() => {
+    const e = (e) => {
+        const t = e.querySelector(":scope > span"),
+          r = Number.parseFloat(t?.style.width || "");
+        (e.classList.remove(
+          "is-level-1",
+          "is-level-2",
+          "is-level-3",
+          "is-level-4",
+        ),
+          !Number.isFinite(r) ||
+            r <= 0 ||
+            e.classList.add(
+              "is-level-" + (r <= 25 ? 1 : r <= 50 ? 2 : r <= 75 ? 3 : 4),
+            ));
+      },
+      t = () => {
+        (document
+          .querySelectorAll(".olt-card-health .device-meter")
+          .forEach((e) => e.classList.add("heat-meter")),
+          document.querySelectorAll(".device-health-card").forEach((e) => {
+            const t = String(
+              e.querySelector(".device-health-head")?.textContent || "",
+            ).toLowerCase();
+            (t.includes("cpu") || t.includes("ram") || t.includes("memory")) &&
+              e.querySelector(".device-meter")?.classList.add("heat-meter");
+          }),
+          document
+            .querySelectorAll(
+              ".olt-temperature, .olt-card-health > div, .olt-optical-details > div, .olt-uplink-row, .olt-pon-optics > div",
+            )
+            .forEach((e) => {
+              let t = e,
+                r = null;
+              if (!e.matches(".olt-temperature")) {
+                r = e.querySelector("span, dt");
+                const a = String(r?.textContent || "")
+                  .trim()
+                  .toLowerCase();
+                if (!a.includes("temperature") && !a.includes("suhu")) return;
+                if (((t = e.querySelector("strong, dd, .value")), !t)) return;
+              }
+              if (
+                (t.classList.remove(
+                  "ok__status",
+                  "warn__status",
+                  "bad__status",
+                  "unknown__status",
+                ),
+                t.classList.add(
+                  ((e) => {
+                    const t = Number.parseFloat(
+                      String(e ?? "").replace(",", "."),
+                    );
+                    return Number.isFinite(t) && 0 !== t
+                      ? t >= 50
+                        ? "bad__status"
+                        : t >= 40
+                          ? "warn__status"
+                          : "ok__status"
+                      : "unknown__status";
+                  })(t.textContent),
+                ),
+                r && !r.querySelector(".bi-thermometer-half"))
+              ) {
+                const e = document.createElement("i");
+                ((e.className = "bi bi-thermometer-half"),
+                  e.setAttribute("aria-hidden", "true"),
+                  r.prepend(e, " "));
+              }
+            }),
+          document
+            .querySelectorAll(".heat-meter:not(.olt-fan-meter)")
+            .forEach(e));
+      };
+    t();
+    new MutationObserver((e) => {
+      e.some((e) => "childList" === e.type || "characterData" === e.type) &&
+        t();
+    }).observe(document.querySelector("[data-olt-view]") || document.body, {
+      childList: !0,
+      characterData: !0,
+      attributes: !0,
+      attributeFilter: ["style"],
+      subtree: !0,
+    });
+  })(),
+  (() => {
+    "use strict";
+    const e = document.querySelector("[data-device-view]");
+    if (!e?.dataset.deviceId) return;
+    e.dataset.deviceId;
+    const t = e.dataset.deviceRef || "",
+      r = e.dataset.interfaceName || "",
+      a = document.body.dataset.liveUrl || "",
+      n = Array.from(document.querySelectorAll("[data-traffic-poll-state]")),
+      i = document.querySelector("[data-mikrotik-traffic-chart]"),
+      o = [];
+    let c = 0,
+      l = 0,
+      s = null,
+      d = !1,
+      u = !1,
+      m = "false" === e.dataset.trafficActive,
+      h = 0,
+      f = 0;
+    const p = (e) => {
+        const t = Number(e);
+        if (!Number.isFinite(t) || t < 0) return "—";
+        const r = ["bps", "Kbps", "Mbps", "Gbps", "Tbps"];
+        let a = t,
+          n = 0;
+        for (; a >= 1e3 && n < r.length - 1; ) ((a /= 1e3), (n += 1));
+        return `${a >= 100 ? a.toFixed(0) : a.toFixed(2)} ${r[n]}`;
+      },
+      x = (e) =>
+        n.forEach((t) => {
+          t.textContent = e;
+        }),
+      y = () => !document.hidden && document.hasFocus() && !d && !m,
+      w = () => {
+        if (!(i instanceof HTMLCanvasElement)) return;
+        const e = i.getContext("2d");
+        if (!e) return;
+        const t = ((e) => {
+            if (!Number.isFinite(e) || e <= 0) return 1;
+            const t = 10 ** Math.floor(Math.log10(e)),
+              r = e / t;
+            return (r <= 1 ? 1 : r <= 2 ? 2 : r <= 5 ? 5 : 10) * t;
+          })(Math.max(0, ...o.flatMap((e) => [e.rx, e.tx])) / 9),
+          r = Math.max(320, Math.floor(i.clientWidth)),
+          a = Math.max(220, Math.floor(i.clientHeight)),
+          n = Math.max(1, window.devicePixelRatio || 1);
+        ((i.width = Math.floor(r * n)),
+          (i.height = Math.floor(a * n)),
+          e.setTransform(n, 0, 0, n, 0, 0),
+          e.clearRect(0, 0, r, a));
+        const c = 14,
+          l = 12,
+          s = 62,
+          d = r - s - l,
+          u = a - c - 24,
+          m = getComputedStyle(document.documentElement),
+          h = m.getPropertyValue("--bg-line").trim() || "rgba(255,255,255,.08)",
+          f = m.getPropertyValue("--text-faint").trim() || "#64748b";
+        ((e.font = "10px sans-serif"),
+          (e.textAlign = "right"),
+          (e.textBaseline = "middle"));
+        for (let a = 0; a < 10; a += 1) {
+          const n = c + (u * a) / 9;
+          ((e.strokeStyle = h),
+            e.beginPath(),
+            e.moveTo(s, n),
+            e.lineTo(r - l, n),
+            e.stroke(),
+            (e.fillStyle = f),
+            e.fillText(p((9 - a) * t), s - 8, n));
+        }
+        const x = (r, a) => {
+          if (0 === o.length) return;
+          const n = s + d * Math.max(0, 1 - (o.length - 1) / 59);
+          ((e.strokeStyle = a),
+            (e.lineWidth = 2),
+            (e.lineJoin = "round"),
+            e.beginPath(),
+            o.forEach((a, i) => {
+              const o = n + (d * i) / 59,
+                l = c + u * (1 - a[r] / t / 9);
+              0 === i ? e.moveTo(o, l) : e.lineTo(o, l);
+            }),
+            e.stroke());
+        };
+        (e.save(),
+          e.beginPath(),
+          e.rect(s, c, d, u),
+          e.clip(),
+          x("rx", m.getPropertyValue("--green").trim() || "#57c785"),
+          x("tx", m.getPropertyValue("--primary").trim() || "#1254d6"),
+          e.restore());
+      },
+      v = (e) => {
+        (window.clearTimeout(c), (c = 0), s?.abort(), (s = null), e && x(e));
+      },
+      b = () => {
+        if (!y() || u || c) return;
+        const e = Math.max(0, performance.now() - h);
+        c = window.setTimeout(
+          () => {
+            ((c = 0), g());
+          },
+          Math.max(0, 1e3 - e),
+        );
+      };
+    async function g() {
+      if (y() && !u)
+        if (a) {
+          ((u = !0), (h = performance.now()), (s = new AbortController()));
+          try {
+            !1 ===
+            (r
+              ? await (async (e) => {
+                  const n = await window.linnmsAjax.request(
+                      `${a}?type=device-traffic&ref=${encodeURIComponent(t)}&interface=${encodeURIComponent(r)}`,
+                      {
+                        credentials: "same-origin",
+                        cache: "no-store",
+                        signal: e,
+                      },
+                    ),
+                    i = await n.json();
+                  if (!n.ok || !i.ok)
+                    throw new Error(i.message || "Trafik tidak tersedia");
+                  if (!1 === i.active) return !1;
+                  const c = document.querySelector("[data-device-rx]"),
+                    l = document.querySelector("[data-device-tx]");
+                  return (
+                    c && (c.textContent = p(i.rx_bps)),
+                    l && (l.textContent = p(i.tx_bps)),
+                    Number.isFinite(Number(i.rx_bps)) &&
+                      Number.isFinite(Number(i.tx_bps)) &&
+                      (o.push({
+                        rx: Math.max(0, Number(i.rx_bps)),
+                        tx: Math.max(0, Number(i.tx_bps)),
+                      }),
+                      o.length > 60 && o.shift(),
+                      w()),
+                    !0
+                  );
+                })(s.signal)
+              : await (async (e) => {
+                  const r = Array.from(
+                      document.querySelectorAll(
+                        "[data-interface-rate-row][data-if-index]",
+                      ),
+                    ).filter((e) => !e.hidden),
+                    n = Array.from(
+                      new Set(
+                        r.map((e) =>
+                          Number.parseInt(e.dataset.ifIndex || "", 10),
+                        ),
+                      ),
+                    )
+                      .filter((e) => Number.isFinite(e) && e > 0)
+                      .slice(0, 256);
+                  if (0 === n.length) return;
+                  const i = await window.linnmsAjax.request(
+                      `${a}?type=device-interface-rates&ref=${encodeURIComponent(t)}&indexes=${encodeURIComponent(n.join(","))}`,
+                      {
+                        credentials: "same-origin",
+                        cache: "no-store",
+                        signal: e,
+                      },
+                    ),
+                    o = await i.json();
+                  if (!i.ok || !o.ok || "object" != typeof o.rates)
+                    throw new Error(o.message || "Trafik tidak tersedia");
+                  return (
+                    !1 !== o.active &&
+                    (r.forEach((e) => {
+                      const t = o.rates[String(e.dataset.ifIndex)],
+                        r = e.querySelector("[data-interface-rx]"),
+                        a = e.querySelector("[data-interface-tx]");
+                      (r && (r.textContent = p(t?.rx_bps)),
+                        a && (a.textContent = p(t?.tx_bps)));
+                    }),
+                    !0)
+                  );
+                })(s.signal))
+              ? ((m = !0),
+                x(""),
+                document
+                  .querySelectorAll(
+                    "[data-device-rx], [data-device-tx], [data-interface-rx], [data-interface-tx]",
+                  )
+                  .forEach((e) => {
+                    e.textContent = "—";
+                  }))
+              : x("TX/RX diperbarui setiap detik");
+          } catch (e) {
+            "AbortError" !== e?.name && ((m = !0), x(""));
+          } finally {
+            ((s = null), (u = !1), b());
+          }
+        } else v("Endpoint realtime belum tersedia");
+    }
+    const S = (e = !1) => {
+      const t = Date.now();
+      (!e && !d && t - f < 1e3) ||
+        ((f = t),
+        (d = !1),
+        window.clearTimeout(l),
+        (l = window.setTimeout(() => {
+          ((d = !0), v("Polling TX/RX berhenti karena tidak ada aktivitas"));
+        }, 6e4)),
+        b());
+    };
+    (["pointerdown", "pointermove", "keydown", "touchstart", "wheel"].forEach(
+      (e) => {
+        window.addEventListener(e, () => S(!1), { passive: !0 });
+      },
+    ),
+      document.addEventListener("visibilitychange", () => {
+        document.hidden
+          ? v("Polling TX/RX berhenti saat halaman tidak aktif")
+          : S(!0);
+      }),
+      window.addEventListener("blur", () =>
+        v("Polling TX/RX berhenti saat halaman tidak aktif"),
+      ),
+      window.addEventListener("focus", () => S(!0)),
+      window.addEventListener("pagehide", () => v()),
+      window.addEventListener("resize", w),
+      S(!0),
+      m &&
+        (x(""),
+        document
+          .querySelectorAll("[data-device-rx], [data-device-tx]")
+          .forEach((e) => {
+            e.textContent = "—";
+          })),
+      w(),
+      g());
+  })());

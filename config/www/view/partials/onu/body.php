@@ -17,8 +17,8 @@ if (empty($onuView['ok'])) {
 extract($onuView);
 
 $onuTemperatureClass = !is_numeric($temp ?? null) || (float)$temp === 0.0
-    ? 'temperature-unknown'
-    : ((float)$temp >= 50 ? 'temperature-hot' : ((float)$temp >= 40 ? 'temperature-warn' : 'temperature-ok'));
+    ? 'unknown__status'
+    : ((float)$temp >= 50 ? 'bad__status' : ((float)$temp >= 40 ? 'warn__status' : 'ok__status'));
 
 ?>
 
@@ -162,7 +162,7 @@ $onuTemperatureClass = !is_numeric($temp ?? null) || (float)$temp === 0.0
                     <span class="label">Index ONU</span>
                     <span class="value mono"><?= h($valueDetail['index']['value']) ?></span></div>
                 <div>
-                    <span class="label">Suhu Modul</span>
+                    <span class="label">Suhu</span>
                     <span class="value <?= h($onuTemperatureClass) ?>"><i class="bi bi-thermometer-half" aria-hidden="true"></i>  <?= h($valueDetail['temperature']['value']) ?></span></div>
                 <div>
                     <span class="label"><?= $valueDetail['olt_rx_power']['state'] !== 'unsupported' ? 'RxPwr / RxOlt' : 'RxPwr' ?></span>

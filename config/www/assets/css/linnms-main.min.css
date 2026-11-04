@@ -1156,23 +1156,10 @@ button.is-loading > i {
   border-radius: 10px;
   color: var(--text-secondary);
   padding: 10px 11px;
-  min-height: 42px;
   outline: 0;
 }
-.field select {
-  border-color: transparent;
-  color: var(--text-primary);
-}
-.field select:hover {
-  border-color: var(--bg-line);
-}
-.field select:focus {
-  border-color: var(--focus-border);
-  box-shadow: var(--focus-ring);
-}
-.field input:focus,
-.field select:focus,
-.field textarea:focus {
+
+.field input:focus,.field select:focus,.field select:hover,.field select:focus,.field textarea:focus {
   border-color: var(--focus-border);
   box-shadow: var(--focus-ring);
 }
@@ -2707,9 +2694,9 @@ header.tittle-subtitle:is(h2, h3) i {
 input[readonly],
 input[readonly]:hover,
 input[readonly]:focus {
-  background: var(--input-readonly) !important;
+ background-color: rgba(127, 127, 127, 0.1) !important;
   border: 1px solid var(--bg-line-soft) !important;
-  color: var(--text-faint) !important;
+  color: var(--text-muted) !important;
   box-shadow: none;
 }
 .choice-check-mark {
@@ -2903,7 +2890,6 @@ input[readonly]:focus {
   inset: 0;
   display: grid;
   place-items: center;
-  color: var(--text-muted);
   font-size: 0.8rem;
   background: var(--surface-raised, transparent);
   pointer-events: none;
@@ -2975,17 +2961,7 @@ input[readonly]:focus {
   color: var(--green);
   animation: serial-copy-feedback 320ms ease-out;
 }
-@keyframes serial-copy-feedback {
-  0% {
-    transform: scale(0.8);
-  }
-  60% {
-    transform: scale(1.18);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
+@keyframes serial-copy-feedback{0%{transform:scale(.8)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion: reduce) {
   .serial-copy-action.is-copied .icon-button {
     animation: none;
@@ -2994,8 +2970,7 @@ input[readonly]:focus {
 
 .notice span,
 .notice p,
-.text-muted,
-.muted {
+.text-muted, .unknown__status {
   color: var(--text-muted) !important;
 }
 .text-secondary {
@@ -3003,46 +2978,30 @@ input[readonly]:focus {
 }
 
 
-.text-cyan {
+.text-cyan,.info  {
   color: var(--cyan) !important;
 }
-.text-success {
+.text-success,.success,.ok__status {
   color: var(--green) !important;
 }
-.text-warning {
+.text-warning,.warning, .warn__status {
   color: var(--amber) !important;
 }
-.text-danger {
+.text-danger,.danger,.bad__status {
   color: var(--red) !important;
 }
-.success {
-  --state-color: var(--green);
-  color: var(--state-color) !important;
-}
-.warning {
-  --state-color: var(--amber);
-  color: var(--state-color) !important;
-}
-.info {
-  --state-color: var(--cyan);
-  color: var(--state-color) !important;
-}
-.danger {
-  --state-color: var(--red);
-  color: var(--state-color) !important;
-}
-.neutral {
-  --state-color: var(--text-faint);
-  color: var(--state-color) !important;
-}
-
-
 .text-yellow {
-  color: var(--yellow);
+  color: var(--yellow) !important;
 }
 .text-orange {
-  color: var(--orange);
+  color: var(--orange) !important;
 }
+.text-faint,.neutral {
+  color:var(--text-faint) !important;
+}
+
+
+
 .text-primary {
   color: var(--primary);
 }
@@ -3081,22 +3040,7 @@ input[readonly]:focus {
 .me-2 {
 margin-left: 0.6rem !important; 
 }
-.temperature-ok,
-.temperature-ok i {
-  color: #57c785 !important;
-}
-.temperature-warn,
-.temperature-warn i {
-  color: #e6c84f !important;
-}
-.temperature-hot,
-.temperature-hot i {
-  color: #eb6161 !important;
-}
-.temperature-unknown,
-.temperature-unknown i {
-  color: var(--text-muted) !important;
-}
+
 .empty-state {
   display: grid;
   justify-items: center;

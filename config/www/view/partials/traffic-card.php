@@ -15,7 +15,7 @@ $trafficCardRole = trim((string)($trafficCardRole ?? ''));
         </span>
     </header>
     <div class="pon-traffic-canvas-wrap">
-        <span class="pon-traffic-loading" data-traffic-loading><span class="onu-loading-badge"><i class="bi bi-arrow-repeat sync-loading-spinner" aria-hidden="true"></i></span></span>
+        <span class="pon-traffic-loading text-muted" data-traffic-loading><span class="onu-loading-badge"><i class="bi bi-arrow-repeat sync-loading-spinner" aria-hidden="true"></i></span></span>
         <canvas class="pon-traffic-canvas" data-traffic-canvas height="150"></canvas>
         <div class="traffic-tooltip" data-traffic-tooltip hidden aria-hidden="true">
             <span data-traffic-tooltip-time></span>

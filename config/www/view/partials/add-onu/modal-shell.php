@@ -28,24 +28,35 @@ $addOnuFieldPrefix = $addOnuModalId . '-field-';
             <script type="application/json" data-add-onu-profile-map><?= json_for_html_script((array)($addOnuModalProfileByOlt ?? [])) ?></script>
             <script type="application/json" data-add-onu-device-map><?= json_for_html_script((array)($addOnuModalDeviceByOlt ?? [])) ?></script>
 
-            <section class="add-onu-modal-section">
-                <div class="add-onu-modal-section-label"><h3>ONU</h3></div>
+            <section class="add-onu-modal-section add-onu-identity-section" aria-labelledby="<?= h($addOnuModalId) ?>IdentityTitle">
+                <div class="add-onu-modal-section-label"><h3 id="<?= h($addOnuModalId) ?>IdentityTitle">Identitas ONU</h3></div>
                 <div class="add-onu-modal-section-body">
                     <input type="hidden" name="olt_device_id" value="" data-add-onu-olt>
-                    <div class="add-onu-form-grid">
+                    <div class="add-onu-device-summary">
                         <div class="field"><label for="<?= h($addOnuFieldPrefix) ?>card">Card</label><input id="<?= h($addOnuFieldPrefix) ?>card" class="mono" data-add-onu-card readonly aria-readonly="true"></div>
                         <div class="field"><label for="<?= h($addOnuFieldPrefix) ?>pon">PON</label><input id="<?= h($addOnuFieldPrefix) ?>pon" class="mono" data-add-onu-pon readonly aria-readonly="true"></div>
-                    </div>
-                    <fieldset class="field add-onu-choice-field" data-onu-capability="onu_id">
-                        <legend>ONU ID</legend>
-                        <div class="add-onu-segmented" data-add-onu-idmode role="group" aria-label="Mode ONU ID">
-                            <button type="button" class="is-active" data-onu-id-mode="auto">Auto</button>
-                            <button type="button" data-onu-id-mode="custom">Custom</button>
-                        </div>
-                        <input id="<?= h($addOnuFieldPrefix) ?>onu-id" class="mono add-onu-id-custom" name="onu_id_custom" inputmode="numeric" placeholder="Masukkan Nomor ONU" aria-label="Nomor ONU" hidden data-add-onu-id-custom>
-                    </fieldset>
-                    <div class="add-onu-form-grid">
                         <div class="field"><label for="<?= h($addOnuFieldPrefix) ?>serial">Serial Number</label><input id="<?= h($addOnuFieldPrefix) ?>serial" class="mono" name="onu_serial" data-add-onu-serial readonly aria-readonly="true" required></div>
+                    </div>
+                    <div class="add-onu-form-grid">
+                        <div class="field">
+                            <label for="<?= h($addOnuFieldPrefix) ?>name">Nama</label>
+                            <input id="<?= h($addOnuFieldPrefix) ?>name" name="onu_name" maxlength="127" required pattern=".*\S.*" data-add-onu-name autocomplete="off" placeholder="Masukkan Nama">
+                        </div>
+                        <div class="field">
+                            <label for="<?= h($addOnuFieldPrefix) ?>location">Lokasi</label>
+                            <input id="<?= h($addOnuFieldPrefix) ?>location" name="onu_location" maxlength="255" data-add-onu-location autocomplete="off" placeholder="Masukkan Lokasi">
+                        </div>
+                    </div>
+                    <div class="add-onu-form-grid">
+                        <div class="field" data-onu-capability="vlan" data-add-onu-primary-vlan="1">
+                            <label for="<?= h($addOnuFieldPrefix) ?>service1-vlan">VLAN ID</label>
+                            <div class="add-onu-input-row">
+                                <select id="<?= h($addOnuFieldPrefix) ?>service1-vlan" name="service1_vlan" data-add-onu-service-vlan>
+                                    <option value="">Pilih VLAN</option>
+                                    <?php foreach ($addOnuModalVlanOptions as $addOnuModalVlan): ?><option value="<?= (int)$addOnuModalVlan ?>"><?= (int)$addOnuModalVlan ?></option><?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
                         <div class="field" data-onu-capability="onu_type">
                             <label for="<?= h($addOnuFieldPrefix) ?>type">ONU Type</label>
                             <div class="add-onu-input-row">
@@ -55,34 +66,19 @@ $addOnuFieldPrefix = $addOnuModalId . '-field-';
                                 </select>
                             </div>
                         </div>
- <div class="field" data-onu-capability="vlan" data-add-onu-primary-vlan="1">
-                        <label for="<?= h($addOnuFieldPrefix) ?>service1-vlan">VLAN ID</label>
-                        <div class="add-onu-input-row">
-                            <select id="<?= h($addOnuFieldPrefix) ?>service1-vlan" name="service1_vlan" data-add-onu-service-vlan>
-                                <option value="">Pilih VLAN</option>
-                                <?php foreach ($addOnuModalVlanOptions as $addOnuModalVlan): ?><option value="<?= (int)$addOnuModalVlan ?>"><?= (int)$addOnuModalVlan ?></option><?php endforeach; ?>
-                            </select>
+                    </div>
+                    <fieldset class="field add-onu-choice-field add-onu-id-field" data-onu-capability="onu_id">
+                        <legend>ONU ID</legend>
+                        <div class="add-onu-id-wrapper">
+                            <div class="add-onu-segmented" data-add-onu-idmode role="group" aria-label="Mode ONU ID">
+                                <button type="button" class="is-active" aria-pressed="true" data-onu-id-mode="auto">Otomatis</button>
+                                <button type="button" aria-pressed="false" data-onu-id-mode="custom">Custom</button>
+                            </div>
+                            <input id="<?= h($addOnuFieldPrefix) ?>onu-id" class="mono add-onu-id-custom" name="onu_id_custom" type="number" min="1" step="1" inputmode="numeric" placeholder="Nomor ONU" aria-label="Nomor ONU" hidden disabled data-add-onu-id-custom>
                         </div>
-                    </div>
-
-                    </div>
+                        <small class="add-onu-field-hint">Pilih Custom untuk menentukan nomor ONU sendiri.</small>
+                    </fieldset>
                     <div class="add-onu-service-head add-onu-toggle-row" data-onu-capability="veip"><label class="add-onu-switch"><input type="checkbox" role="switch" name="use_veip" value="1" checked aria-label="Gunakan VEIP"><span class="toggle-switch" aria-hidden="true"></span></label><h4>Gunakan VEIP</h4></div>
-                </div>
-            </section>
-
-            <section class="add-onu-modal-section">
-                <div class="add-onu-modal-section-label"><h3>Informasi</h3></div>
-                <div class="add-onu-modal-section-body">
-                    <div class="add-onu-form-grid">
-                        <div class="field">
-                            <label for="<?= h($addOnuFieldPrefix) ?>name">Nama</label>
-                            <input id="<?= h($addOnuFieldPrefix) ?>name" name="onu_name" maxlength="127" required pattern=".*\S.*" data-add-onu-name autocomplete="off" placeholder="Masukkan Nama">
-                        </div>
-                        <div class="field">
-                            <label for="<?= h($addOnuFieldPrefix) ?>location">Lokasi</label>
-                            <input id="<?= h($addOnuFieldPrefix) ?>location" name="onu_location" maxlength="255" data-add-onu-location autocomplete="off" placeholder="Masukkan Lokasi (opsional)">
-                        </div>
-                    </div>
                 </div>
             </section>
 

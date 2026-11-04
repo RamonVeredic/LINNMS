@@ -82,16 +82,7 @@
   gap: 0.7rem;
   color: var(--text-muted);
 }
-.pon-traffic-rx {
-  color: var(--cyan);
-}
-.pon-traffic-tx {
-  color: var(--amber, #f59e0b);
-}
-.pon-traffic-rx b,
-.pon-traffic-tx b {
-  color: var(--text);
-}
+
 .pon-traffic-rx i,
 .pon-traffic-tx i {
   font-size: 0.95em;
@@ -161,19 +152,7 @@
   position: relative;
   margin-top: 0.35rem;
 }
-.pon-traffic-loading {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  background: var(--surface-raised, transparent);
-  pointer-events: none;
-}
-.pon-traffic-loading[hidden] {
-  display: none;
-}
+
 .pon-traffic-canvas {
   width: 100%;
   display: block;

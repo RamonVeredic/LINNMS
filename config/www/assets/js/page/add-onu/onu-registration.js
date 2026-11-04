@@ -22,6 +22,22 @@
     input.value = value;
   };
 
+  const syncIdMode = (form, mode) => {
+    form.querySelectorAll('[data-onu-id-mode]').forEach((button) => {
+      const active = button.dataset.onuIdMode === mode;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    const custom = form.querySelector('[data-add-onu-id-custom]');
+    if (custom instanceof HTMLInputElement) {
+      custom.hidden = mode !== 'custom';
+      custom.disabled = mode !== 'custom';
+      custom.required = mode === 'custom';
+      if (mode !== 'custom') custom.value = '';
+    }
+    setHidden(form, 'onu_id_mode', mode);
+  };
+
 
   const syncVlanOptions = (scope) => {
     const formEl = scope instanceof HTMLFormElement ? scope : (scope?.querySelector?.('form') || document);
@@ -178,8 +194,6 @@
       syncIptvFields(card);
       syncServiceWan(card);
     });
-    const customId = form.querySelector('[data-add-onu-id-custom]');
-    if (customId instanceof HTMLInputElement) customId.hidden = true;
     form.querySelectorAll('[data-onu-wan-tab]').forEach((tab, index) => {
       tab.classList.toggle('is-active', index === 0);
       tab.setAttribute('aria-selected', index === 0 ? 'true' : 'false');
@@ -242,6 +256,7 @@
         control.disabled = !enabled;
       });
     });
+    syncIdMode(form, 'auto');
     form.querySelectorAll('[data-add-onu-service-card]').forEach(syncQinqField);
     const serviceSection = form.querySelector('[data-add-onu-service-section]');
     if (!serviceSection?.hidden) syncWanMethod(form);
@@ -318,14 +333,8 @@
     const idModeButton = target.closest('[data-onu-id-mode]');
     if (idModeButton instanceof HTMLButtonElement) {
       const mode = String(idModeButton.dataset.onuIdMode || 'auto');
-      activeModal.querySelectorAll('[data-onu-id-mode]').forEach((candidate) => candidate.classList.toggle('is-active', candidate === idModeButton));
-      const custom = form.querySelector('[data-add-onu-id-custom]');
-      if (custom instanceof HTMLInputElement) {
-        custom.hidden = mode !== 'custom';
-        if (mode !== 'custom') custom.value = '';
-      }
-      setHidden(form, 'onu_id_mode', mode);
-      if (mode === 'custom') custom?.focus();
+      syncIdMode(form, mode);
+      if (mode === 'custom') form.querySelector('[data-add-onu-id-custom]')?.focus();
       return;
     }
 

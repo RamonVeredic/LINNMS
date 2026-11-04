@@ -61,20 +61,20 @@
                 </span>
             </div>
             <div class="sidebar-scroll">
-                <div class="nav-label">DASHBOARD</div>
+                <div class="nav-label neutral">DASHBOARD</div>
                 <nav>
                     <a class="<?= in_array(     $page,     ['dashboard', 'view-olt', 'add-device', 'view-mikrotik', 'view-mikrotik-interface', 'view-switch'],     true ) ? 'active' : '' ?>" href="<?= h(public_page_url('dashboard')) ?>">
                         <i class="bi bi-speedometer2" aria-hidden="true"></i> Dashboard</a>
                 </nav>
 
-                <div class="nav-label">MANAGEMENT</div>
+                <div class="nav-label neutral">MANAGEMENT</div>
                 <nav>
                     <a class="<?= nav_active($page, 'add-onu') ?>" href="<?= h(public_page_url('add-onu')) ?>">
                         <i class="bi bi-plus-circle" aria-hidden="true"></i><span class="sidebar-nav-label">Add ONU<?php if ($addOnuSidebarTotal > 0): ?><span class="sidebar-count"><?= $addOnuSidebarTotal ?></span><?php endif; ?></span></a>
                     <a class="<?= in_array($page, ['onus', 'view-onu'], true) ? 'active' : '' ?>" href="<?= h(public_page_url('onus')) ?>">
                         <i class="bi bi-router" aria-hidden="true"></i>All ONU</a>
                 </nav>
-                <div class="nav-label">NOTIFIKASI</div>
+                <div class="nav-label neutral">NOTIFIKASI</div>
                 <?php
                 $telegramSidebarAccessAllowed = !empty($telegramFeatureAllowed);
                 $whatsappSidebarAccessAllowed = !empty($whatsappFeatureAllowed);
@@ -112,7 +112,7 @@
                     <?php endif; ?>
                 </nav>
 
-                <div class="nav-label">AKUN</div>
+                <div class="nav-label neutral">AKUN</div>
                 <nav>
                     <a class="<?= in_array($page, ['settings', 'settings-admin'], true) ? 'active' : '' ?>" href="<?= h(public_page_url(is_admin() ? 'settings-admin' : 'settings')) ?>">
                         <i class="bi bi-sliders2" aria-hidden="true"></i> Pengaturan</a>

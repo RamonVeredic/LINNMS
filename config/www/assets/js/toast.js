@@ -1,1 +1,149 @@
-(()=>{"use strict";const e="linnms-toast-stage",t={success:{icon:"bi-check-circle",color:"var(--green, #57c785)",timeout:3600},error:{icon:"bi-x-circle",color:"var(--red, #ef6b6b)",timeout:6e3},warning:{icon:"bi-exclamation-triangle",color:"var(--orange, #f0a35e)",timeout:5200},waiting:{icon:"bi-arrow-repeat",color:"var(--primary, #5b8def)",timeout:5200},info:{icon:"bi-info-circle",color:"var(--primary, #5b8def)",timeout:3600}},n=e=>{e&&"1"!==e.dataset.leaving&&(e.dataset.leaving="1",window.clearTimeout(e.__timer),e.__timer=null,e.classList.remove("is-visible"),window.setTimeout((()=>e.remove()),200))},i=(e,t)=>{window.clearTimeout(e.__timer),e.__remaining=t,e.__startedAt=Date.now(),e.__timer=window.setTimeout((()=>n(e)),t)};window.linnmsToast=(a,o,r={})=>{const s=String(o||"").trim();if(""===s)return null;const c=t[a]?a:"info",l=t[c],m=Number.isFinite(r.timeout)?Number(r.timeout):l.timeout,d=r.mount instanceof Element?r.mount:null,u=d||(()=>{let t=document.getElementById(e);return t||(t=document.createElement("div"),t.id=e,t.className="linnms-toast-stage",t.setAttribute("aria-live","polite"),t.setAttribute("aria-atomic","true"),document.body.appendChild(t),t)})(),_=Array.from(u.children).find((e=>"1"!==e.dataset.leaving&&e.dataset.kind===c&&e.dataset.message===s));if(_)return i(_,m),_;const v=()=>Array.from(u.children).filter((e=>e.classList.contains("linnms-toast")));for(;v().length>=(d?1:4);){const e=v()[0];if(!e)break;n(e),e.remove()}const w=document.createElement("div");w.className="linnms-toast "+c,w.dataset.kind=c,w.dataset.message=s,w.setAttribute("role","error"===c?"alert":"status"),w.innerHTML='<i class="bi '+l.icon+'" aria-hidden="true"></i><span class="linnms-toast-message"></span><button type="button" class="linnms-toast-close" aria-label="Tutup">&times;</button>';const g=w.querySelector(".linnms-toast-message");return g.textContent="",s.split(/\r?\n/).forEach(((e,t)=>{t>0&&g.append(document.createElement("br")),g.append(document.createTextNode(e))})),w.style.setProperty("--linnms-toast-accent",l.color),!1===r.closeable&&w.querySelector(".linnms-toast-close")?.remove(),w.querySelector(".linnms-toast-close")?.addEventListener("click",(()=>n(w))),w.addEventListener("mouseenter",(()=>(e=>{if(!e.__timer)return;window.clearTimeout(e.__timer),e.__timer=null;const t=Date.now()-(e.__startedAt||Date.now());e.__remaining=Math.max(0,(e.__remaining||0)-t)})(w))),w.addEventListener("mouseleave",(()=>(e=>{e.__timer||"1"===e.dataset.leaving||((e.__remaining||0)<=0?n(e):i(e,e.__remaining))})(w))),u.appendChild(w),window.requestAnimationFrame((()=>w.classList.add("is-visible"))),m>0&&i(w,m),w}})(),(()=>{"use strict";const e=(e,t,n)=>"function"==typeof window.linnmsToast?window.linnmsToast(e||"info",t,n||{}):null;window.linnmsNotify=(t,n)=>e(t,n);const t=()=>{document.querySelectorAll("template[data-flash-toast]").forEach((t=>{const n=t.content.textContent?.trim()||"",i="scanning"===t.dataset.type?"waiting":t.dataset.type;t.remove(),""!==n&&e(i,n)}))};"loading"===document.readyState?document.addEventListener("DOMContentLoaded",t):t();const n=document.querySelector("[data-service-expiry-notice]");n&&n.querySelector("[data-service-expiry-dismiss]")?.addEventListener("click",(()=>n.remove()))})();
+((() => {
+  "use strict";
+  const e = "linnms-toast-stage",
+    t = {
+      success: {
+        icon: "bi-check-circle",
+        color: "var(--green, #57c785)",
+        timeout: 3600,
+      },
+      error: {
+        icon: "bi-x-circle",
+        color: "var(--red, #ef6b6b)",
+        timeout: 6e3,
+      },
+      warning: {
+        icon: "bi-exclamation-triangle",
+        color: "var(--orange, #f0a35e)",
+        timeout: 5200,
+      },
+      waiting: {
+        icon: "bi-arrow-repeat",
+        color: "var(--primary, #5b8def)",
+        timeout: 5200,
+      },
+      info: {
+        icon: "bi-info-circle",
+        color: "var(--primary, #5b8def)",
+        timeout: 3600,
+      },
+    },
+    n = (e) => {
+      e &&
+        "1" !== e.dataset.leaving &&
+        ((e.dataset.leaving = "1"),
+        window.clearTimeout(e.__timer),
+        (e.__timer = null),
+        e.classList.remove("is-visible"),
+        window.setTimeout(() => e.remove(), 200));
+    },
+    i = (e, t) => {
+      (window.clearTimeout(e.__timer),
+        (e.__remaining = t),
+        (e.__startedAt = Date.now()),
+        (e.__timer = window.setTimeout(() => n(e), t)));
+    };
+  window.linnmsToast = (a, o, r = {}) => {
+    const s = String(o || "").trim();
+    if ("" === s) return null;
+    const c = t[a] ? a : "info",
+      l = t[c],
+      m = Number.isFinite(r.timeout) ? Number(r.timeout) : l.timeout,
+      d = r.mount instanceof Element ? r.mount : null,
+      u =
+        d ||
+        (() => {
+          let t = document.getElementById(e);
+          return (
+            t ||
+            ((t = document.createElement("div")),
+            (t.id = e),
+            (t.className = "linnms-toast-stage"),
+            t.setAttribute("aria-live", "polite"),
+            t.setAttribute("aria-atomic", "true"),
+            document.body.appendChild(t),
+            t)
+          );
+        })(),
+      _ = Array.from(u.children).find(
+        (e) =>
+          "1" !== e.dataset.leaving &&
+          e.dataset.kind === c &&
+          e.dataset.message === s,
+      );
+    if (_) return (i(_, m), _);
+    const v = () =>
+      Array.from(u.children).filter((e) =>
+        e.classList.contains("linnms-toast"),
+      );
+    for (; v().length >= (d ? 1 : 4); ) {
+      const e = v()[0];
+      if (!e) break;
+      (n(e), e.remove());
+    }
+    const w = document.createElement("div");
+    ((w.className = "linnms-toast " + c),
+      (w.dataset.kind = c),
+      (w.dataset.message = s),
+      w.setAttribute("role", "error" === c ? "alert" : "status"),
+      (w.innerHTML =
+        '<i class="bi ' +
+        l.icon +
+        '" aria-hidden="true"></i><span class="linnms-toast-message"></span><button type="button" class="linnms-toast-close" aria-label="Tutup">&times;</button>'));
+    const g = w.querySelector(".linnms-toast-message");
+    return (
+      (g.textContent = ""),
+      s.split(/\r?\n/).forEach((e, t) => {
+        (t > 0 && g.append(document.createElement("br")),
+          g.append(document.createTextNode(e)));
+      }),
+      w.style.setProperty("--linnms-toast-accent", l.color),
+      !1 === r.closeable && w.querySelector(".linnms-toast-close")?.remove(),
+      w
+        .querySelector(".linnms-toast-close")
+        ?.addEventListener("click", () => n(w)),
+      w.addEventListener("mouseenter", () =>
+        ((e) => {
+          if (!e.__timer) return;
+          (window.clearTimeout(e.__timer), (e.__timer = null));
+          const t = Date.now() - (e.__startedAt || Date.now());
+          e.__remaining = Math.max(0, (e.__remaining || 0) - t);
+        })(w),
+      ),
+      w.addEventListener("mouseleave", () =>
+        ((e) => {
+          e.__timer ||
+            "1" === e.dataset.leaving ||
+            ((e.__remaining || 0) <= 0 ? n(e) : i(e, e.__remaining));
+        })(w),
+      ),
+      u.appendChild(w),
+      window.requestAnimationFrame(() => w.classList.add("is-visible")),
+      m > 0 && i(w, m),
+      w
+    );
+  };
+})(),
+  (() => {
+    "use strict";
+    const e = (e, t, n) =>
+      "function" == typeof window.linnmsToast
+        ? window.linnmsToast(e || "info", t, n || {})
+        : null;
+    window.linnmsNotify = (t, n) => e(t, n);
+    const t = () => {
+      document.querySelectorAll("template[data-flash-toast]").forEach((t) => {
+        const n = t.content.textContent?.trim() || "",
+          i = "scanning" === t.dataset.type ? "waiting" : t.dataset.type;
+        (t.remove(), "" !== n && e(i, n));
+      });
+    };
+    "loading" === document.readyState
+      ? document.addEventListener("DOMContentLoaded", t)
+      : t();
+    const n = document.querySelector("[data-service-expiry-notice]");
+    n &&
+      n
+        .querySelector("[data-service-expiry-dismiss]")
+        ?.addEventListener("click", () => n.remove());
+  })());
